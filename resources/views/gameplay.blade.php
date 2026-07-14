@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Clash of Subjects | The Arena</title>
+    <link rel="shortcut icon" href="{{ asset('unitygame/TemplateData/favicon.ico') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+
+        :root {
+            --gold: #f0c030;
+            --gold-dim: #7a6000;
+            --gold-glow: rgba(240,192,0,0.3);
+            --blue-dark: #0e1530;
+            --blue-mid: #1e2a50;
+            --blue-deep: #090d1e;
+            --crimson: #8b1a1a;
+            --text-dim: rgba(180,200,255,0.6);
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #030007;
+            font-family: 'VT323', monospace;
+        }
+
+        /* ===== ANIMATED PIXEL BACKGROUND ===== */
+        #bgCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            display: block;
+        }
+
+        .scanlines {
+            position: fixed;
+            inset: 0;
+            z-index: 2;
+            pointer-events: none;
+            background: repeating-linear-gradient(0deg,
+                transparent, transparent 2px,
+                rgba(0, 0, 0, 0.15) 2px, rgba(0, 0, 0, 0.15) 4px);
+        }
+
+        .vignette {
+            position: fixed;
+            inset: 0;
+            z-index: 3;
+            pointer-events: none;
+            background: radial-gradient(ellipse at center, transparent 35%, rgba(0, 0, 0, 0.9) 100%);
+        }
+
+        /* ===== EMBERS ===== */
+        .embers {
+            position: fixed;
+            inset: 0;
+            z-index: 4;
+            pointer-events: none;
+        }
+        .ember {
+            position: absolute;
+            background: #f08000;
+            animation: emberUp linear infinite;
+            opacity: 0;
+            filter: blur(0.5px);
+        }
+        @keyframes emberUp {
+            0% { opacity: 0; transform: translate(0, 0) scale(1); }
+            10% { opacity: 1; }
+            80% { opacity: 0.6; }
+            100% { opacity: 0; transform: translate(var(--ex), var(--ey)) scale(0.3); }
+        }
+
+        /* ===== BATS ===== */
+        .bat-wrap {
+            position: fixed;
+            z-index: 4;
+            animation: batFly linear infinite;
+            pointer-events: none;
+        }
+        @keyframes batFly {
+            from { left: -80px; }
+            to { left: calc(100vw + 80px); }
+        }
+        .bat-sprite {
+            width: 28px;
+            height: 14px;
+            position: relative;
+            animation: batFlap 0.25s steps(2) infinite;
+        }
+        @keyframes batFlap {
+            0% { transform: scaleY(1); }
+            50% { transform: scaleY(-0.45); }
+            100% { transform: scaleY(1); }
+        }
+        .bat-sprite::before, .bat-sprite::after {
+            content: '';
+            position: absolute;
+            width: 12px;
+            height: 10px;
+            background: #0a0612;
+            clip-path: polygon(0 100%, 50% 0, 100% 80%, 60% 60%, 40% 60%);
+            top: 0;
+        }
+        .bat-sprite::before { left: 0; }
+        .bat-sprite::after { right: 0; transform: scaleX(-1); }
+
+        /* ===== TOP BAR ===== */
+        #top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 30;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 28px;
+            background: linear-gradient(180deg, rgba(9, 13, 30, 0.98) 0%, rgba(9, 13, 30, 0.6) 70%, transparent 100%);
+            border-bottom: 1px solid rgba(240, 192, 0, 0.25);
+            backdrop-filter: blur(2px);
+        }
+
+        #top-bar .realm-title {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 11px;
+            color: var(--gold);
+            letter-spacing: 0.12em;
+            text-shadow: 0 0 12px rgba(240, 192, 0, 0.6);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        #top-bar .realm-title::before {
+            content: '⚔️';
+            font-size: 16px;
+            filter: drop-shadow(0 0 4px gold);
+        }
+
+        .logout-btn {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 8px;
+            color: #0a0e1a;
+            background: var(--gold);
+            border: none;
+            padding: 10px 18px;
+            text-decoration: none;
+            letter-spacing: 0.1em;
+            cursor: pointer;
+            display: inline-block;
+            box-shadow: 3px 3px 0 var(--gold-dim);
+            transition: all 0.07s steps(2);
+            line-height: 1.4;
+            font-weight: bold;
+        }
+        .logout-btn:hover {
+            background: #ffe070;
+            box-shadow: 5px 5px 0 var(--gold-dim);
+            transform: translate(-1px, -1px);
+        }
+        .logout-btn:active {
+            transform: translate(2px, 2px);
+            box-shadow: 1px 1px 0 var(--gold-dim);
+        }
+
+        /* ===== MAIN GAME CONTAINER - FIXED LAYOUT ===== */
+        #game-stage {
+            position: fixed;
+            inset: 0;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding-top: 70px;  /* clear top bar */
+            padding-bottom: 20px;
+        }
+
+        /* Unity wrapper with gothic frame */
+        .unity-frame {
+            position: relative;
+            background: #030007;
+            border: 3px solid var(--blue-mid);
+            box-shadow: 0 0 0 1px var(--gold),
+                        0 20px 40px rgba(0, 0, 0, 0.6),
+                        0 0 80px rgba(240, 160, 0, 0.25),
+                        inset 0 0 30px rgba(0, 0, 30, 0.5);
+            max-width: 95vw;
+        }
+
+        /* Corner gems */
+        .unity-frame .corner {
+            position: absolute;
+            width: 14px;
+            height: 14px;
+            background: var(--gold);
+            z-index: 20;
+            box-shadow: 0 0 6px var(--gold);
+        }
+        .corner.tl { top: -6px; left: -6px; }
+        .corner.tr { top: -6px; right: -6px; }
+        .corner.bl { bottom: -6px; left: -6px; }
+        .corner.br { bottom: -6px; right: -6px; }
+
+        .unity-top-gold {
+            position: absolute;
+            top: -2px;
+            left: 12px;
+            right: 12px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--gold), var(--gold), transparent);
+            z-index: 19;
+            box-shadow: 0 0 4px gold;
+        }
+
+        #unity-canvas {
+            display: block;
+            background: #030007;
+            width: 100%;
+            height: 100%;
+            max-width: 100%;
+        }
+
+        /* Loading overlay — pixel perfect */
+        #unity-loading-bar {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: var(--blue-deep);
+            z-index: 25;
+            gap: 24px;
+            backdrop-filter: blur(2px);
+        }
+
+        #unity-logo {
+            width: 100px;
+            height: 100px;
+            background: url("{{ asset('unitygame/TemplateData/unity-logo-dark.png') }}") center/contain no-repeat;
+            filter: drop-shadow(0 0 20px var(--gold-glow));
+            opacity: 0.9;
+        }
+
+        .loading-text {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 9px;
+            color: var(--gold);
+            letter-spacing: 0.2em;
+            text-shadow: 0 0 8px var(--gold-glow);
+            animation: pulseText 1s steps(2) infinite;
+        }
+
+        @keyframes pulseText {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        #unity-progress-bar-empty {
+            width: 320px;
+            height: 14px;
+            border: 2px solid var(--gold);
+            background: #05080f;
+            box-shadow: 0 0 12px var(--gold-glow), inset 0 0 8px rgba(0, 0, 0, 0.8);
+            position: relative;
+            overflow: hidden;
+        }
+
+        #unity-progress-bar-full {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #b87c00, var(--gold), #ffdd77);
+            box-shadow: 0 0 6px gold;
+            transition: width 0.2s ease-out;
+        }
+
+        /* warning banner */
+        #unity-warning {
+            position: absolute;
+            bottom: 100%;
+            left: 0;
+            right: 0;
+            z-index: 26;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 7px;
+            pointer-events: none;
+        }
+
+        /* footer (fullscreen & build info) */
+        #unity-footer {
+            position: absolute;
+            bottom: -42px;
+            left: 0;
+            right: 0;
+            height: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 14px;
+            background: rgba(9, 13, 30, 0.92);
+            border-top: 1px solid rgba(240, 192, 0, 0.35);
+            border-bottom: 1px solid rgba(240, 192, 0, 0.15);
+            backdrop-filter: blur(4px);
+            z-index: 20;
+        }
+
+        #unity-logo-title-footer {
+            width: 24px;
+            height: 24px;
+            background: url("{{ asset('unitygame/TemplateData/unity-logo-dark.png') }}") center/contain no-repeat;
+            opacity: 0.7;
+        }
+
+        #unity-build-title {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 7px;
+            color: var(--text-dim);
+            letter-spacing: 0.1em;
+        }
+
+        #unity-fullscreen-button {
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            background: url("{{ asset('unitygame/TemplateData/fullscreen-button.png') }}") center/contain no-repeat;
+            opacity: 0.7;
+            transition: opacity 0.15s, filter 0.1s;
+            filter: sepia(1) saturate(2) hue-rotate(5deg) brightness(1.3);
+        }
+        #unity-fullscreen-button:hover {
+            opacity: 1;
+            filter: drop-shadow(0 0 4px gold);
+        }
+
+        /* Custom cursor (pixel sword/gold) */
+        * {
+            cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16'%3E%3Crect x='0' y='0' width='4' height='4' fill='%23f0a000'/%3E%3Crect x='0' y='4' width='4' height='4' fill='%23f0a000'/%3E%3Crect x='0' y='8' width='4' height='4' fill='%23f0a000'/%3E%3Crect x='4' y='4' width='4' height='4' fill='%23f0a000'/%3E%3Crect x='8' y='8' width='4' height='4' fill='%23f0a000'/%3E%3C/svg%3E") 0 0, default;
+        }
+
+        /* responsive behavior: keep aspect ratio but center */
+        @media (max-width: 991px) {
+            .unity-frame {
+                max-width: 95vw;
+                height: auto;
+            }
+            #top-bar .realm-title {
+                font-size: 9px;
+            }
+            .logout-btn {
+                padding: 8px 14px;
+                font-size: 7px;
+            }
+        }
+
+        @media (max-width: 780px) {
+            #top-bar {
+                padding: 10px 16px;
+            }
+            #unity-progress-bar-empty {
+                max-width: 80vw;
+            }
+        }
+
+        /* ===== MOBILE WARNING OVERLAY ===== */
+        #mobile-warning-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(5, 3, 8, 0.96);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            backdrop-filter: blur(4px);
+        }
+
+        .mobile-warning-box {
+            background: var(--blue-dark);
+            border: 3px solid var(--blue-mid);
+            box-shadow: 0 0 0 1px var(--gold),
+                        0 20px 40px rgba(0, 0, 0, 0.8),
+                        0 0 80px rgba(240, 160, 0, 0.25);
+            padding: 32px 24px;
+            width: 100%;
+            max-width: 420px;
+            position: relative;
+            text-align: center;
+        }
+
+        .mobile-warning-box .corner {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: var(--gold);
+            z-index: 20;
+            box-shadow: 0 0 4px var(--gold);
+        }
+        .mobile-warning-box .corner.tl { top: -5px; left: -5px; }
+        .mobile-warning-box .corner.tr { top: -5px; right: -5px; }
+        .mobile-warning-box .corner.bl { bottom: -5px; left: -5px; }
+        .mobile-warning-box .corner.br { bottom: -5px; right: -5px; }
+
+        .warning-title {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 10px;
+            color: var(--gold);
+            line-height: 1.6;
+            margin-bottom: 20px;
+            text-shadow: 0 0 8px rgba(240,192,0,0.5);
+        }
+
+        .warning-text {
+            font-size: 18px;
+            color: rgba(180, 200, 255, 0.8);
+            line-height: 1.6;
+            margin-bottom: 28px;
+            letter-spacing: 0.05em;
+        }
+
+        .warning-text b {
+            color: var(--gold);
+        }
+
+        .warning-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .warning-btn {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 9px;
+            padding: 14px 20px;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            box-shadow: 3px 3px 0 var(--gold-dim);
+            transition: all 0.05s steps(2);
+            line-height: 1.4;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .warning-btn.btn-primary {
+            background: var(--gold);
+            color: #0a0e1a;
+        }
+        .warning-btn.btn-primary:hover {
+            background: #ffe070;
+            box-shadow: 5px 5px 0 var(--gold-dim);
+            transform: translate(-1px, -1px);
+        }
+        .warning-btn.btn-primary:active {
+            transform: translate(2px, 2px);
+            box-shadow: 1px 1px 0 var(--gold-dim);
+        }
+
+        .warning-btn.btn-secondary {
+            background: var(--blue-mid);
+            color: var(--gold);
+            border: 1px solid var(--gold);
+        }
+        .warning-btn.btn-secondary:hover {
+            background: var(--blue-dark);
+            box-shadow: 5px 5px 0 var(--gold-dim);
+            transform: translate(-1px, -1px);
+        }
+        .warning-btn.btn-secondary:active {
+            transform: translate(2px, 2px);
+            box-shadow: 1px 1px 0 var(--gold-dim);
+        }
+
+        /* Show warning on mobile screens (max-width: 991px or mobile devices) */
+        @media (max-width: 991px) {
+            #mobile-warning-overlay {
+                display: flex;
+            }
+        }
+
+        /* ===== MOBILE KEYBOARD HELPER BAR ===== */
+        #mobile-input-bar {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(9, 13, 30, 0.98);
+            border-top: 2px solid var(--gold);
+            padding: 12px 16px;
+            z-index: 999;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.7);
+            flex-direction: column;
+            gap: 6px;
+            backdrop-filter: blur(4px);
+        }
+
+        .mobile-input-header {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 8px;
+            color: var(--gold);
+            letter-spacing: 0.05em;
+            text-shadow: 0 0 6px var(--gold-glow);
+            text-align: left;
+        }
+
+        .mobile-input-row {
+            display: flex;
+            width: 100%;
+            gap: 8px;
+            align-items: center;
+        }
+
+        #mobile-text-input {
+            flex-grow: 1;
+            background: #030007;
+            border: 2px solid var(--blue-mid);
+            color: var(--gold);
+            font-family: 'VT323', monospace;
+            font-size: 20px;
+            padding: 8px 12px;
+            outline: none;
+            box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.8);
+            border-radius: 4px;
+            text-transform: none; /* keep original capitalization */
+        }
+
+        #mobile-text-input:focus {
+            border-color: var(--gold);
+            box-shadow: 0 0 8px var(--gold-glow), inset 0 0 8px rgba(0, 0, 0, 0.8);
+        }
+
+        #mobile-text-input::placeholder {
+            color: var(--text-dim);
+            font-size: 15px;
+        }
+
+        .mobile-input-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .mobile-helper-btn {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 8px;
+            padding: 10px 14px;
+            border: none;
+            cursor: pointer;
+            box-shadow: 3px 3px 0 var(--gold-dim);
+            transition: all 0.05s steps(2);
+            line-height: 1.4;
+            font-weight: bold;
+            text-align: center;
+            border-radius: 2px;
+            white-space: nowrap;
+        }
+
+        .mobile-helper-btn.btn-backspace {
+            background: var(--blue-mid);
+            color: var(--gold);
+            border: 1px solid var(--gold);
+        }
+
+        .mobile-helper-btn.btn-backspace:active {
+            transform: translate(2px, 2px);
+            box-shadow: 1px 1px 0 var(--gold-dim);
+        }
+
+        .mobile-helper-btn.btn-enter {
+            background: var(--gold);
+            color: #0a0e1a;
+        }
+
+        .mobile-helper-btn.btn-enter:active {
+            transform: translate(2px, 2px);
+            box-shadow: 1px 1px 0 var(--gold-dim);
+        }
+
+        @media (max-width: 991px) {
+            #mobile-input-bar {
+                display: flex;
+            }
+            #game-stage {
+                padding-bottom: 90px;
+            }
+        }
+
+        /* ===== PORTRAIT ORIENTATION OVERLAY ===== */
+        #portrait-rotate-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: #090d1e; /* matches --blue-deep */
+            z-index: 10005;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            text-align: center;
+            backdrop-filter: blur(4px);
+        }
+
+        .rotate-box {
+            background: var(--blue-dark);
+            border: 3px solid var(--blue-mid);
+            box-shadow: 0 0 0 1px var(--gold),
+                        0 20px 40px rgba(0, 0, 0, 0.8),
+                        0 0 80px rgba(240, 160, 0, 0.25);
+            padding: 40px 24px;
+            width: 100%;
+            max-width: 420px;
+            position: relative;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .rotate-box .corner {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: var(--gold);
+            z-index: 20;
+            box-shadow: 0 0 4px var(--gold);
+        }
+        .rotate-box .corner.tl { top: -5px; left: -5px; }
+        .rotate-box .corner.tr { top: -5px; right: -5px; }
+        .rotate-box .corner.bl { bottom: -5px; left: -5px; }
+        .rotate-box .corner.br { bottom: -5px; right: -5px; }
+
+        .rotate-icon {
+            font-size: 64px;
+            margin-bottom: 24px;
+            animation: rotatePhone 2.5s ease-in-out infinite;
+            filter: drop-shadow(0 0 10px var(--gold));
+            line-height: 1;
+        }
+
+        @keyframes rotatePhone {
+            0% { transform: rotate(0deg); }
+            50% { transform: rotate(-90deg); }
+            100% { transform: rotate(0deg); }
+        }
+
+        .rotate-title {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 11px;
+            color: var(--gold);
+            line-height: 1.6;
+            margin-bottom: 20px;
+            text-shadow: 0 0 8px rgba(240,192,0,0.5);
+        }
+
+        .rotate-text {
+            font-size: 18px;
+            color: rgba(180, 200, 255, 0.8);
+            line-height: 1.6;
+            letter-spacing: 0.05em;
+        }
+
+        .rotate-text b {
+            color: var(--gold);
+        }
+
+        /* Show rotate overlay on mobile (max-width: 991px) when in portrait mode */
+        @media (max-width: 991px) and (orientation: portrait) {
+            #portrait-rotate-overlay {
+                display: flex;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- PORTRAIT ORIENTATION OVERLAY -->
+    <div id="portrait-rotate-overlay">
+        <div class="rotate-box">
+            <div class="corner tl"></div>
+            <div class="corner tr"></div>
+            <div class="corner bl"></div>
+            <div class="corner br"></div>
+            <div class="rotate-icon">📱🔄</div>
+            <div class="rotate-title">⚔️ LANDSCAPE MODE REQUIRED ⚔️</div>
+            <p class="rotate-text">
+                Please rotate your device to <b>Landscape</b> (horizontal) mode for the best subjects arena experience!
+            </p>
+        </div>
+    </div>
+
+    <!-- MOBILE WARNING OVERLAY -->
+    <div id="mobile-warning-overlay">
+        <div class="mobile-warning-box">
+            <div class="corner tl"></div>
+            <div class="corner tr"></div>
+            <div class="corner bl"></div>
+            <div class="corner br"></div>
+            <div class="warning-title">⚔️ MOBILE REALM DETECTED ⚔️</div>
+            <p class="warning-text">
+                For the best pixel-perfect combat, audio experience, and gameplay controls, Clash of Subjects is optimized for <b>Desktop / Laptop</b> devices.
+            </p>
+            <div class="warning-actions">
+                <button class="warning-btn btn-primary" onclick="proceedToGame()">CONTINUE ANYWAY</button>
+                <a href="{{ route('student.dashboard') }}" class="warning-btn btn-secondary">BACK TO PORTAL</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- pixel background canvas -->
+    <!-- INTERCEPT NETWORK REQUESTS FOR DEBUGGING -->
+    <script>
+        function proceedToGame() {
+            document.getElementById('mobile-warning-overlay').style.setProperty('display', 'none', 'important');
+        }
+        const originalFetch = window.fetch;
+        window.fetch = async function(...args) {
+            if (typeof args[0] === 'string' && args[0].includes('localhost/backend/get_question.php')) {
+                args[0] = args[0].replace('http://localhost/backend/get_question.php', 'http://127.0.0.1:8000/api/get_question');
+            }
+            return originalFetch.apply(this, args);
+        };
+        const originalXHR = window.XMLHttpRequest.prototype.open;
+        window.XMLHttpRequest.prototype.open = function(method, url) {
+            if (typeof url === 'string' && url.includes('localhost/backend/get_question.php')) {
+                url = url.replace('http://localhost/backend/get_question.php', 'http://127.0.0.1:8000/api/get_question');
+            }
+            return originalXHR.call(this, method, url);
+        };
+    </script>
+    <canvas id="bgCanvas"></canvas>
+    <div class="scanlines"></div>
+    <div class="vignette"></div>
+    <div class="embers" id="embers"></div>
+
+    <!-- bats (atmospheric) -->
+    <div class="bat-wrap" style="top:8%; animation-duration: 24s; animation-delay: -5s;"><div class="bat-sprite"></div></div>
+    <div class="bat-wrap" style="top:16%; animation-duration: 31s; animation-delay: -12s;"><div class="bat-sprite" style="transform: scale(0.7);"></div></div>
+    <div class="bat-wrap" style="top:22%; animation-duration: 19s; animation-delay: -2s;"><div class="bat-sprite" style="transform: scale(0.55);"></div></div>
+    <div class="bat-wrap" style="top:5%; animation-duration: 28s; animation-delay: -9s;"><div class="bat-sprite" style="transform: scale(0.6);"></div></div>
+
+    <!-- top bar -->
+    <div id="top-bar">
+        <div class="realm-title">⚔ CLASH OF SUBJECTS ⚔</div>
+        <a href="{{ route('student.dashboard') }}" class="logout-btn">⛊ BACK TO DASHBOARD ⛊</a>
+    </div>
+
+    <!-- main game stage (layout fixed) -->
+    <div id="game-stage">
+        <div id="unity-container" class="unity-frame">
+            <div class="unity-top-gold"></div>
+            <div class="corner tl"></div>
+            <div class="corner tr"></div>
+            <div class="corner bl"></div>
+            <div class="corner br"></div>
+            
+            <canvas id="unity-canvas" width="960" height="600" tabindex="0"></canvas>
+            
+            <div id="unity-loading-bar">
+                <div id="unity-logo"></div>
+                <div class="loading-text">⟡ LOADING REALM ⟡</div>
+                <div id="unity-progress-bar-empty">
+                    <div id="unity-progress-bar-full"></div>
+                </div>
+            </div>
+            
+            <div id="unity-warning"></div>
+            
+            <div id="unity-footer">
+                <div id="unity-logo-title-footer"></div>
+                <div id="unity-build-title">⚔ CLASH OF SUBJECTS ⚔</div>
+                <div id="unity-fullscreen-button"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MOBILE KEYBOARD HELPER BAR -->
+    <div id="mobile-input-bar">
+        <div class="mobile-input-header">⌨️ MOBILE KEYBOARD HELPER (TAP IN-GAME TEXTBOX FIRST):</div>
+        <div class="mobile-input-row">
+            <input type="text" id="mobile-text-input" placeholder="Tap here and type your answer..." autocomplete="off" />
+            <div class="mobile-input-buttons">
+                <button id="mobile-btn-backspace" class="mobile-helper-btn btn-backspace">⌫ BACK</button>
+                <button id="mobile-btn-enter" class="mobile-helper-btn btn-enter">ENTER ⚔️</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* ============================================================
+           RETRO PIXEL BACKGROUND
+           ============================================================ */
+        const bgCanvas = document.getElementById('bgCanvas');
+        const bgCtx = bgCanvas.getContext('2d');
+        bgCtx.imageSmoothingEnabled = false;
+        const TILE = 8;
+        let W, H, cols, rows, tick = 0;
+        const STAR_GRID = [];
+
+        function resizeBackground() {
+            W = bgCanvas.width = window.innerWidth;
+            H = bgCanvas.height = window.innerHeight;
+            cols = Math.ceil(W / TILE);
+            rows = Math.ceil(H / TILE);
+            STAR_GRID.length = 0;
+            for (let i = 0; i < 100; i++) {
+                STAR_GRID.push({
+                    x: Math.floor(Math.random() * cols),
+                    y: Math.floor(Math.random() * Math.floor(rows * 0.55)),
+                    phase: Math.random() * Math.PI * 2,
+                    speed: 0.018 + Math.random() * 0.045
+                });
+            }
+        }
+        window.addEventListener('resize', resizeBackground);
+        resizeBackground();
+
+        function lerpColor(a, b, t) {
+            return [
+                Math.round(a[0] + (b[0] - a[0]) * t),
+                Math.round(a[1] + (b[1] - a[1]) * t),
+                Math.round(a[2] + (b[2] - a[2]) * t)
+            ];
+        }
+        function rgb(c) { return `rgb(${c[0]},${c[1]},${c[2]})`; }
+
+        function drawBackground() {
+            if (!bgCtx) return;
+            bgCtx.clearRect(0, 0, W, H);
+            const horizonRow = Math.floor(rows * 0.72);
+            
+            // sky gradient
+            for (let r = 0; r < horizonRow; r++) {
+                let t = r / horizonRow;
+                let c;
+                if (t < 0.5) c = lerpColor([8, 2, 18], [22, 6, 38], t * 2);
+                else c = lerpColor([22, 6, 38], [50, 18, 5], (t - 0.5) * 2);
+                bgCtx.fillStyle = rgb(c);
+                bgCtx.fillRect(0, r * TILE, W, TILE);
+            }
+            // ground
+            for (let r = horizonRow; r < rows; r++) {
+                const t = (r - horizonRow) / (rows - horizonRow);
+                const c = lerpColor([10, 6, 2], [4, 2, 0], t);
+                bgCtx.fillStyle = rgb(c);
+                bgCtx.fillRect(0, r * TILE, W, TILE);
+            }
+            
+            // mountains
+            const mtns = [
+                {cx:0.05, h:18}, {cx:0.15, h:22}, {cx:0.28, h:16},
+                {cx:0.40, h:20}, {cx:0.55, h:26}, {cx:0.68, h:19},
+                {cx:0.80, h:22}, {cx:0.92, h:17}, {cx:1.0, h:14}
+            ];
+            mtns.forEach(m => {
+                const pc = Math.floor(m.cx * cols);
+                const pr = horizonRow - m.h;
+                bgCtx.fillStyle = rgb([10, 6, 3]);
+                for (let dr = 0; dr < m.h; dr++) {
+                    const half = Math.floor((dr / m.h) * m.h * 0.7) + 1;
+                    bgCtx.fillRect((pc - half) * TILE, (pr + dr) * TILE, half * 2 * TILE, TILE);
+                }
+                bgCtx.fillStyle = 'rgba(200,180,150,0.12)';
+                for (let dr = 0; dr < 3; dr++) {
+                    const half = Math.floor((dr / m.h) * m.h * 0.7) + 1;
+                    bgCtx.fillRect((pc - half) * TILE, (pr + dr) * TILE, half * 2 * TILE, TILE);
+                }
+            });
+            
+            // castle base
+            const cx = Math.floor(cols / 2);
+            const cb = horizonRow;
+            for (let dr = 0; dr < 12; dr++) {
+                bgCtx.fillStyle = dr === 0 ? '#1a0e06' : '#100804';
+                bgCtx.fillRect((cx - 9) * TILE, (cb - dr) * TILE, 18 * TILE, TILE);
+            }
+            for (let dr = 0; dr < 6; dr++) {
+                bgCtx.fillStyle = '#030201';
+                const gw = dr < 5 ? 4 : 2;
+                bgCtx.fillRect((cx - gw/2) * TILE, (cb - dr) * TILE, gw * TILE, TILE);
+            }
+            
+            // towers
+            const towers = [-10, -5, 0, 5, 10];
+            const tH = [16, 18, 22, 18, 16];
+            towers.forEach((off, i) => {
+                const tx = cx + off;
+                const th = tH[i];
+                for (let dr = 0; dr < th; dr++) {
+                    bgCtx.fillStyle = dr < 2 ? '#1e1208' : '#0c0804';
+                    bgCtx.fillRect((tx - 2) * TILE, (cb - 12 - dr) * TILE, 4 * TILE, TILE);
+                }
+                for (let b = 0; b < 3; b++) {
+                    if (b % 2 === 0) {
+                        bgCtx.fillStyle = '#0c0804';
+                        bgCtx.fillRect((tx - 2 + b) * TILE, (cb - 12 - th - 2) * TILE, TILE, 3 * TILE);
+                    }
+                }
+                // center tower flag
+                if (i === 2) {
+                    const fp = Math.sin(tick * 0.05);
+                    bgCtx.fillStyle = '#8b1a1a';
+                    for (let fr = 0; fr < 4; fr++) {
+                        const fw = Math.round(4 + fp * 1.5) - fr;
+                        if (fw > 0) bgCtx.fillRect(tx * TILE, (cb - 12 - th - 6 + fr) * TILE, fw * TILE, TILE);
+                    }
+                    bgCtx.fillStyle = '#5a3010';
+                    bgCtx.fillRect(tx * TILE - 1, (cb - 12 - th - 6) * TILE, 2, 6 * TILE);
+                }
+                const fl = 0.6 + 0.4 * Math.sin(tick * 0.08 + i * 1.3);
+                bgCtx.fillStyle = `rgba(255,180,40,${0.6 * fl})`;
+                bgCtx.fillRect(tx * TILE, (cb - 12 - Math.floor(th * 0.5)) * TILE, 2 * TILE, 2 * TILE);
+            });
+            
+            // torches
+            [Math.floor(cols * 0.18), Math.floor(cols * 0.82)].forEach(tx => {
+                bgCtx.fillStyle = '#4a2806';
+                bgCtx.fillRect(tx * TILE, (cb - 5) * TILE, TILE, 5 * TILE);
+                const flick = Math.floor(tick * 0.25) % 3;
+                const fc = [[255, 140, 0], [255, 80, 0], [255, 200, 0]][flick];
+                for (let fr = 0; fr < 3; fr++) {
+                    const fw = 3 - fr;
+                    const off2 = fr % 2 === 0 ? 0 : TILE;
+                    bgCtx.fillStyle = `rgba(${fc[0]}, ${fc[1]}, ${fc[2]}, ${0.9 - fr * 0.2})`;
+                    bgCtx.fillRect((tx - fw/2) * TILE + off2, (cb - 5 - fr - 1) * TILE, fw * TILE, TILE);
+                }
+                const grad = bgCtx.createRadialGradient((tx + 0.5) * TILE, (cb - 7) * TILE, 0, (tx + 0.5) * TILE, (cb - 7) * TILE, 8 * TILE);
+                grad.addColorStop(0, 'rgba(255,140,0,0.22)');
+                grad.addColorStop(1, 'rgba(255,100,0,0)');
+                bgCtx.fillStyle = grad;
+                bgCtx.fillRect((tx - 8) * TILE, (cb - 14) * TILE, 16 * TILE, 14 * TILE);
+            });
+            
+            // stars
+            STAR_GRID.forEach(s => {
+                const br = 0.4 + 0.6 * Math.abs(Math.sin(tick * s.speed + s.phase));
+                bgCtx.fillStyle = `rgba(255,250,220,${br})`;
+                if (br > 0.7) {
+                    bgCtx.fillRect(s.x * TILE, s.y * TILE, TILE, TILE);
+                    if (br > 0.9) {
+                        bgCtx.fillRect((s.x + 1) * TILE, s.y * TILE, TILE, TILE);
+                        bgCtx.fillRect(s.x * TILE, (s.y + 1) * TILE, TILE, TILE);
+                    }
+                } else {
+                    bgCtx.fillRect(s.x * TILE + 2, s.y * TILE + 2, TILE - 4, TILE - 4);
+                }
+            });
+            
+            // moon
+            const mx = Math.floor(cols * 0.82), my = 4;
+            const moonGlow = 0.7 + 0.3 * Math.sin(tick * 0.03);
+            const moonGrad = bgCtx.createRadialGradient((mx + 3) * TILE, (my + 3) * TILE, 0, (mx + 3) * TILE, (my + 3) * TILE, 10 * TILE);
+            moonGrad.addColorStop(0, `rgba(220,180,60,${0.3 * moonGlow})`);
+            moonGrad.addColorStop(1, 'rgba(200,140,20,0)');
+            bgCtx.fillStyle = moonGrad;
+            bgCtx.fillRect((mx - 7) * TILE, (my - 7) * TILE, 20 * TILE, 20 * TILE);
+            [[1,0,4],[0,1,6],[0,2,6],[0,3,6],[0,4,6],[0,5,6],[1,6,4]].forEach(([ox, oy, w]) => {
+                bgCtx.fillStyle = `rgba(240,210,80,${moonGlow})`;
+                bgCtx.fillRect((mx + ox) * TILE, (my + oy) * TILE, w * TILE, TILE);
+            });
+            
+            tick++;
+            requestAnimationFrame(drawBackground);
+        }
+        
+        drawBackground();
+        
+        /* ========== EMBERS ========== */
+        const embersContainer = document.getElementById('embers');
+        function spawnEmbers() {
+            [15, 48, 82].forEach(pct => {
+                for (let i = 0; i < 12; i++) {
+                    const e = document.createElement('div');
+                    e.className = 'ember';
+                    const spread = (Math.random() - 0.5) * 70;
+                    const size = Math.random() > 0.6 ? 6 : 4;
+                    e.style.cssText = `left:calc(${pct}% + ${spread}px); top:${65 + Math.random() * 12}%; animation-duration:${1.6 + Math.random() * 3.2}s; animation-delay:${-Math.random() * 6}s; width:${size}px; height:${size}px;`;
+                    e.style.setProperty('--ex', (Math.random() - 0.5) * 90 + 'px');
+                    e.style.setProperty('--ey', -(45 + Math.random() * 110) + 'px');
+                    embersContainer.appendChild(e);
+                }
+            });
+        }
+        spawnEmbers();
+        
+        /* ========== UNITY LOADER (FIXED LAYOUT) ========== */
+        const unityCanvas = document.querySelector("#unity-canvas");
+        
+        function unityShowBanner(msg, type) {
+            const warningDiv = document.querySelector("#unity-warning");
+            function updateVisibility() {
+                warningDiv.style.display = warningDiv.children.length ? 'block' : 'none';
+            }
+            const banner = document.createElement('div');
+            banner.innerHTML = msg;
+            if (type === 'error') {
+                banner.style = 'background:#600010;color:#f0a0a0;padding:8px 14px;font-family:"Press Start 2P",monospace;font-size:7px;border-bottom:1px solid #c01020;margin-bottom:2px;';
+            } else {
+                banner.style = 'background:#3a2800;color:#f0c030;padding:8px 14px;font-family:"Press Start 2P",monospace;font-size:7px;border-bottom:1px solid #7a6000;';
+            }
+            warningDiv.appendChild(banner);
+            setTimeout(() => {
+                if (warningDiv.contains(banner)) warningDiv.removeChild(banner);
+                updateVisibility();
+            }, 5000);
+            updateVisibility();
+        }
+        
+        const buildUrl = "{{ asset('unitygame/Build') }}";
+        const loaderUrl = buildUrl + "/unityFinal.loader.js";
+        const config = {
+            arguments: [],
+            dataUrl: buildUrl + "/unityFinal.data",
+            frameworkUrl: buildUrl + "/unityFinal.framework.js",
+            codeUrl: buildUrl + "/unityFinal.wasm",
+            streamingAssetsUrl: "{{ asset('unitygame/StreamingAssets') }}",
+            companyName: "ClashStudio",
+            productName: "ClashOfSubjects",
+            productVersion: "1.0",
+            showBanner: unityShowBanner,
+        };
+        
+        // force canvas dimensions to avoid distortion
+        if (!/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+            unityCanvas.style.width = "960px";
+            unityCanvas.style.height = "600px";
+        } else {
+            unityCanvas.style.width = "100%";
+            unityCanvas.style.height = "auto";
+            document.querySelector("#unity-container").style.transform = "scale(0.92)";
+        }
+        
+        document.querySelector("#unity-loading-bar").style.display = "flex";
+        
+        const script = document.createElement("script");
+        script.src = loaderUrl;
+        script.onload = () => {
+            createUnityInstance(unityCanvas, config, (progress) => {
+                const progressBar = document.querySelector("#unity-progress-bar-full");
+                if (progressBar) progressBar.style.width = (progress * 100) + "%";
+            }).then((unityInstance) => {
+                document.querySelector("#unity-loading-bar").style.display = "none";
+                const fullscreenBtn = document.querySelector("#unity-fullscreen-button");
+                if (fullscreenBtn) {
+                    fullscreenBtn.onclick = () => { unityInstance.SetFullscreen(1); };
+                }
+            }).catch((err) => {
+                console.warn("Unity error:", err);
+                const loadingDiv = document.querySelector("#unity-loading-bar");
+                if (loadingDiv) {
+                    loadingDiv.innerHTML = '<div style="color:#c01020;font-family:monospace;text-align:center;">⚠ REALM UNREACHABLE<br>RETRY LATER</div>';
+                }
+            });
+        };
+        document.body.appendChild(script);
+        
+        // manual resize to keep frame stable
+        window.addEventListener('resize', () => {
+            if (!unityCanvas) return;
+            if (window.innerWidth < 992) {
+                if (!/Mobi/i.test(navigator.userAgent)) unityCanvas.style.transform = "scale(0.96)";
+            } else {
+                unityCanvas.style.transform = "";
+            }
+        });
+
+        /* ============================================================
+           MOBILE KEYBOARD BRIDGE INTERACTION
+           ============================================================ */
+        (function() {
+            const mobileInput = document.getElementById('mobile-text-input');
+            const btnBackspace = document.getElementById('mobile-btn-backspace');
+            const btnEnter = document.getElementById('mobile-btn-enter');
+            
+            if (!mobileInput || !unityCanvas) return;
+
+            // Character keyboard event mapping function
+            function getKeyCodeAndCode(char) {
+                const upper = char.toUpperCase();
+                
+                // Defaults
+                let keyCode = upper.charCodeAt(0);
+                let keyEventCode = "Key" + upper;
+                
+                if (char === "Backspace") {
+                    return { key: "Backspace", code: "Backspace", keyCode: 8 };
+                }
+                if (char === "Enter") {
+                    return { key: "Enter", code: "Enter", keyCode: 13 };
+                }
+                if (char === " ") {
+                    return { key: " ", code: "Space", keyCode: 32 };
+                }
+                
+                // Numbers
+                if (char >= "0" && char <= "9") {
+                    return { key: char, code: "Digit" + char, keyCode: char.charCodeAt(0) };
+                }
+                
+                // Symbols mapping
+                const symbols = {
+                    "-": { code: "Minus", keyCode: 189 },
+                    "=": { code: "Equal", keyCode: 187 },
+                    "[": { code: "BracketLeft", keyCode: 219 },
+                    "]": { code: "BracketRight", keyCode: 221 },
+                    "\\": { code: "Backslash", keyCode: 220 },
+                    ";": { code: "Semicolon", keyCode: 186 },
+                    "'": { code: "Quote", keyCode: 222 },
+                    ",": { code: "Comma", keyCode: 188 },
+                    ".": { code: "Period", keyCode: 190 },
+                    "/": { code: "Slash", keyCode: 191 },
+                    "`": { code: "Backquote", keyCode: 192 }
+                };
+                
+                if (symbols[char]) {
+                    return { key: char, code: symbols[char].code, keyCode: symbols[char].keyCode };
+                }
+                
+                // Shifted symbols mapping
+                const shiftedSymbols = {
+                    "!": { key: "!", code: "Digit1", keyCode: 49 },
+                    "@": { key: "@", code: "Digit2", keyCode: 50 },
+                    "#": { key: "#", code: "Digit3", keyCode: 51 },
+                    "$": { key: "$", code: "Digit4", keyCode: 52 },
+                    "%": { key: "%", code: "Digit5", keyCode: 53 },
+                    "^": { key: "^", code: "Digit6", keyCode: 54 },
+                    "&": { key: "&", code: "Digit7", keyCode: 55 },
+                    "*": { key: "*", code: "Digit8", keyCode: 56 },
+                    "(": { key: "(", code: "Digit9", keyCode: 57 },
+                    ")": { key: ")", code: "Digit0", keyCode: 48 },
+                    "_": { key: "_", code: "Minus", keyCode: 189 },
+                    "+": { key: "+", code: "Equal", keyCode: 187 },
+                    "{": { key: "{", code: "BracketLeft", keyCode: 219 },
+                    "}": { key: "}", code: "BracketRight", keyCode: 221 },
+                    "|": { key: "|", code: "Backslash", keyCode: 220 },
+                    ":": { key: ":", code: "Semicolon", keyCode: 186 },
+                    '"': { key: '"', code: "Quote", keyCode: 222 },
+                    "<": { key: "<", code: "Comma", keyCode: 188 },
+                    ">": { key: ">", code: "Period", keyCode: 190 },
+                    "?": { key: "?", code: "Slash", keyCode: 191 },
+                    "~": { key: "~", code: "Backquote", keyCode: 192 }
+                };
+                
+                if (shiftedSymbols[char]) {
+                    return shiftedSymbols[char];
+                }
+                
+                return { key: char, code: keyEventCode, keyCode: keyCode };
+            }
+
+            // Keyboard event simulation function
+            function simulateKeyPress(char) {
+                const info = getKeyCodeAndCode(char);
+                const isUpper = /^[A-Z]$/.test(char);
+                const shiftRequired = isUpper || ["!", "@", "#", "$", "%", "^", "&", "*", "(", ")", "_", "+", "{", "}", "|", ":", '"', "<", ">", "?"].includes(char);
+                
+                // Keydown
+                const downEvent = new KeyboardEvent("keydown", {
+                    key: info.key,
+                    code: info.code,
+                    keyCode: info.keyCode,
+                    which: info.keyCode,
+                    shiftKey: shiftRequired,
+                    bubbles: true,
+                    cancelable: true
+                });
+                
+                // Keypress
+                let pressEvent = null;
+                if (char !== "Backspace" && char !== "Enter") {
+                    pressEvent = new KeyboardEvent("keypress", {
+                        key: info.key,
+                        code: info.code,
+                        keyCode: info.key.charCodeAt(0),
+                        which: info.key.charCodeAt(0),
+                        charCode: info.key.charCodeAt(0),
+                        shiftKey: shiftRequired,
+                        bubbles: true,
+                        cancelable: true
+                    });
+                }
+                
+                // Keyup
+                const upEvent = new KeyboardEvent("keyup", {
+                    key: info.key,
+                    code: info.code,
+                    keyCode: info.keyCode,
+                    which: info.keyCode,
+                    shiftKey: shiftRequired,
+                    bubbles: true,
+                    cancelable: true
+                });
+                
+                unityCanvas.dispatchEvent(downEvent);
+                if (pressEvent) unityCanvas.dispatchEvent(pressEvent);
+                unityCanvas.dispatchEvent(upEvent);
+            }
+
+            let prevVal = '';
+            let backspaceHandled = false;
+
+            // Handle Backspace & Enter via keydown
+            mobileInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.keyCode === 13) {
+                    simulateKeyPress('Enter');
+                    mobileInput.value = '';
+                    prevVal = '';
+                    e.preventDefault();
+                } else if (e.key === 'Backspace' || e.keyCode === 8) {
+                    simulateKeyPress('Backspace');
+                    backspaceHandled = true;
+                }
+            });
+
+            // Handle standard alphanumeric typing
+            mobileInput.addEventListener('input', () => {
+                const currentVal = mobileInput.value;
+                
+                if (currentVal.length > prevVal.length) {
+                    const addedChars = currentVal.substring(prevVal.length);
+                    for (let i = 0; i < addedChars.length; i++) {
+                        simulateKeyPress(addedChars[i]);
+                    }
+                } else if (currentVal.length < prevVal.length) {
+                    if (!backspaceHandled) {
+                        const deletedCount = prevVal.length - currentVal.length;
+                        for (let i = 0; i < deletedCount; i++) {
+                            simulateKeyPress('Backspace');
+                        }
+                    }
+                }
+                
+                backspaceHandled = false;
+                prevVal = currentVal;
+            });
+
+            // UI helper button actions
+            btnBackspace.addEventListener('click', (e) => {
+                e.preventDefault();
+                simulateKeyPress('Backspace');
+                if (mobileInput.value.length > 0) {
+                    mobileInput.value = mobileInput.value.slice(0, -1);
+                    prevVal = mobileInput.value;
+                }
+                mobileInput.focus();
+            });
+
+            btnEnter.addEventListener('click', (e) => {
+                e.preventDefault();
+                simulateKeyPress('Enter');
+                mobileInput.value = '';
+                prevVal = '';
+                mobileInput.focus();
+            });
+        })();
+    </script>
+</body>
+</html>

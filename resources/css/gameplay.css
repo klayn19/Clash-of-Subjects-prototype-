@@ -1,0 +1,9 @@
+body {
+    background-color: #241c40; 
+    /* BINAGO: Tumaas ang opacity sa 0.5 (50%) - Gawing mas maliwanag */
+    background-image: radial-gradient(rgba(199, 131, 48, 0.5) 1px, transparent 1px); 
+    
+    background-size: 100px 100px; 
+    color: #FFFFFF; 
+    font-family: 'Press Start 2P', cursive;
+}

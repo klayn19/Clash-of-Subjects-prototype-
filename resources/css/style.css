@@ -1,0 +1,169 @@
+/* HYPER-PIXELATED, RETRO RPG-STYLE LOGIN DESIGN */
+
+body {
+    margin: 0;
+    font-family: 'Press Start 2P', 'Courier New', monospace;
+   background-image: url("../images/backgroundlogin.png");
+    background-size: cover;
+    background-position: center;
+    image-rendering: pixelated;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    -webkit-font-smoothing: none;
+    -moz-osx-font-smoothing: grayscale;
+    font-smooth: never;
+}
+
+
+/* Pixelated retro window box */
+.form-container {
+    background: #bfbfbf; /* Slightly darker gray like old RPG menus */
+    padding: 28px;
+    border-radius: 0;
+
+    /* Thick pixel border + double border effect */
+    border: 6px solid #ffffff;
+    box-shadow:
+        0px 0px 0px 4px #000,    /* Outer thick black frame */
+        6px 6px 0px 0px #000;    /* Pixel shadow bottom-right */
+
+    width: 360px;
+    text-align: center;
+
+    /* IMPORTANT: kept from your code */
+    display: none;
+}
+
+.active {
+    display: block;
+}
+
+/* Title – retro RPG text with strong pixel shadow */
+h2 {
+    margin-bottom: 25px;
+    font-size: 22px;
+    color: #111;
+    -webkit-font-smoothing: none;
+    -moz-osx-font-smoothing: grayscale;
+    font-smooth: never;
+    text-rendering: geometricPrecision;
+}
+
+/* Inputs – more pixel depth */
+input {
+    width: 100%;
+    padding: 12px 14px;
+    margin: 10px 0;
+    border-radius: 0;
+    border: 4px solid #000;
+    outline: none;
+    font-size: 13px;
+    box-sizing: border-box;
+    background-color: #fff;
+    font-family: 'Press Start 2P', 'Courier New', monospace;
+
+    /* Inner pixel shadow for 3D look */
+    box-shadow: inset 3px 3px 0px #b2b2b2;
+    
+    /* Pixelated rendering */
+    -webkit-font-smoothing: none;
+    -moz-osx-font-smoothing: grayscale;
+    font-smooth: never;
+}
+
+/* Password wrapper and toggle */
+.password-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.password-wrapper input {
+    padding-right: 45px;
+}
+
+.password-wrapper .toggle-password {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    font-size: 18px;
+    color: #000;
+    background: none;
+    border: none;
+    outline: none;
+    text-shadow: 2px 2px 0 #fff;
+}
+
+.password-wrapper .toggle-password:hover {
+    color: #9100ff;
+}
+
+/* Pixel button - SUPER PIXELATED */
+button {
+    width: 100%;
+    padding: 14px;
+    background: #7d2ba8;
+    background-size: 6px 6px, 6px 6px, 100%;
+    background-position: 0 0, 0 0, 0 0;
+    color: #fff;
+    border-radius: 0;
+    border: 3px solid #fff;
+    outline: 3px solid #000;
+    outline-offset: -6px;
+    font-size: 14px;
+    cursor: pointer;
+    margin-top: 18px;
+    font-family: 'Press Start 2P', 'Courier New', monospace;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+
+    /* Pixel shadow */
+    box-shadow: 
+        0 0 0 3px #000,
+        5px 5px 0px #000;
+    transition: 0.05s linear;
+    
+    /* Pixelated rendering */
+    -webkit-font-smoothing: none;
+    -moz-osx-font-smoothing: grayscale;
+    font-smooth: never;
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+}
+
+button:hover {
+    background: #6a2491;
+    transform: translateY(-2px);
+    box-shadow: 
+        0 0 0 3px #000,
+        5px 7px 0px #000;
+}
+
+button:active {
+    transform: translate(4px, 4px);
+    box-shadow: 
+        0 0 0 3px #000,
+        1px 1px 0px #000;
+    background: #5a1d7a;
+}
+
+/* Links – improved readability */
+.link, .right-link a {
+    display: block;
+    margin-top: 10px;
+    font-size: 11px;
+    color: #663a7a;
+    cursor: pointer;
+    text-decoration: underline;
+    text-align: right;
+    padding-right: 6px;
+}
+
+.right-link {
+    text-align: right;
+    padding-right: 6px;
+}
