@@ -1,3 +1,4 @@
+# Force Render rebuild trigger
 # --- Stage 1: Build Frontend Assets ---
 FROM node:20-alpine AS assets-builder
 WORKDIR /app
