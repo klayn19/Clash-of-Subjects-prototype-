@@ -1,0 +1,12 @@
+/node_modules
+/vendor
+.env
+/public/storage
+/storage/*.key
+.git
+.github
+tests
+README.md
+.phpunit.result.cache
+poetry.lock
+pip-selfcheck.json
