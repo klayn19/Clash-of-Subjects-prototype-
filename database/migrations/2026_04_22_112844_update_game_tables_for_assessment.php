@@ -18,8 +18,12 @@ return new class extends Migration
             }
         });
 
-        // Modifying ENUM column natively in MySQL without doctrine/dbal
-        \Illuminate\Support\Facades\DB::statement("ALTER TABLE questions MODIFY COLUMN type ENUM('quiz', 'exam', 'assessment') NOT NULL");
+        // Modifying column natively in MySQL without doctrine/dbal
+        if (\Illuminate\Support\Facades\DB::getDriverName() === 'mysql') {
+            \Illuminate\Support\Facades\DB::statement("ALTER TABLE questions MODIFY COLUMN type ENUM('quiz', 'exam', 'assessment') NOT NULL");
+        } else {
+            \Illuminate\Support\Facades\DB::statement("ALTER TABLE questions ALTER COLUMN type TYPE VARCHAR(100), ALTER COLUMN type SET NOT NULL");
+        }
 
         // 2. Update student_scores table
         Schema::table('student_scores', function (Blueprint $table) {
@@ -31,7 +35,11 @@ return new class extends Migration
             }
         });
 
-        \Illuminate\Support\Facades\DB::statement("ALTER TABLE student_scores MODIFY COLUMN type ENUM('quiz', 'exam', 'assessment') NOT NULL");
+        if (\Illuminate\Support\Facades\DB::getDriverName() === 'mysql') {
+            \Illuminate\Support\Facades\DB::statement("ALTER TABLE student_scores MODIFY COLUMN type ENUM('quiz', 'exam', 'assessment') NOT NULL");
+        } else {
+            \Illuminate\Support\Facades\DB::statement("ALTER TABLE student_scores ALTER COLUMN type TYPE VARCHAR(100), ALTER COLUMN type SET NOT NULL");
+        }
     }
 
     public function down(): void
@@ -41,12 +49,20 @@ return new class extends Migration
             $table->dropColumn('sequence_number');
         });
 
-        \Illuminate\Support\Facades\DB::statement("ALTER TABLE questions MODIFY COLUMN type ENUM('quiz', 'exam') NOT NULL");
+        if (\Illuminate\Support\Facades\DB::getDriverName() === 'mysql') {
+            \Illuminate\Support\Facades\DB::statement("ALTER TABLE questions MODIFY COLUMN type ENUM('quiz', 'exam') NOT NULL");
+        } else {
+            \Illuminate\Support\Facades\DB::statement("ALTER TABLE questions ALTER COLUMN type TYPE VARCHAR(100), ALTER COLUMN type SET NOT NULL");
+        }
 
         Schema::table('student_scores', function (Blueprint $table) {
             $table->dropColumn(['quarter', 'sequence_number']);
         });
 
-        \Illuminate\Support\Facades\DB::statement("ALTER TABLE student_scores MODIFY COLUMN type ENUM('quiz', 'exam') NOT NULL");
+        if (\Illuminate\Support\Facades\DB::getDriverName() === 'mysql') {
+            \Illuminate\Support\Facades\DB::statement("ALTER TABLE student_scores MODIFY COLUMN type ENUM('quiz', 'exam') NOT NULL");
+        } else {
+            \Illuminate\Support\Facades\DB::statement("ALTER TABLE student_scores ALTER COLUMN type TYPE VARCHAR(100), ALTER COLUMN type SET NOT NULL");
+        }
     }
 };

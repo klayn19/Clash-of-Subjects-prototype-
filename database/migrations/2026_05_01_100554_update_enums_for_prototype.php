@@ -11,8 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        \Illuminate\Support\Facades\DB::statement("ALTER TABLE questions MODIFY COLUMN type ENUM('quiz', 'exam', 'assessment', 'prototype') NOT NULL");
-        \Illuminate\Support\Facades\DB::statement("ALTER TABLE student_scores MODIFY COLUMN type ENUM('quiz', 'exam', 'assessment', 'prototype') NOT NULL");
+        if (\Illuminate\Support\Facades\DB::getDriverName() === 'mysql') {
+            \Illuminate\Support\Facades\DB::statement("ALTER TABLE questions MODIFY COLUMN type ENUM('quiz', 'exam', 'assessment', 'prototype') NOT NULL");
+            \Illuminate\Support\Facades\DB::statement("ALTER TABLE student_scores MODIFY COLUMN type ENUM('quiz', 'exam', 'assessment', 'prototype') NOT NULL");
+        } else {
+            \Illuminate\Support\Facades\DB::statement("ALTER TABLE questions ALTER COLUMN type TYPE VARCHAR(100), ALTER COLUMN type SET NOT NULL");
+            \Illuminate\Support\Facades\DB::statement("ALTER TABLE student_scores ALTER COLUMN type TYPE VARCHAR(100), ALTER COLUMN type SET NOT NULL");
+        }
     }
 
     /**
@@ -20,7 +25,12 @@ return new class extends Migration
      */
     public function down(): void
     {
-        \Illuminate\Support\Facades\DB::statement("ALTER TABLE questions MODIFY COLUMN type ENUM('quiz', 'exam', 'assessment') NOT NULL");
-        \Illuminate\Support\Facades\DB::statement("ALTER TABLE student_scores MODIFY COLUMN type ENUM('quiz', 'exam', 'assessment') NOT NULL");
+        if (\Illuminate\Support\Facades\DB::getDriverName() === 'mysql') {
+            \Illuminate\Support\Facades\DB::statement("ALTER TABLE questions MODIFY COLUMN type ENUM('quiz', 'exam', 'assessment') NOT NULL");
+            \Illuminate\Support\Facades\DB::statement("ALTER TABLE student_scores MODIFY COLUMN type ENUM('quiz', 'exam', 'assessment') NOT NULL");
+        } else {
+            \Illuminate\Support\Facades\DB::statement("ALTER TABLE questions ALTER COLUMN type TYPE VARCHAR(100), ALTER COLUMN type SET NOT NULL");
+            \Illuminate\Support\Facades\DB::statement("ALTER TABLE student_scores ALTER COLUMN type TYPE VARCHAR(100), ALTER COLUMN type SET NOT NULL");
+        }
     }
 };
