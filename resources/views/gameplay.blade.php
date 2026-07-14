@@ -491,6 +491,7 @@
                 display: flex;
             }
         }
+<<<<<<< HEAD
 
         /* ===== MOBILE KEYBOARD HELPER BAR ===== */
         #mobile-input-bar {
@@ -684,10 +685,13 @@
                 display: flex;
             }
         }
+=======
+>>>>>>> prototype-repo/main
     </style>
 </head>
 <body>
 
+<<<<<<< HEAD
     <!-- PORTRAIT ORIENTATION OVERLAY -->
     <div id="portrait-rotate-overlay">
         <div class="rotate-box">
@@ -703,6 +707,8 @@
         </div>
     </div>
 
+=======
+>>>>>>> prototype-repo/main
     <!-- MOBILE WARNING OVERLAY -->
     <div id="mobile-warning-overlay">
         <div class="mobile-warning-box">
@@ -788,6 +794,7 @@
         </div>
     </div>
 
+<<<<<<< HEAD
     <!-- MOBILE KEYBOARD HELPER BAR -->
     <div id="mobile-input-bar">
         <div class="mobile-input-header">⌨️ MOBILE KEYBOARD HELPER (TAP IN-GAME TEXTBOX FIRST):</div>
@@ -800,6 +807,8 @@
         </div>
     </div>
 
+=======
+>>>>>>> prototype-repo/main
     <script>
         /* ============================================================
            RETRO PIXEL BACKGROUND
@@ -1077,6 +1086,7 @@
                 unityCanvas.style.transform = "";
             }
         });
+<<<<<<< HEAD
 
         /* ============================================================
            MOBILE KEYBOARD BRIDGE INTERACTION
@@ -1267,6 +1277,8 @@
                 mobileInput.focus();
             });
         })();
+=======
+>>>>>>> prototype-repo/main
     </script>
 </body>
 </html>
