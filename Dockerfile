@@ -27,8 +27,12 @@ ENV APP_DEBUG false
 ENV LOG_CHANNEL stderr
 ENV COMPOSER_ALLOW_SUPERUSER 1
 
-# Automatically run composer install on startup (which also optimizes autoloader in production)
-ENV SKIP_COMPOSER 0
+# Run composer install during image build (utilizing higher RAM constraints on Render's build servers)
+ENV APP_KEY base64:hJ6vF1yId3Pi8HfYThadryS8bfDI0ZtLYH/DMsPTsc0=
+RUN composer install --no-dev --optimize-autoloader
+
+# Skip composer install on container startup
+ENV SKIP_COMPOSER 1
 
 # Create the startup deploy script inside the Linux build container to avoid CRLF line-ending / shell errors on Windows host.
 RUN mkdir -p /var/www/html/scripts && \
