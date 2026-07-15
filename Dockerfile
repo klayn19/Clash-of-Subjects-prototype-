@@ -11,7 +11,8 @@ RUN npm run build
 FROM richarvey/nginx-php-fpm:3.1.6
 WORKDIR /var/www/html
 
-# Copy project files
+# Copy project files (includes conf/nginx/nginx-site.conf which richarvey/nginx-php-fpm
+# auto-detects at startup to configure proper try_files for Laravel routing)
 COPY . .
 
 # Copy built CSS/JS assets from Node build stage
