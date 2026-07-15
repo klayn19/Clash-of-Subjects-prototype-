@@ -46,6 +46,8 @@ RUN mkdir -p /var/www/html/scripts && \
     echo 'php artisan view:cache' >> /var/www/html/scripts/00-laravel-deploy.sh && \
     echo 'echo "Running migrations..."' >> /var/www/html/scripts/00-laravel-deploy.sh && \
     echo 'php artisan migrate --force' >> /var/www/html/scripts/00-laravel-deploy.sh && \
+    echo 'echo "Seeding default accounts..."' >> /var/www/html/scripts/00-laravel-deploy.sh && \
+    echo 'php artisan db:seed --force' >> /var/www/html/scripts/00-laravel-deploy.sh && \
     chmod +x /var/www/html/scripts/00-laravel-deploy.sh
 
 CMD ["/start.sh"]

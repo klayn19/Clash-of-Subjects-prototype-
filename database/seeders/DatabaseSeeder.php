@@ -15,15 +15,27 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Create default Admin
-        if (!User::where('email', 'admin@gmail.com')->exists()) {
+        // ── Admin Account ────────────────────────────────────────────
+        if (!User::where('email', 'admin@cos.com')->exists()) {
             User::create([
                 'first_name' => 'System',
                 'last_name'  => 'Admin',
-                'age'        => 30, // just a default
-                'email'      => 'admin@gmail.com',
-                'password'   => \Illuminate\Support\Facades\Hash::make('password'),
+                'age'        => 30,
+                'email'      => 'admin@cos.com',
+                'password'   => \Illuminate\Support\Facades\Hash::make('admin1234'),
                 'role'       => 'admin',
+            ]);
+        }
+
+        // ── Teacher Account ──────────────────────────────────────────
+        if (!User::where('email', 'teacher@cos.com')->exists()) {
+            User::create([
+                'first_name' => 'Test',
+                'last_name'  => 'Teacher',
+                'age'        => 28,
+                'email'      => 'teacher@cos.com',
+                'password'   => \Illuminate\Support\Facades\Hash::make('teacher1234'),
+                'role'       => 'teacher',
             ]);
         }
     }
