@@ -24,9 +24,12 @@ ENV PHP_ERRORS_STDERR 1
 ENV RUN_SCRIPTS 1
 ENV REAL_IP_HEADER 1
 ENV APP_ENV production
-ENV APP_DEBUG false
+ENV APP_DEBUG true
 ENV LOG_CHANNEL stderr
 ENV COMPOSER_ALLOW_SUPERUSER 1
+# Use file-based sessions so no 'sessions' DB table is needed
+ENV SESSION_DRIVER file
+ENV CACHE_STORE file
 
 # Run composer install during image build (utilizing higher RAM constraints on Render's build servers)
 ENV APP_KEY base64:hJ6vF1yId3Pi8HfYThadryS8bfDI0ZtLYH/DMsPTsc0=
@@ -38,8 +41,8 @@ ENV SKIP_COMPOSER 1
 # Create the startup deploy script inside the Linux build container to avoid CRLF line-ending / shell errors on Windows host.
 RUN mkdir -p /var/www/html/scripts && \
     echo '#!/usr/bin/env bash' > /var/www/html/scripts/00-laravel-deploy.sh && \
-    echo 'echo "Caching configuration..."' >> /var/www/html/scripts/00-laravel-deploy.sh && \
-    echo 'php artisan config:cache' >> /var/www/html/scripts/00-laravel-deploy.sh && \
+    echo 'echo "Clearing config cache (using env vars directly)..."' >> /var/www/html/scripts/00-laravel-deploy.sh && \
+    echo 'php artisan config:clear' >> /var/www/html/scripts/00-laravel-deploy.sh && \
     echo 'echo "Caching routes..."' >> /var/www/html/scripts/00-laravel-deploy.sh && \
     echo 'php artisan route:cache' >> /var/www/html/scripts/00-laravel-deploy.sh && \
     echo 'echo "Caching views..."' >> /var/www/html/scripts/00-laravel-deploy.sh && \
