@@ -15,6 +15,41 @@ Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])->name
 Route::post('/reset-password',  [AuthController::class, 'resetPassword'])->name('resetPassword');
 Route::get('/logout',           [AuthController::class, 'logout'])->name('logout');
 
+// ─── ONE-TIME SETUP: creates admin & teacher if they don't exist ────
+Route::get('/setup-accounts', function () {
+    $created = [];
+
+    if (!\App\Models\User::where('email', 'admin@cos.com')->exists()) {
+        \App\Models\User::create([
+            'first_name' => 'System',
+            'last_name'  => 'Admin',
+            'age'        => 30,
+            'email'      => 'admin@cos.com',
+            'password'   => \Illuminate\Support\Facades\Hash::make('admin1234'),
+            'role'       => 'admin',
+        ]);
+        $created[] = 'Admin (admin@cos.com / admin1234)';
+    } else {
+        $created[] = 'Admin already exists (admin@cos.com)';
+    }
+
+    if (!\App\Models\User::where('email', 'teacher@cos.com')->exists()) {
+        \App\Models\User::create([
+            'first_name' => 'Test',
+            'last_name'  => 'Teacher',
+            'age'        => 28,
+            'email'      => 'teacher@cos.com',
+            'password'   => \Illuminate\Support\Facades\Hash::make('teacher1234'),
+            'role'       => 'teacher',
+        ]);
+        $created[] = 'Teacher (teacher@cos.com / teacher1234)';
+    } else {
+        $created[] = 'Teacher already exists (teacher@cos.com)';
+    }
+
+    return response()->json(['status' => 'done', 'accounts' => $created]);
+});
+
 // ─── GAMEPLAY ──────────────────────────────────────────────────────
 Route::get('/gameplay', function () {
     if (!session('user_id')) return redirect('/');
