@@ -317,7 +317,17 @@
     /* ===== TABLE SCROLL ===== */
     .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 
-    /* ===== MOBILE RESPONSIVE ===== */
+    /* ===== TABLET RESPONSIVE (769px – 1024px) ===== */
+    @media (min-width: 769px) and (max-width: 1024px) {
+      .sidebar { width: 155px; }
+      .nav-btn { font-size: 11px; padding: 12px 12px; }
+      .main { padding: 18px; }
+      .topbar { padding: 12px 20px; }
+      .topbar-title { font-size: 14px; }
+      .action-btn, .logout-btn { font-size: 11px; padding: 8px 13px; }
+    }
+
+    /* ===== MOBILE RESPONSIVE (≤768px) ===== */
     @media (max-width: 768px) {
       .hamburger { display: flex; }
 
@@ -362,6 +372,7 @@
       .action-btn span, .logout-btn span { display: none; }
       .panel { padding: 14px 12px; }
       .panel-title { font-size: 14px; }
+      .action-btn, .logout-btn { font-size: 9px; padding: 6px 8px; }
     }
 
     /* ===== NOTES CONTAINER ===== */

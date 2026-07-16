@@ -603,7 +603,26 @@
     /* ===== TABLE SCROLL ===== */
     .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 
-    /* ===== MOBILE RESPONSIVE ===== */
+    /* ===== TABLET RESPONSIVE (769px – 1024px) ===== */
+    @media (min-width: 769px) and (max-width: 1024px) {
+      .sidebar { width: 155px; }
+      .nav-btn { font-size: 11px; padding: 12px 12px; }
+      .main { padding: 18px; }
+      .topbar { padding: 12px 20px; }
+      .topbar-title { font-size: 14px; }
+      .topbar-subtitle { font-size: 12px; }
+      .topbar-gems { display: none; }
+      .logout-btn { font-size: 11px; padding: 8px 12px; }
+      .class-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 14px; }
+      .class-circle { width: 80px; height: 80px; font-size: 12px; }
+      .choices-grid { grid-template-columns: 1fr; }
+      .filter-row { flex-wrap: wrap; gap: 8px; }
+      .filter-row select[style], .filter-row input[style] { max-width: 180px; margin: 0 !important; }
+      .pixel-table th, .pixel-table td { padding: 8px 10px; font-size: 14px; }
+      .panel { padding: 18px; }
+    }
+
+    /* ===== MOBILE RESPONSIVE (≤768px) ===== */
     @media (max-width: 768px) {
       .hamburger { display: flex; }
       .sidebar {
@@ -625,10 +644,12 @@
       .logout-btn { font-size: 11px; padding: 7px 12px; }
       .main { padding: 14px; }
       .choices-grid { grid-template-columns: 1fr; }
+      .class-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; }
       .filter-row { flex-direction: column; align-items: flex-start; gap: 8px; }
-      .filter-row select, .filter-row input, .filter-row button { width: 100% !important; margin: 0 !important; }
+      .filter-row select, .filter-row input, .filter-row button { width: 100% !important; margin: 0 !important; max-width: 100%; }
       .pixel-table th, .pixel-table td { padding: 7px 10px; white-space: nowrap; font-size: 13px; }
-      .btn-row { justify-content: flex-start; width: 100%; }
+      .btn-row { justify-content: flex-start; width: 100%; flex-wrap: wrap; }
+      .modal-box { padding: 20px 16px; }
     }
 
     @media (max-width: 480px) {
@@ -636,6 +657,9 @@
       .panel { padding: 14px 12px; }
       .panel-title { font-size: 14px; }
       .pixel-btn { font-size: 10px; padding: 9px 12px; }
+      .logout-btn { font-size: 10px; padding: 6px 10px; }
+      .class-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+      .class-circle { width: 72px; height: 72px; font-size: 11px; }
     }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>

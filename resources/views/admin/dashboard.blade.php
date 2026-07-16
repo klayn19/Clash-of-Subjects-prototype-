@@ -153,7 +153,21 @@
     }
     .sidebar-overlay.open { display: block; }
 
-    /* ===== MOBILE RESPONSIVE ===== */
+    /* ===== TABLET RESPONSIVE (769px – 1024px) ===== */
+    @media (min-width: 769px) and (max-width: 1024px) {
+      .sidebar { width: 160px; }
+      .nav-btn { font-size: 11px; padding: 12px 12px; }
+      .main { padding: 18px; }
+      .topbar { padding: 12px 20px; }
+      .topbar-title { font-size: 14px; }
+      .topbar-subtitle { font-size: 12px; }
+      .panel { padding: 18px; }
+      .pixel-table th, .pixel-table td { padding: 8px 10px; font-size: 14px; }
+      .filter-row { flex-wrap: wrap; gap: 8px; }
+      .filter-row select[style], .filter-row input[style] { width: 100% !important; max-width: 200px; margin: 0 !important; }
+    }
+
+    /* ===== MOBILE RESPONSIVE (≤768px) ===== */
     @media (max-width: 768px) {
       .hamburger { display: flex; }
       .sidebar {
@@ -176,8 +190,9 @@
       .main { padding: 14px; }
       .form-grid { grid-template-columns: 1fr !important; }
       .filter-row { flex-direction: column; align-items: flex-start; gap: 8px; }
-      .filter-row select, .filter-row input { width: 100% !important; margin: 0 !important; }
+      .filter-row select, .filter-row input { width: 100% !important; margin: 0 !important; max-width: 100%; }
       .pixel-table th, .pixel-table td { padding: 7px 10px; white-space: nowrap; font-size: 13px; }
+      .btn-row { flex-wrap: wrap; }
     }
 
     @media (max-width: 480px) {
@@ -185,6 +200,7 @@
       .panel { padding: 14px 12px; }
       .panel-title { font-size: 14px; }
       .pixel-btn { font-size: 10px; padding: 9px 12px; }
+      .logout-btn { font-size: 10px; padding: 6px 10px; }
     }
   </style>
 </head>

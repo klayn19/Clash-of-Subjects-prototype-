@@ -29,7 +29,8 @@ body {
   align-items: center;
   justify-content: center;
   background: #050308;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
   position: relative;
 }
 
@@ -233,15 +234,28 @@ body {
   cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16'%3E%3Crect x='0' y='0' width='4' height='4' fill='%23f0a000'/%3E%3Crect x='0' y='4' width='4' height='4' fill='%23f0a000'/%3E%3Crect x='0' y='8' width='4' height='4' fill='%23f0a000'/%3E%3Crect x='4' y='4' width='4' height='4' fill='%23f0a000'/%3E%3Crect x='8' y='8' width='4' height='4' fill='%23f0a000'/%3E%3C/svg%3E") 0 0, default;
 }
 
-/* ===== MOBILE RESPONSIVE ===== */
-@media (max-width: 520px) {
+/* ===== TABLET RESPONSIVE (481px – 768px) ===== */
+@media (min-width: 481px) and (max-width: 768px) {
+  .card-wrap {
+    width: 94vw;
+    max-width: 520px;
+    padding: 30px 10px;
+  }
+  .card { padding: 30px 30px 34px; }
+  .crest-title { font-size: 22px; }
+  .tab-btn { font-size: 11px; padding: 12px 6px; }
+}
+
+/* ===== MOBILE RESPONSIVE (≤480px) ===== */
+@media (max-width: 480px) {
+  body { align-items: flex-start; padding: 12px 0; }
   .card-wrap {
     width: 100%;
     max-width: 100%;
-    padding: 20px 8px;
+    padding: 16px 6px;
   }
   .card {
-    padding: 24px 20px 28px;
+    padding: 22px 18px 26px;
     border-left: none;
     border-right: none;
   }
@@ -256,11 +270,12 @@ body {
   .strength-row { gap: 2px; }
 }
 
-@media (max-width: 380px) {
-  .card { padding: 20px 14px 24px; }
+@media (max-width: 360px) {
+  .card { padding: 18px 12px 22px; }
   .crest-title { font-size: 15px; letter-spacing: 0.06em; }
   .tabs { gap: 0; }
   .tab-btn { font-size: 9px; }
+  .field label { font-size: 10px; }
 }
 </style>
 </head>
