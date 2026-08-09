@@ -41,13 +41,10 @@ class ScoreController extends Controller
 
         $quarter        = max(1, min(4, (int) $request->input('quarter', 1)));
         $sequenceNumber = max(1, (int) $request->input('sequence_number', 1));
-        $correctInput = $request->input('correct') ?? $request->input('score') ?? $request->input('correct_answers') ?? $request->input('right') ?? 0;
-        $totalInput   = $request->input('total') ?? $request->input('total_questions') ?? $request->input('num_questions') ?? 1;
-
-        $correct  = max(0, (int) $correctInput);
-        $total    = max(1, (int) $totalInput);
-        $mistakes = max(0, $total - $correct);
-        $percent  = round(($correct / $total) * 100, 2);
+        $correct        = max(0, (int) $request->input('correct', 0));
+        $total          = max(1, (int) $request->input('total', 1));
+        $mistakes       = max(0, $total - $correct);
+        $percent        = round(($correct / $total) * 100, 2);
 
         // Fetch student's previous highest score for this subject/type
         $prevHighest = DB::table('student_scores')

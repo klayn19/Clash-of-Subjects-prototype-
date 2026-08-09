@@ -87,8 +87,6 @@ Route::post('/backend/unenroll_student.php',   [TeacherController::class, 'unenr
 Route::get('/backend/get_class_students.php',  [TeacherController::class, 'getClassStudents']);
 
 // ─── UNITY GAME API ────────────────────────────────────────────────
-// Called by Unity's QuizManager to fetch a question or save a score.
+// Called by Unity's QuizManager to fetch a question from the DB.
+// GET /api/get_question?class_id=3&subject=english&type=quiz&quarter=1&answered=1,2,5
 Route::any('/api/get_question', [TeacherController::class, 'getQuestion'])->name('api.getQuestion');
-Route::any('/api/save_score', [ScoreController::class, 'store'])->name('api.saveScore');
-Route::any('/api/student_high_score', [ScoreController::class, 'getHighScore'])->name('api.studentHighScore');
-

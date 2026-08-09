@@ -185,15 +185,19 @@ class TeacherController extends Controller
 
     // ─── GET QUESTION FOR UNITY GAME ─────────────────────────────
     // Called by Unity via GET /api/get_question
-    // Params: class_id, subject, type, quarter, sequence_number, answered
+    // Params: class_id, subject, type, quarter, student_id (optional, to avoid repeats)
     public function getQuestion(Request $request)
     {
         \Log::info('getQuestion hit: ', $request->all());
+        $request->validate([
+            'class_id'        => 'nullable|integer',
+            'subject'         => 'required|string',
+            'type'            => 'nullable|in:quiz,exam,assessment,prototype',
+            'quarter'         => 'nullable|integer|between:1,4',
+            'sequence_number' => 'nullable|integer|min:1',
+        ]);
 
-        $subjectInput = strtolower(trim($request->query('subject', 'english')));
-        if (empty($subjectInput)) {
-            $subjectInput = 'english';
-        }
+        $query = DB::table('questions');
 
         $classId = $request->query('class_id');
         if (empty($classId) && session('user_id')) {
@@ -205,103 +209,68 @@ class TeacherController extends Controller
             }
         }
 
+        if ($classId) {
+            $query->where('class_id', $classId);
+        } else {
+            $query->whereNull('class_id');
+        }
+        
+        $query->where('subject',  strtolower(trim($request->subject)));
+
+        if ($request->filled('type')) {
+            $query->where('type', $request->type);
+        }
+
+        if ($request->filled('quarter')) {
+            $query->where('quarter', $request->quarter);
+        }
+
+        if ($request->filled('sequence_number')) {
+            $query->where('sequence_number', $request->sequence_number);
+        }
+
+        // Count total matching questions before filtering answered
+        $totalQuestionsInPool = (clone $query)->count();
+
+        // Avoid repeating recently-seen questions for this student session
+        // Unity passes answered IDs as a comma-separated string: ?answered=1,2,5
         $answeredIds = [];
         if ($request->filled('answered')) {
             $answeredIds = array_filter(
                 array_map('intval', explode(',', $request->answered))
             );
-        }
-
-        // 1. Build base query for requested subject & class
-        $baseQuery = DB::table('questions')
-            ->whereRaw('LOWER(subject) = ?', [$subjectInput]);
-
-        if ($classId) {
-            $baseQuery->where(function($q) use ($classId) {
-                $q->where('class_id', $classId)->orWhereNull('class_id');
-            });
-        }
-
-        if ($request->filled('type')) {
-            $baseQuery->where('type', $request->type);
-        }
-
-        $totalQuestionsInPool = (clone $baseQuery)->count();
-
-        // 2. Fallback to subject search without class_id/type if 0 found
-        if ($totalQuestionsInPool === 0) {
-            $baseQuery = DB::table('questions')
-                ->whereRaw('LOWER(subject) = ?', [$subjectInput]);
-            $totalQuestionsInPool = (clone $baseQuery)->count();
-        }
-
-        // 3. Fallback to 'prototype' type if still 0 found
-        $isPrototype = false;
-        if ($totalQuestionsInPool === 0) {
-            $baseQuery = DB::table('questions')->where('type', 'prototype');
-            $totalQuestionsInPool = (clone $baseQuery)->count();
-            if ($totalQuestionsInPool > 0) {
-                $isPrototype = true;
+            if (!empty($answeredIds)) {
+                $query->whereNotIn('id', $answeredIds);
             }
         }
 
-        // 4. Fallback to ANY question in DB if still 0 found
-        if ($totalQuestionsInPool === 0) {
-            $baseQuery = DB::table('questions');
-            $totalQuestionsInPool = (clone $baseQuery)->count();
-        }
+        $remainingCount = (clone $query)->count();
+        $question = $query->inRandomOrder()->first();
 
-        if ($totalQuestionsInPool === 0) {
-            return response()->json([
-                'completed'      => true,
-                'cycle_finished' => true,
-                'error'          => 'No questions found in database. Ask your teacher to add questions.',
-                'is_last'        => true,
-                'remaining'      => 0,
-                'id'             => 0,
-                'question'       => 'No questions available.',
-                'A'              => '',
-                'B'              => '',
-                'C'              => '',
-                'D'              => '',
-                'answer'         => '',
-            ], 200);
-        }
-
-        // Filter out already answered question IDs
-        $unansweredQuery = (clone $baseQuery);
-        if (!empty($answeredIds)) {
-            $unansweredQuery->whereNotIn('id', $answeredIds);
-        }
-
-        $unansweredCount = (clone $unansweredQuery)->count();
-
-        // If player answered all available questions in this pool -> CYCLE COMPLETED!
-        if ($unansweredCount === 0 && !empty($answeredIds)) {
-            return response()->json([
-                'completed'      => true,
-                'cycle_finished' => true,
-                'message'        => 'Question cycle completed!',
-                'total_questions'=> $totalQuestionsInPool,
-                'is_last'        => true,
-                'remaining'      => 0,
-                'id'             => 0,
-                'question'       => 'Cycle Finished!',
-                'A'              => '',
-                'B'              => '',
-                'C'              => '',
-                'D'              => '',
-                'answer'         => '',
-            ], 200);
-        }
-
-        $question = $unansweredQuery->inRandomOrder()->first();
+        $isPrototype = false;
+        // If no regular question found, try to fetch a prototype question
         if (!$question) {
-            // Fallback: pick any random question from pool
-            $question = (clone $baseQuery)->inRandomOrder()->first();
+            $prototypeQuery = DB::table('questions')->where('type', 'prototype');
+            $totalQuestionsInPool = (clone $prototypeQuery)->count();
+            
+            if ($request->filled('answered') && !empty($answeredIds)) {
+                $prototypeQuery->whereNotIn('id', $answeredIds);
+            }
+
+            $remainingCount = (clone $prototypeQuery)->count();
+            $question = $prototypeQuery->inRandomOrder()->first();
+            $isPrototype = true;
         }
 
-        $remainingAfterThis = max(0, $unansweredCount - 1);
+        if (!$question) {
+            return response()->json([
+                'completed'      => true,
+                'cycle_finished' => true,
+                'error'          => 'No questions found for this class/subject/quarter. Ask your teacher to add questions.',
+            ], 404);
+        }
+
+        $remainingAfterThis = max(0, $remainingCount - 1);
         $isLast = ($remainingAfterThis === 0);
 
         return response()->json([
@@ -311,7 +280,7 @@ class TeacherController extends Controller
             'B'               => $question->choice_b,
             'C'               => $question->choice_c,
             'D'               => $question->choice_d,
-            'answer'          => strtoupper(trim($question->answer)),
+            'answer'          => $question->answer,
             'is_last'         => $isLast,
             'remaining'       => $remainingAfterThis,
             'total_questions' => $totalQuestionsInPool,

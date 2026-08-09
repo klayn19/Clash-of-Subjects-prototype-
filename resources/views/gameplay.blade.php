@@ -828,8 +828,6 @@
 
     <!-- NETWORK REQUEST INTERCEPTOR & SCORE TRACKER -->
     <script>
-        let isCycleFinishedHandled = false;
-
         function redirectGameApiUrl(urlStr) {
             if (typeof urlStr === 'string') {
                 if (urlStr.includes('get_question')) {
@@ -846,45 +844,6 @@
             return urlStr;
         }
 
-        async function handleCycleCompletedEvent(data) {
-            if (isCycleFinishedHandled) return;
-            isCycleFinishedHandled = true;
-
-            if (!data || data.correct === undefined) {
-                try {
-                    const res = await originalFetch(window.location.origin + '/api/student_high_score');
-                    const hsData = await res.json();
-                    if (hsData && hsData.success) {
-                        data = data || {};
-                        data.correct = hsData.highest_correct || 0;
-                        data.total = hsData.highest_correct || 1;
-                        data.percent = hsData.highest_percent || 0;
-                        data.highest_percent = hsData.highest_percent || 0;
-                    }
-                } catch(e) {}
-            }
-            showQuestionResultsModal(data || { force_show: true });
-        }
-
-        function processApiResponse(urlStr, data) {
-            if (!urlStr || typeof urlStr !== 'string') return;
-
-            if (urlStr.includes('save_score')) {
-                if (data && (data.success || data.correct !== undefined)) {
-                    isCycleFinishedHandled = true;
-                    showQuestionResultsModal(data);
-                }
-            } else if (urlStr.includes('get_question')) {
-                if (data && (data.completed || data.cycle_finished)) {
-                    setTimeout(() => {
-                        if (!isCycleFinishedHandled) {
-                            handleCycleCompletedEvent(data);
-                        }
-                    }, 800);
-                }
-            }
-        }
-
         const originalFetch = window.fetch;
         window.fetch = async function(...args) {
             if (args[0]) {
@@ -893,11 +852,13 @@
             const response = await originalFetch.apply(this, args);
             try {
                 const urlStr = typeof args[0] === 'string' ? args[0] : (args[0] && args[0].url ? args[0].url : '');
-                if (urlStr.includes('save_score') || urlStr.includes('get_question')) {
+                if (urlStr.includes('save_score')) {
                     const clone = response.clone();
                     clone.json().then(data => {
-                        processApiResponse(urlStr, data);
-                    }).catch(e => console.log('Response parse error:', e));
+                        if (data && (data.success || data.correct !== undefined)) {
+                            showQuestionResultsModal(data);
+                        }
+                    }).catch(e => console.log('Score parse error:', e));
                 }
             } catch(e) {}
             return response;
@@ -917,10 +878,12 @@
         window.XMLHttpRequest.prototype.send = function(...args) {
             this.addEventListener('load', function() {
                 try {
-                    if (this._reqUrl && (this._reqUrl.includes('save_score') || this._reqUrl.includes('get_question'))) {
+                    if (this._reqUrl && this._reqUrl.includes('save_score')) {
                         let data = null;
                         try { data = JSON.parse(this.responseText); } catch(e) {}
-                        processApiResponse(this._reqUrl, data);
+                        if (data && (data.success || data.correct !== undefined)) {
+                            showQuestionResultsModal(data);
+                        }
                     }
                 } catch(e) {}
             });
@@ -1605,13 +1568,6 @@
             const correct = parseInt(data.correct !== undefined ? data.correct : 0);
             const mistakes = parseInt(data.mistakes !== undefined ? data.mistakes : (data.total ? Math.max(0, data.total - correct) : 0));
             const total = parseInt(data.total !== undefined ? data.total : (correct + mistakes));
-
-            // Prevent displaying empty 0/0 modal
-            if (total <= 0 && !data.force_show) {
-                console.warn('showQuestionResultsModal ignored empty data:', data);
-                return;
-            }
-
             const percent = data.percent !== undefined ? parseFloat(data.percent) : (total > 0 ? Math.round((correct / total) * 100) : 0);
             const highestPercent = data.highest_percent !== undefined ? parseFloat(data.highest_percent) : Math.max(percent, 0);
             const isHighScore = Boolean(data.is_new_high_score || (highestPercent > 0 && percent >= highestPercent));
