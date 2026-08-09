@@ -14,43 +14,29 @@ class ScoreController extends Controller
      */
     public function store(Request $request)
     {
-        $studentId = (int) ($request->input('student_id') ?: session('user_id'));
-        if (!$studentId) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unauthenticated student session'
-            ], 401);
-        }
+        $request->validate([
+            'student_id'      => 'required|integer|exists:users,id',
+            'class_id'        => 'nullable|integer',
+            'subject'         => 'required|string|max:100',
+            'type'            => 'required|in:quiz,exam,assessment,prototype',
+            'quarter'         => 'required|integer|between:1,4',
+            'sequence_number' => 'required|integer|min:1',
+            'correct'         => 'required|integer|min:0',
+            'total'           => 'required|integer|min:1',
+        ]);
 
-        // Auto-resolve class_id if missing
-        $classId = $request->input('class_id');
-        if (empty($classId)) {
-            $enrolledClass = DB::table('class_students')
-                ->where('student_id', $studentId)
-                ->first();
-            if ($enrolledClass) {
-                $classId = $enrolledClass->class_id;
-            }
-        }
+        $studentId = (int) $request->student_id;
+        $subject   = strtolower(trim($request->subject));
+        $correct   = (int) $request->correct;
+        $total     = (int) $request->total;
+        $mistakes  = max(0, $total - $correct);
+        $percent   = $total > 0 ? round(($correct / $total) * 100, 2) : 0;
 
-        $subject = strtolower(trim($request->input('subject', 'english')));
-        $type    = strtolower(trim($request->input('type', 'quiz')));
-        if (!in_array($type, ['quiz', 'exam', 'assessment', 'prototype'])) {
-            $type = 'quiz';
-        }
-
-        $quarter        = max(1, min(4, (int) $request->input('quarter', 1)));
-        $sequenceNumber = max(1, (int) $request->input('sequence_number', 1));
-        $correct        = max(0, (int) $request->input('correct', 0));
-        $total          = max(1, (int) $request->input('total', 1));
-        $mistakes       = max(0, $total - $correct);
-        $percent        = round(($correct / $total) * 100, 2);
-
-        // Fetch student's previous highest score for this subject/type
+        // Fetch student's previous highest score for this subject/type (or overall)
         $prevHighest = DB::table('student_scores')
             ->where('student_id', $studentId)
             ->where('subject', $subject)
-            ->where('type', $type)
+            ->where('type', $request->type)
             ->select(
                 DB::raw('MAX(correct) as max_correct'),
                 DB::raw('MAX(percent) as max_percent')
@@ -66,11 +52,11 @@ class ScoreController extends Controller
 
         DB::table('student_scores')->insert([
             'student_id'      => $studentId,
-            'class_id'        => $classId ?: null,
+            'class_id'        => $request->class_id ?: null,
             'subject'         => $subject,
-            'type'            => $type,
-            'quarter'         => $quarter,
-            'sequence_number' => $sequenceNumber,
+            'type'            => $request->type,
+            'quarter'         => $request->quarter,
+            'sequence_number' => $request->sequence_number,
             'correct'         => $correct,
             'total'           => $total,
             'percent'         => $percent,

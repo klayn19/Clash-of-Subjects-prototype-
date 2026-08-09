@@ -826,8 +826,11 @@
         <i class="fas fa-expand"></i> TAP HERE TO ENTER FULLSCREEN ARENA
     </div>
 
-    <!-- NETWORK REQUEST INTERCEPTOR & SCORE TRACKER -->
+    <!-- NETWORK REQUEST INTERCEPTOR & CYCLE END DETECTOR -->
     <script>
+        let isLastQuestionReached = false;
+        let isCycleModalShown = false;
+
         function redirectGameApiUrl(urlStr) {
             if (typeof urlStr === 'string') {
                 if (urlStr.includes('get_question')) {
@@ -844,6 +847,42 @@
             return urlStr;
         }
 
+        async function handleCycleCompletedEvent(data) {
+            if (isCycleModalShown) return;
+
+            // Try to fetch student's overall high score if missing
+            if (!data || data.highest_percent === undefined) {
+                try {
+                    const res = await originalFetch(window.location.origin + '/api/student_high_score');
+                    const hsData = await res.json();
+                    if (hsData && hsData.success) {
+                        data = data || {};
+                        data.highest_percent = hsData.highest_percent;
+                        data.highest_correct = hsData.highest_correct;
+                    }
+                } catch(e) {}
+            }
+            
+            isCycleModalShown = true;
+            showQuestionResultsModal(data || {});
+        }
+
+        function handleQuestionResponseData(urlStr, status, data) {
+            if (urlStr.includes('save_score')) {
+                if (data && (data.success || data.correct !== undefined)) {
+                    handleCycleCompletedEvent(data);
+                }
+            } else if (urlStr.includes('get_question')) {
+                if (status === 404 || (data && (data.completed || data.cycle_finished))) {
+                    // No more questions left in pool -> Cycle Finished!
+                    handleCycleCompletedEvent(data || {});
+                } else if (data && data.is_last) {
+                    isLastQuestionReached = true;
+                    console.log('⚔️ Last question in cycle reached!');
+                }
+            }
+        }
+
         const originalFetch = window.fetch;
         window.fetch = async function(...args) {
             if (args[0]) {
@@ -852,13 +891,15 @@
             const response = await originalFetch.apply(this, args);
             try {
                 const urlStr = typeof args[0] === 'string' ? args[0] : (args[0] && args[0].url ? args[0].url : '');
-                if (urlStr.includes('save_score')) {
+                if (urlStr.includes('save_score') || urlStr.includes('get_question')) {
                     const clone = response.clone();
                     clone.json().then(data => {
-                        if (data && (data.success || data.correct !== undefined)) {
-                            showQuestionResultsModal(data);
+                        handleQuestionResponseData(urlStr, response.status, data);
+                    }).catch(() => {
+                        if (response.status === 404 && urlStr.includes('get_question')) {
+                            handleCycleCompletedEvent({ completed: true });
                         }
-                    }).catch(e => console.log('Score parse error:', e));
+                    });
                 }
             } catch(e) {}
             return response;
@@ -878,12 +919,10 @@
         window.XMLHttpRequest.prototype.send = function(...args) {
             this.addEventListener('load', function() {
                 try {
-                    if (this._reqUrl && this._reqUrl.includes('save_score')) {
+                    if (this._reqUrl && (this._reqUrl.includes('save_score') || this._reqUrl.includes('get_question'))) {
                         let data = null;
                         try { data = JSON.parse(this.responseText); } catch(e) {}
-                        if (data && (data.success || data.correct !== undefined)) {
-                            showQuestionResultsModal(data);
-                        }
+                        handleQuestionResponseData(this._reqUrl, this.status, data);
                     }
                 } catch(e) {}
             });
