@@ -58,6 +58,7 @@ Route::get('/gameplay', function () {
 
 // ─── STUDENT DASHBOARD ─────────────────────────────────────────────
 Route::get('/student/dashboard', [\App\Http\Controllers\StudentController::class, 'index'])->name('student.dashboard');
+Route::get('/student/general-knowledge', [\App\Http\Controllers\GeneralKnowledgeController::class, 'index'])->name('general.knowledge.play');
 
 // ─── ADMIN DASHBOARD ───────────────────────────────────────────────
 Route::get('/admin/dashboard', [AdminController::class, 'index'])->name('admin.dashboard');

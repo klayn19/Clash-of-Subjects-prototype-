@@ -118,6 +118,20 @@
     }
     .action-btn:active { transform: translate(2px,2px); box-shadow: 1px 1px 0 var(--gold-dim); }
 
+    .gk-btn {
+      background: var(--green);
+      color: #fff;
+      border-color: #2ecc71;
+      box-shadow: 3px 3px 0 #1b7a43;
+    }
+    .gk-btn:hover {
+      background: #2ecc71 !important;
+      box-shadow: 4px 4px 0 #1b7a43 !important;
+    }
+    .gk-btn:active {
+      box-shadow: 1px 1px 0 #1b7a43 !important;
+    }
+
     .logout-btn {
       background: var(--blue-mid);
       color: var(--gold);
@@ -425,6 +439,7 @@
       </div>
     </div>
     <div>
+      <a href="{{ route('general.knowledge.play') }}" class="action-btn gk-btn"><i class="fas fa-brain"></i> GK ARENA</a>
       <a href="{{ route('gameplay') }}" class="action-btn"><i class="fas fa-gamepad"></i> LAUNCH GAMEPLAY</a>
       <a href="{{ route('logout') }}" class="logout-btn"><i class="fas fa-sign-out-alt"></i> LOGOUT</a>
     </div>
