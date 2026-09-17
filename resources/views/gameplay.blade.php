@@ -564,6 +564,16 @@
             }
         }
 
+        @media (min-width: 992px) {
+            #fullscreen-hud-btn {
+                display: none;
+            }
+
+            #mobile-input-bar {
+                display: none !important;
+            }
+        }
+
         /* ===== QUESTION CYCLE RESULTS MODAL ===== */
         .results-modal-backdrop {
             display: none;
@@ -821,11 +831,6 @@
         </div>
     </div>
 
-    <!-- FULLSCREEN PROMPT OVERLAY -->
-    <div id="fullscreen-prompt-overlay" onclick="toggleFullscreen()">
-        <i class="fas fa-expand"></i> TAP HERE TO ENTER FULLSCREEN ARENA
-    </div>
-
     <!-- NETWORK REQUEST INTERCEPTOR & CYCLE END DETECTOR -->
     <script>
         let isLastQuestionReached = false;
@@ -957,7 +962,7 @@
                 <i class="fas fa-keyboard"></i> <span class="btn-label">KEYBOARD</span>
             </button>
             <button id="fit-toggle-btn" class="hud-btn" title="Toggle Aspect Mode (Fit / Stretch)" onclick="toggleFitMode()">
-                <i class="fas fa-compress-alt"></i> <span class="btn-label">FIT</span>
+                <i class="fas fa-expand-alt"></i> <span class="btn-label">STRETCH</span>
             </button>
             <button id="fullscreen-hud-btn" class="hud-btn" title="Toggle Fullscreen Arena" onclick="toggleFullscreen()">
                 <i class="fas fa-expand"></i> <span class="btn-label">FULLSCREEN</span>
@@ -1180,7 +1185,7 @@
         /* ============================================================
            AUTO-FIT GAMEPLAY CANVAS (MAXIMIZED VIEWPORT)
            ============================================================ */
-        let fitMode = 'FIT'; // 'FIT' (preserve aspect ratio) or 'STRETCH'
+        let fitMode = 'STRETCH'; // 'FIT' (preserve aspect ratio) or 'STRETCH'
 
         function fitGameToViewport() {
             const container = document.getElementById('unity-container');
@@ -1258,35 +1263,6 @@
             }
         }
 
-        function autoLaunchFullscreen() {
-            const docEl = document.documentElement;
-            const requestFS = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.mozRequestFullScreen || docEl.msRequestFullscreen;
-            
-            if (requestFS && !document.fullscreenElement && !document.webkitFullscreenElement) {
-                requestFS.call(docEl).then(() => {
-                    const prompt = document.getElementById('fullscreen-prompt-overlay');
-                    if (prompt) prompt.style.display = 'none';
-                }).catch(() => {
-                    // Autoplay blocked fullscreen without interaction - show tap prompt
-                    const prompt = document.getElementById('fullscreen-prompt-overlay');
-                    if (prompt && (window.innerWidth <= 991 || window.navigator.maxTouchPoints > 0)) {
-                        prompt.style.display = 'block';
-                    }
-                });
-            }
-        }
-
-        // Tap screen once to auto-launch fullscreen seamlessly
-        const autoFullscreenHandler = () => {
-            if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-                autoLaunchFullscreen();
-            }
-            const prompt = document.getElementById('fullscreen-prompt-overlay');
-            if (prompt) prompt.style.display = 'none';
-        };
-        window.addEventListener('click', autoFullscreenHandler, { once: true });
-        window.addEventListener('touchstart', autoFullscreenHandler, { once: true, passive: true });
-
         /* ============================================================
            HUD VISIBILITY TOGGLE
            ============================================================ */
@@ -1357,9 +1333,6 @@
             }).then((unityInstance) => {
                 globalUnityInstance = unityInstance;
                 document.querySelector("#unity-loading-bar").style.display = "none";
-                
-                // Launch fullscreen default on ready
-                autoLaunchFullscreen();
 
             }).catch((err) => {
                 console.warn("Unity error:", err);
@@ -1407,7 +1380,7 @@
 
             // Automatically open mobile keyboard overlay on canvas touch / click
             const handleCanvasTouch = () => {
-                const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (window.innerWidth <= 991);
+                const isTouch = window.innerWidth <= 991 && (('ontouchstart' in window) || navigator.maxTouchPoints > 0);
                 if (isTouch) {
                     toggleMobileKeyboard(true);
                 }

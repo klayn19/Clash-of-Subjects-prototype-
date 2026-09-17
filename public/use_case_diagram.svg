@@ -1,0 +1,470 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2920 1960" width="2920" height="1960">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap');
+      * { font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+      .title { font-size: 36px; font-weight: 800; fill: #0f172a; letter-spacing: -0.5px; }
+      .subtitle { font-size: 18px; font-weight: 500; fill: #475569; }
+      .module-title { font-size: 19px; font-weight: 700; fill: #1e293b; }
+      .actor-label { font-size: 20px; font-weight: 800; fill: #0f172a; text-anchor: middle; }
+      .actor-sub { font-size: 13px; font-weight: 500; fill: #64748b; text-anchor: middle; }
+      .uc-text { font-size: 15px; font-weight: 700; fill: #1e293b; text-anchor: middle; }
+      .uc-sub { font-size: 12px; font-weight: 500; fill: #64748b; text-anchor: middle; }
+      .legend-text { font-size: 14px; font-weight: 600; fill: #334155; }
+    </style>
+
+    <filter id="shadow" x="-8%" y="-8%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#0f172a" flood-opacity="0.07" />
+    </filter>
+    <filter id="card-shadow" x="-4%" y="-2%" width="108%" height="106%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#0f172a" flood-opacity="0.05" />
+    </filter>
+    <filter id="actor-glow-green" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#059669" flood-opacity="0.18" />
+    </filter>
+    <filter id="actor-glow-purple" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#7c3aed" flood-opacity="0.18" />
+    </filter>
+    <filter id="actor-glow-red" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#dc2626" flood-opacity="0.18" />
+    </filter>
+
+    <marker id="arrow-green" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#059669" />
+    </marker>
+    <marker id="arrow-amber" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#d97706" />
+    </marker>
+    <marker id="arrow-red" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#dc2626" />
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="2920" height="1960" fill="#f8fafc" />
+
+  <!-- Grid decoration -->
+  <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+    <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#e2e8f0" stroke-width="0.8" opacity="0.6"/>
+  </pattern>
+  <rect width="2920" height="1960" fill="url(#grid)" />
+
+  <!-- ============================================================== -->
+  <!-- TOP BANNER                                                     -->
+  <!-- ============================================================== -->
+  <g transform="translate(80, 40)">
+    <rect x="0" y="0" width="2760" height="84" rx="16" fill="#ffffff" filter="url(#shadow)" stroke="#e2e8f0" stroke-width="1"/>
+    <rect x="0" y="0" width="10" height="84" rx="4" fill="#2563eb"/>
+    <text x="35" y="40" class="title">CLASH OF SUBJECTS (COS) — UNIFIED USE CASE DIAGRAM</text>
+    <text x="35" y="68" class="subtitle">Complete UML Specification of User Roles, Educational RPG Gameplay Loop, and Institutional Systems</text>
+    
+    <!-- Legend -->
+    <g transform="translate(1880, 20)">
+      <line x1="0" y1="22" x2="40" y2="22" stroke="#64748b" stroke-width="2.2" />
+      <circle cx="20" cy="22" r="3" fill="#64748b" />
+      <text x="48" y="27" class="legend-text">Association</text>
+
+      <line x1="150" y1="22" x2="190" y2="22" stroke="#059669" stroke-width="2" stroke-dasharray="5,4" marker-end="url(#arrow-green)" />
+      <text x="198" y="27" class="legend-text">&lt;&lt;include&gt;&gt;</text>
+
+      <rect x="300" y="10" width="22" height="22" rx="6" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+      <text x="330" y="27" class="legend-text">Sub-module</text>
+
+      <ellipse cx="445" cy="21" rx="15" ry="11" fill="#ffffff" stroke="#059669" stroke-width="2" />
+      <text x="468" y="27" class="legend-text">Use Case</text>
+    </g>
+  </g>
+
+  <!-- ============================================================== -->
+  <!-- SYSTEM BOUNDARY BOX                                            -->
+  <!-- ============================================================== -->
+  <g transform="translate(450, 150)">
+    <rect x="0" y="0" width="2020" height="1760" rx="24" fill="#ffffff" stroke="#cbd5e1" stroke-width="2.5" filter="url(#card-shadow)" />
+    
+    <!-- Tag -->
+    <path d="M 0 24 Q 0 0 24 0 L 460 0 L 490 44 L 0 44 Z" fill="#0f172a" />
+    <text x="24" y="29" fill="#ffffff" font-size="15" font-weight="800" letter-spacing="1">SYSTEM BOUNDARY :</text>
+    <text x="210" y="29" fill="#60a5fa" font-size="15" font-weight="700">CLASH OF SUBJECTS PLATFORM</text>
+
+    <!-- ============================================================== -->
+    <!-- MODULE 1 (TOP): STUDENT & RPG COMBAT ARENA                     -->
+    <!-- ============================================================== -->
+    <g transform="translate(25, 60)">
+      <rect x="0" y="0" width="1970" height="570" rx="18" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5" />
+      <rect x="0" y="0" width="1970" height="42" rx="18" fill="#f1f5f9" />
+      <rect x="0" y="28" width="1970" height="14" fill="#f1f5f9" />
+      <text x="22" y="28" class="module-title">🎮 1. Student Learning Portal &amp; Unity RPG Combat Arena</text>
+
+      <!-- Left Sub-Panel: Dashboard -->
+      <rect x="25" y="60" width="460" height="485" rx="14" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.2"/>
+      <text x="45" y="92" font-size="14" font-weight="700" fill="#047857" letter-spacing="0.5">STUDENT DASHBOARD &amp; PROGRESS</text>
+
+      <g id="uc-studdash" transform="translate(255, 150)">
+        <ellipse cx="0" cy="0" rx="160" ry="34" fill="#f0fdf4" stroke="#059669" stroke-width="2" filter="url(#shadow)"/>
+        <text x="0" y="-3" class="uc-text">View Student Dashboard</text>
+        <text x="0" y="16" class="uc-sub">(Overall Scores &amp; Game History)</text>
+      </g>
+
+      <g id="uc-viewgrades" transform="translate(255, 245)">
+        <ellipse cx="0" cy="0" rx="160" ry="34" fill="#f0fdf4" stroke="#059669" stroke-width="2" filter="url(#shadow)"/>
+        <text x="0" y="-3" class="uc-text">View Subject Grades</text>
+        <text x="0" y="16" class="uc-sub">(Math, Science, English Mastery %)</text>
+      </g>
+
+      <g id="uc-viewnotes" transform="translate(255, 340)">
+        <ellipse cx="0" cy="0" rx="160" ry="34" fill="#f0fdf4" stroke="#059669" stroke-width="2" filter="url(#shadow)"/>
+        <text x="0" y="-3" class="uc-text">View Teacher Notes</text>
+        <text x="0" y="16" class="uc-sub">(Teacher Guidance &amp; Study Advice)</text>
+      </g>
+
+      <g id="uc-leaderboard" transform="translate(255, 435)">
+        <ellipse cx="0" cy="0" rx="160" ry="34" fill="#f0fdf4" stroke="#059669" stroke-width="2" filter="url(#shadow)"/>
+        <text x="0" y="-3" class="uc-text">View Leaderboards &amp; Ranks</text>
+        <text x="0" y="16" class="uc-sub">(Top Players &amp; High Score Trophies)</text>
+      </g>
+
+      <!-- Right Sub-Panel: Combat Arena Core -->
+      <rect x="510" y="60" width="1435" height="485" rx="14" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.2"/>
+      <text x="535" y="92" font-size="14" font-weight="700" fill="#0284c7" letter-spacing="0.5">UNITY WEBGL RPG ARENA &amp; COMBAT CYCLE</text>
+
+      <g id="uc-launchgame" transform="translate(710, 230)">
+        <ellipse cx="0" cy="0" rx="165" ry="40" fill="#ecfdf5" stroke="#059669" stroke-width="3" filter="url(#shadow)"/>
+        <text x="0" y="-4" class="uc-text" font-size="16" font-weight="800">Launch RPG Arena</text>
+        <text x="0" y="18" class="uc-sub">(Embedded WebGL Client)</text>
+      </g>
+
+      <g id="uc-single" transform="translate(1080, 155)">
+        <ellipse cx="0" cy="0" rx="160" ry="36" fill="#f0fdf4" stroke="#059669" stroke-width="2" filter="url(#shadow)"/>
+        <text x="0" y="-3" class="uc-text">Play Singleplayer Mode</text>
+        <text x="0" y="16" class="uc-sub">(Quiz: 15Q / Exam: 50Q by Quarter)</text>
+      </g>
+
+      <g id="uc-multi" transform="translate(1080, 310)">
+        <ellipse cx="0" cy="0" rx="160" ry="36" fill="#f0f9ff" stroke="#0284c7" stroke-width="2.5" filter="url(#shadow)"/>
+        <text x="0" y="-3" class="uc-text" fill="#0369a1">Play Multiplayer Duel</text>
+        <text x="0" y="16" class="uc-sub">(Mixed Subject Cycle Match)</text>
+      </g>
+
+      <g id="uc-timer" transform="translate(1440, 230)">
+        <ellipse cx="0" cy="0" rx="165" ry="38" fill="#fffbeb" stroke="#d97706" stroke-width="2.5" filter="url(#shadow)"/>
+        <text x="0" y="-3" class="uc-text" fill="#b45309">Answer with 10s Timer</text>
+        <text x="0" y="17" class="uc-sub">(Auto-advances on 0s or Player Choice)</text>
+      </g>
+
+      <g id="uc-combat" transform="translate(1770, 230)">
+        <ellipse cx="0" cy="0" rx="160" ry="38" fill="#fef2f2" stroke="#dc2626" stroke-width="2.5" filter="url(#shadow)"/>
+        <text x="0" y="-3" class="uc-text" fill="#b91c1c">Turn-Based Combat</text>
+        <text x="0" y="17" class="uc-sub">(Attack Enemy / Take Damage)</text>
+      </g>
+
+      <g id="uc-results" transform="translate(1440, 420)">
+        <ellipse cx="0" cy="0" rx="165" ry="36" fill="#f0fdf4" stroke="#059669" stroke-width="2" filter="url(#shadow)"/>
+        <text x="0" y="-3" class="uc-text">View Cycle Results</text>
+        <text x="0" y="16" class="uc-sub">(Accuracy %, Score Saved to DB)</text>
+      </g>
+
+      <!-- Inclusions -->
+      <path d="M 850 195 C 900 175, 920 165, 920 155" fill="none" stroke="#059669" stroke-width="2" stroke-dasharray="5,4" marker-end="url(#arrow-green)"/>
+      <rect x="850" y="160" width="75" height="18" rx="4" fill="#ffffff" stroke="#059669" stroke-width="0.8"/>
+      <text x="887" y="173" font-size="10" font-weight="700" fill="#059669" text-anchor="middle">&lt;&lt;include&gt;&gt;</text>
+
+      <path d="M 850 265 C 900 285, 920 295, 920 310" fill="none" stroke="#059669" stroke-width="2" stroke-dasharray="5,4" marker-end="url(#arrow-green)"/>
+      <rect x="850" y="280" width="75" height="18" rx="4" fill="#ffffff" stroke="#059669" stroke-width="0.8"/>
+      <text x="887" y="293" font-size="10" font-weight="700" fill="#059669" text-anchor="middle">&lt;&lt;include&gt;&gt;</text>
+
+      <path d="M 1240 175 C 1260 190, 1270 205, 1280 215" fill="none" stroke="#d97706" stroke-width="2" stroke-dasharray="5,4" marker-end="url(#arrow-amber)"/>
+      <rect x="1225" y="188" width="75" height="18" rx="4" fill="#ffffff" stroke="#d97706" stroke-width="0.8"/>
+      <text x="1262" y="201" font-size="10" font-weight="700" fill="#d97706" text-anchor="middle">&lt;&lt;include&gt;&gt;</text>
+
+      <path d="M 1240 290 C 1260 275, 1270 260, 1280 245" fill="none" stroke="#d97706" stroke-width="2" stroke-dasharray="5,4" marker-end="url(#arrow-amber)"/>
+      <rect x="1225" y="260" width="75" height="18" rx="4" fill="#ffffff" stroke="#d97706" stroke-width="0.8"/>
+      <text x="1262" y="273" font-size="10" font-weight="700" fill="#d97706" text-anchor="middle">&lt;&lt;include&gt;&gt;</text>
+
+      <line x1="1605" y1="230" x2="1610" y2="230" stroke="#dc2626" stroke-width="2" stroke-dasharray="5,4" marker-end="url(#arrow-red)"/>
+      <rect x="1575" y="221" width="75" height="18" rx="4" fill="#ffffff" stroke="#dc2626" stroke-width="0.8"/>
+      <text x="1612" y="234" font-size="10" font-weight="700" fill="#dc2626" text-anchor="middle">&lt;&lt;include&gt;&gt;</text>
+
+      <path d="M 1720 268 C 1680 340, 1580 385, 1550 400" fill="none" stroke="#059669" stroke-width="2" stroke-dasharray="5,4" marker-end="url(#arrow-green)"/>
+      <rect x="1620" y="325" width="75" height="18" rx="4" fill="#ffffff" stroke="#059669" stroke-width="0.8"/>
+      <text x="1657" y="338" font-size="10" font-weight="700" fill="#059669" text-anchor="middle">&lt;&lt;include&gt;&gt;</text>
+    </g>
+
+    <!-- ============================================================== -->
+    <!-- MODULE 2: TEACHER MANAGEMENT (Middle Left)                     -->
+    <!-- ============================================================== -->
+    <g transform="translate(25, 655)">
+      <rect x="0" y="0" width="1070" height="490" rx="18" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5" />
+      <rect x="0" y="0" width="1070" height="42" rx="18" fill="#f1f5f9" />
+      <rect x="0" y="28" width="1070" height="14" fill="#f1f5f9" />
+      <text x="22" y="28" class="module-title">👨‍🏫 2. Teacher Classroom &amp; Question Management</text>
+
+      <!-- Col 1 (Directly adjacent to Teacher) -->
+      <g id="uc-teachdash" transform="translate(250, 110)">
+        <ellipse cx="0" cy="0" rx="160" ry="34" fill="#f5f3ff" stroke="#7c3aed" stroke-width="2.5" filter="url(#shadow)"/>
+        <text x="0" y="-3" class="uc-text" fill="#5b21b6">Teacher Dashboard</text>
+        <text x="0" y="16" class="uc-sub">(Overview of Classes &amp; Roster)</text>
+      </g>
+
+      <g id="uc-classes" transform="translate(250, 205)">
+        <ellipse cx="0" cy="0" rx="160" ry="34" fill="#ffffff" stroke="#7c3aed" stroke-width="2" filter="url(#shadow)"/>
+        <text x="0" y="-3" class="uc-text">Manage Classes</text>
+        <text x="0" y="16" class="uc-sub">(Create, Rename, Delete Class)</text>
+      </g>
+
+      <g id="uc-questions" transform="translate(250, 300)">
+        <ellipse cx="0" cy="0" rx="160" ry="34" fill="#ffffff" stroke="#7c3aed" stroke-width="2" filter="url(#shadow)"/>
+        <text x="0" y="-3" class="uc-text">Curate Question Bank</text>
+        <text x="0" y="16" class="uc-sub">(Subject, Quarter, Quiz/Exam)</text>
+      </g>
+
+      <g id="uc-analytics" transform="translate(250, 395)">
+        <ellipse cx="0" cy="0" rx="160" ry="34" fill="#ffffff" stroke="#7c3aed" stroke-width="2" filter="url(#shadow)"/>
+        <text x="0" y="-3" class="uc-text">Monitor Student Analytics</text>
+        <text x="0" y="16" class="uc-sub">(Student Accuracy &amp; Strengths)</text>
+      </g>
+
+      <!-- Col 2 (Associated Features) -->
+      <g id="uc-roster" transform="translate(780, 110)">
+        <ellipse cx="0" cy="0" rx="160" ry="34" fill="#ffffff" stroke="#7c3aed" stroke-width="2" filter="url(#shadow)"/>
+        <text x="0" y="-3" class="uc-text">Manage Class Roster</text>
+        <text x="0" y="16" class="uc-sub">(Enroll / Unenroll Students)</text>
+      </g>
+
+      <g id="uc-notes" transform="translate(780, 205)">
+        <ellipse cx="0" cy="0" rx="160" ry="34" fill="#ffffff" stroke="#7c3aed" stroke-width="2" filter="url(#shadow)"/>
+        <text x="0" y="-3" class="uc-text">Write Student Notes</text>
+        <text x="0" y="16" class="uc-sub">(Individual Feedback / Advice)</text>
+      </g>
+
+      <g id="uc-alerts" transform="translate(780, 300)">
+        <ellipse cx="0" cy="0" rx="160" ry="34" fill="#fffbeb" stroke="#d97706" stroke-width="2.5" filter="url(#shadow)"/>
+        <text x="0" y="-3" class="uc-text" fill="#b45309">Trigger Low-Grade Alerts</text>
+        <text x="0" y="16" class="uc-sub">(Automated Email Notification)</text>
+      </g>
+
+      <g id="uc-prototype" transform="translate(780, 395)">
+        <ellipse cx="0" cy="0" rx="160" ry="34" fill="#ffffff" stroke="#7c3aed" stroke-width="2" filter="url(#shadow)"/>
+        <text x="0" y="-3" class="uc-text">Record Prototype Grades</text>
+        <text x="0" y="16" class="uc-sub">(Manual Score Entry &amp; Override)</text>
+      </g>
+
+      <!-- Internal clean associations between related use cases -->
+      <line x1="410" y1="110" x2="620" y2="110" stroke="#7c3aed" stroke-width="1.5" stroke-dasharray="4,3"/>
+      <line x1="410" y1="205" x2="620" y2="205" stroke="#7c3aed" stroke-width="1.5" stroke-dasharray="4,3"/>
+      <line x1="410" y1="395" x2="620" y2="300" stroke="#d97706" stroke-width="1.5" stroke-dasharray="4,3"/>
+      <line x1="410" y1="395" x2="620" y2="395" stroke="#7c3aed" stroke-width="1.5" stroke-dasharray="4,3"/>
+    </g>
+
+    <!-- ============================================================== -->
+    <!-- MODULE 3: AUTHENTICATION & ACCESS (Middle Right)               -->
+    <!-- ============================================================== -->
+    <g transform="translate(1125, 655)">
+      <rect x="0" y="0" width="870" height="490" rx="18" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5" />
+      <rect x="0" y="0" width="870" height="42" rx="18" fill="#f1f5f9" />
+      <rect x="0" y="28" width="870" height="14" fill="#f1f5f9" />
+      <text x="22" y="28" class="module-title">🔐 3. Authentication &amp; System Access</text>
+
+      <g id="uc-reg" transform="translate(230, 120)">
+        <ellipse cx="0" cy="0" rx="150" ry="34" fill="#ffffff" stroke="#2563eb" stroke-width="2" filter="url(#shadow)"/>
+        <text x="0" y="-3" class="uc-text">Register Account</text>
+        <text x="0" y="16" class="uc-sub">(Student Account Creation)</text>
+      </g>
+
+      <g id="uc-login" transform="translate(640, 120)">
+        <ellipse cx="0" cy="0" rx="150" ry="34" fill="#eff6ff" stroke="#2563eb" stroke-width="2.5" filter="url(#shadow)"/>
+        <text x="0" y="-3" class="uc-text" fill="#1d4ed8">Login / Authenticate</text>
+        <text x="0" y="16" class="uc-sub">(Role-Based Redirection)</text>
+      </g>
+
+      <g id="uc-forgot" transform="translate(230, 250)">
+        <ellipse cx="0" cy="0" rx="150" ry="34" fill="#ffffff" stroke="#2563eb" stroke-width="2" filter="url(#shadow)"/>
+        <text x="0" y="-3" class="uc-text">Reset Password</text>
+        <text x="0" y="16" class="uc-sub">(Email Token Verification)</text>
+      </g>
+
+      <g id="uc-profile" transform="translate(640, 250)">
+        <ellipse cx="0" cy="0" rx="150" ry="34" fill="#ffffff" stroke="#2563eb" stroke-width="2" filter="url(#shadow)"/>
+        <text x="0" y="-3" class="uc-text">Manage Profile &amp; LRN</text>
+        <text x="0" y="16" class="uc-sub">(Name, Age, LRN Number)</text>
+      </g>
+
+      <g id="uc-logout" transform="translate(435, 380)">
+        <ellipse cx="0" cy="0" rx="140" ry="32" fill="#ffffff" stroke="#2563eb" stroke-width="2" filter="url(#shadow)"/>
+        <text x="0" y="-2" class="uc-text">Logout System</text>
+        <text x="0" y="15" class="uc-sub">(Session Termination)</text>
+      </g>
+    </g>
+
+    <!-- ============================================================== -->
+    <!-- MODULE 4: SYSTEM ADMINISTRATION & GOVERNANCE (Bottom)          -->
+    <!-- ============================================================== -->
+    <g transform="translate(25, 1170)">
+      <rect x="0" y="0" width="1970" height="560" rx="18" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5" />
+      <rect x="0" y="0" width="1970" height="42" rx="18" fill="#f1f5f9" />
+      <rect x="0" y="28" width="1970" height="14" fill="#f1f5f9" />
+      <text x="22" y="28" class="module-title">🛡️ 4. System Administration &amp; Institutional Governance</text>
+
+      <g id="uc-admindash" transform="translate(300, 160)">
+        <ellipse cx="0" cy="0" rx="170" ry="38" fill="#fef2f2" stroke="#dc2626" stroke-width="2.5" filter="url(#shadow)"/>
+        <text x="0" y="-3" class="uc-text" fill="#991b1b">Access Admin Dashboard</text>
+        <text x="0" y="17" class="uc-sub">(School-Wide Metrics &amp; Monitoring)</text>
+      </g>
+
+      <g id="uc-regteacher" transform="translate(760, 160)">
+        <ellipse cx="0" cy="0" rx="165" ry="36" fill="#ffffff" stroke="#dc2626" stroke-width="2" filter="url(#shadow)"/>
+        <text x="0" y="-3" class="uc-text">Register Teacher Accounts</text>
+        <text x="0" y="16" class="uc-sub">(Provision Faculty Access)</text>
+      </g>
+
+      <g id="uc-sections" transform="translate(1220, 160)">
+        <ellipse cx="0" cy="0" rx="165" ry="36" fill="#ffffff" stroke="#dc2626" stroke-width="2" filter="url(#shadow)"/>
+        <text x="0" y="-3" class="uc-text">Manage Sections &amp; Grades</text>
+        <text x="0" y="16" class="uc-sub">(Add, Edit, Delete Class Sections)</text>
+      </g>
+
+      <g id="uc-records" transform="translate(1680, 160)">
+        <ellipse cx="0" cy="0" rx="165" ry="36" fill="#ffffff" stroke="#dc2626" stroke-width="2" filter="url(#shadow)"/>
+        <text x="0" y="-3" class="uc-text">Update Student Records</text>
+        <text x="0" y="16" class="uc-sub">(LRN Modification &amp; Sectioning)</text>
+      </g>
+
+      <g id="uc-schoolanalytics" transform="translate(990, 360)">
+        <ellipse cx="0" cy="0" rx="180" ry="40" fill="#ffffff" stroke="#dc2626" stroke-width="2" filter="url(#shadow)"/>
+        <text x="0" y="-3" class="uc-text">Review School-Wide Analytics</text>
+        <text x="0" y="17" class="uc-sub">(Aggregated Grade Map &amp; Passing Rate)</text>
+      </g>
+
+      <!-- Internal clean associations for Admin -->
+      <line x1="470" y1="160" x2="595" y2="160" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="4,3"/>
+      <line x1="925" y1="160" x2="1055" y2="160" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="4,3"/>
+      <line x1="1385" y1="160" x2="1515" y2="160" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="4,3"/>
+      <path d="M 300 198 C 300 360, 750 360, 810 360" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="4,3"/>
+    </g>
+
+  </g> <!-- End System Boundary -->
+
+  <!-- ============================================================== -->
+  <!-- ACTORS (Left: Primary Human Roles)                             -->
+  <!-- ============================================================== -->
+
+  <!-- ACTOR 1: STUDENT (Top Left) -->
+  <g id="actor-student" transform="translate(220, 390)">
+    <rect x="-140" y="-120" width="280" height="230" rx="20" fill="#ffffff" stroke="#059669" stroke-width="2.5" filter="url(#actor-glow-green)"/>
+    <circle cx="0" cy="-60" r="22" fill="#d1fae5" stroke="#059669" stroke-width="3.5" />
+    <path d="M 0 -38 L 0 10 M -28 -15 L 28 -15 M 0 10 L -20 45 M 0 10 L 20 45" stroke="#059669" stroke-width="3.5" stroke-linecap="round" fill="none" />
+    <text x="0" y="75" class="actor-label" fill="#065f46">👤 STUDENT</text>
+    <text x="0" y="97" class="actor-sub">Learner &amp; Arena Combatant</text>
+  </g>
+
+  <!-- ACTOR 2: TEACHER (Middle Left) -->
+  <g id="actor-teacher" transform="translate(220, 940)">
+    <rect x="-140" y="-120" width="280" height="230" rx="20" fill="#ffffff" stroke="#7c3aed" stroke-width="2.5" filter="url(#actor-glow-purple)"/>
+    <circle cx="0" cy="-60" r="22" fill="#ede9fe" stroke="#7c3aed" stroke-width="3.5" />
+    <path d="M 0 -38 L 0 10 M -28 -15 L 28 -15 M 0 10 L -20 45 M 0 10 L 20 45" stroke="#7c3aed" stroke-width="3.5" stroke-linecap="round" fill="none" />
+    <text x="0" y="75" class="actor-label" fill="#5b21b6">👨‍🏫 TEACHER</text>
+    <text x="0" y="97" class="actor-sub">Educator &amp; Curriculum Manager</text>
+  </g>
+
+  <!-- ACTOR 3: SYSTEM ADMIN (Bottom Left) -->
+  <g id="actor-admin" transform="translate(220, 1490)">
+    <rect x="-140" y="-120" width="280" height="230" rx="20" fill="#ffffff" stroke="#dc2626" stroke-width="2.5" filter="url(#actor-glow-red)"/>
+    <circle cx="0" cy="-60" r="22" fill="#fee2e2" stroke="#dc2626" stroke-width="3.5" />
+    <path d="M 0 -38 L 0 10 M -28 -15 L 28 -15 M 0 10 L -20 45 M 0 10 L 20 45" stroke="#dc2626" stroke-width="3.5" stroke-linecap="round" fill="none" />
+    <text x="0" y="75" class="actor-label" fill="#991b1b">🛡️ SYSTEM ADMIN</text>
+    <text x="0" y="97" class="actor-sub">Institutional Administrator</text>
+  </g>
+
+  <!-- ============================================================== -->
+  <!-- EXTERNAL SYSTEMS (Right Side: Supporting Services)             -->
+  <!-- ============================================================== -->
+
+  <!-- EXTERNAL 1: PHOTON CLOUD (Top Right) -->
+  <g id="actor-photon" transform="translate(2700, 520)">
+    <rect x="-140" y="-90" width="280" height="180" rx="20" fill="#ffffff" stroke="#0284c7" stroke-width="2.5" filter="url(#shadow)"/>
+    <rect x="-40" y="-60" width="80" height="48" rx="10" fill="#e0f2fe" stroke="#0284c7" stroke-width="2" />
+    <text x="0" y="-30" font-size="24" text-anchor="middle">☁️</text>
+    <text x="0" y="24" class="actor-label" fill="#0369a1" font-size="18">PHOTON CLOUD</text>
+    <text x="0" y="46" class="actor-sub">Multiplayer Matchmaking &amp; Sync</text>
+    <rect x="-90" y="58" width="180" height="22" rx="6" fill="#f0f9ff" />
+    <text x="0" y="73" font-size="11" font-weight="700" fill="#0284c7" text-anchor="middle">&lt;&lt;External Cloud Service&gt;&gt;</text>
+  </g>
+
+  <!-- EXTERNAL 2: SMTP MAIL SERVER (Middle Right) -->
+  <g id="actor-smtp" transform="translate(2700, 990)">
+    <rect x="-140" y="-90" width="280" height="180" rx="20" fill="#ffffff" stroke="#d97706" stroke-width="2.5" filter="url(#shadow)"/>
+    <rect x="-40" y="-60" width="80" height="48" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="2" />
+    <text x="0" y="-30" font-size="24" text-anchor="middle">✉️</text>
+    <text x="0" y="24" class="actor-label" fill="#b45309" font-size="18">SMTP MAIL SERVER</text>
+    <text x="0" y="46" class="actor-sub">Alerts &amp; Password Tokens</text>
+    <rect x="-90" y="58" width="180" height="22" rx="6" fill="#fffbeb" />
+    <text x="0" y="73" font-size="11" font-weight="700" fill="#d97706" text-anchor="middle">&lt;&lt;External Mail Service&gt;&gt;</text>
+  </g>
+
+  <!-- EXTERNAL 3: MYSQL DATABASE (Bottom Right) -->
+  <g id="actor-db" transform="translate(2700, 1560)">
+    <rect x="-140" y="-90" width="280" height="180" rx="20" fill="#ffffff" stroke="#475569" stroke-width="2.5" filter="url(#shadow)"/>
+    <rect x="-40" y="-60" width="80" height="48" rx="10" fill="#f1f5f9" stroke="#475569" stroke-width="2" />
+    <text x="0" y="-30" font-size="24" text-anchor="middle">🗄️</text>
+    <text x="0" y="24" class="actor-label" fill="#1e293b" font-size="18">MYSQL DATABASE</text>
+    <text x="0" y="46" class="actor-sub">Central Persistence Store</text>
+    <rect x="-90" y="58" width="180" height="22" rx="6" fill="#f8fafc" />
+    <text x="0" y="73" font-size="11" font-weight="700" fill="#475569" text-anchor="middle">&lt;&lt;Data Persistence Store&gt;&gt;</text>
+  </g>
+
+  <!-- ============================================================== -->
+  <!-- CONNECTIONS: STUDENT -> USE CASES (Clean & Direct)             -->
+  <!-- ============================================================== -->
+  <path d="M 360 340 C 460 340, 510 360, 570 360" fill="none" stroke="#059669" stroke-width="2.4"/>
+  <path d="M 360 360 C 460 380, 510 440, 570 455" fill="none" stroke="#059669" stroke-width="2.4"/>
+  <path d="M 360 380 C 460 420, 510 530, 570 550" fill="none" stroke="#059669" stroke-width="2.2"/>
+  <path d="M 360 400 C 460 460, 510 630, 570 645" fill="none" stroke="#059669" stroke-width="2.2"/>
+  <path d="M 360 320 C 500 240, 850 250, 1025 390" fill="none" stroke="#059669" stroke-width="3"/>
+
+  <!-- ============================================================== -->
+  <!-- CONNECTIONS: TEACHER -> USE CASES (Direct, ZERO CROSSINGS!)    -->
+  <!-- ============================================================== -->
+  <!-- Teacher (360, 940) -> Teacher Dashboard (725, 765) -->
+  <path d="M 360 900 C 450 820, 500 765, 565 765" fill="none" stroke="#7c3aed" stroke-width="2.5"/>
+
+  <!-- Teacher -> Manage Classes (725, 860) -->
+  <path d="M 360 925 C 440 880, 480 860, 565 860" fill="none" stroke="#7c3aed" stroke-width="2.5"/>
+
+  <!-- Teacher -> Curate Question Bank (725, 955) -->
+  <path d="M 360 955 L 565 955" fill="none" stroke="#7c3aed" stroke-width="2.5"/>
+
+  <!-- Teacher -> Monitor Student Analytics (725, 1050) -->
+  <path d="M 360 980 C 440 1020, 480 1050, 565 1050" fill="none" stroke="#7c3aed" stroke-width="2.5"/>
+
+  <!-- ============================================================== -->
+  <!-- CONNECTIONS: SYSTEM ADMIN -> USE CASES (Clean & Direct)        -->
+  <!-- ============================================================== -->
+  <!-- Admin (360, 1490) -> Access Admin Dashboard (750, 1330) -->
+  <path d="M 360 1460 C 460 1380, 500 1330, 580 1330" fill="none" stroke="#dc2626" stroke-width="2.8"/>
+
+  <!-- Admin -> Review School Analytics (1440, 1530) -->
+  <path d="M 360 1515 C 500 1550, 900 1530, 1260 1530" fill="none" stroke="#dc2626" stroke-width="2.5"/>
+
+  <!-- ============================================================== -->
+  <!-- CONNECTIONS: EXTERNAL SYSTEMS                                  -->
+  <!-- ============================================================== -->
+  <!-- Multiplayer -> Photon Cloud (Direct Horizontal!) -->
+  <line x1="1715" y1="520" x2="2560" y2="520" stroke="#0284c7" stroke-width="2.5" stroke-dasharray="6,4" />
+  <rect x="2070" y="505" width="130" height="24" rx="6" fill="#ffffff" stroke="#0284c7" stroke-width="1"/>
+  <text x="2135" y="522" font-size="12" font-weight="700" fill="#0284c7" text-anchor="middle">&lt;&lt;real-time sync&gt;&gt;</text>
+
+  <!-- Reset Password -> SMTP Mail Server -->
+  <path d="M 1955 905 C 2200 905, 2400 970, 2560 985" fill="none" stroke="#d97706" stroke-width="2.4" stroke-dasharray="6,4"/>
+  <rect x="2200" y="920" width="115" height="24" rx="6" fill="#ffffff" stroke="#d97706" stroke-width="1"/>
+  <text x="2257" y="937" font-size="12" font-weight="700" fill="#d97706" text-anchor="middle">&lt;&lt;sends token&gt;&gt;</text>
+
+  <!-- Low Grade Alerts -> SMTP Mail Server (Direct Clean Horizontal!) -->
+  <path d="M 1415 955 C 1700 955, 2200 990, 2560 995" fill="none" stroke="#d97706" stroke-width="2.4" stroke-dasharray="6,4"/>
+  <rect x="1800" y="943" width="125" height="24" rx="6" fill="#ffffff" stroke="#d97706" stroke-width="1"/>
+  <text x="1862" y="960" font-size="12" font-weight="700" fill="#d97706" text-anchor="middle">&lt;&lt;dispatches alert&gt;&gt;</text>
+
+  <!-- Save Scores & Question Bank -> MySQL Database -->
+  <path d="M 1630 1530 C 1900 1530, 2300 1550, 2560 1560" fill="none" stroke="#475569" stroke-width="2.5" stroke-dasharray="6,4"/>
+  <rect x="2070" y="1520" width="115" height="24" rx="6" fill="#ffffff" stroke="#475569" stroke-width="1"/>
+  <text x="2127" y="1537" font-size="12" font-weight="700" fill="#475569" text-anchor="middle">&lt;&lt;persists data&gt;&gt;</text>
+
+</svg>

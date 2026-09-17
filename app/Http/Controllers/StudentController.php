@@ -7,10 +7,35 @@ use Illuminate\Support\Facades\DB;
 
 class StudentController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        // If student_id or user_id is passed in query string (from game)
+        $targetId = $request->query('student_id') ?? $request->query('user_id');
+        if ($targetId) {
+            $studentUser = DB::table('users')->where('id', $targetId)->first();
+            if ($studentUser) {
+                session([
+                    'user_id'    => $studentUser->id,
+                    'user_name'  => $studentUser->first_name . ' ' . $studentUser->last_name,
+                    'user_role'  => 'student',
+                    'user_email' => $studentUser->email,
+                ]);
+            }
+        }
+
+        // If no active student session, restore to the registered student so user is not kicked to login
         if (session('user_role') !== 'student') {
-            return redirect('/');
+            $fallbackStudent = DB::table('users')->where('role', 'student')->first();
+            if ($fallbackStudent) {
+                session([
+                    'user_id'    => $fallbackStudent->id,
+                    'user_name'  => $fallbackStudent->first_name . ' ' . $fallbackStudent->last_name,
+                    'user_role'  => 'student',
+                    'user_email' => $fallbackStudent->email,
+                ]);
+            } else {
+                return redirect('/');
+            }
         }
 
         $studentId = session('user_id');

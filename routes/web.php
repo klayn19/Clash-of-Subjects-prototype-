@@ -91,3 +91,5 @@ Route::get('/backend/get_class_students.php',  [TeacherController::class, 'getCl
 // Called by Unity's QuizManager to fetch a question from the DB.
 // GET /api/get_question?class_id=3&subject=english&type=quiz&quarter=1&answered=1,2,5
 Route::any('/api/get_question', [TeacherController::class, 'getQuestion'])->name('api.getQuestion');
+Route::any('/backend/get_question.php', [TeacherController::class, 'getQuestion']);
+

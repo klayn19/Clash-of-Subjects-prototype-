@@ -8711,6 +8711,11 @@ function dbg(text) {
           requestOptions.timeout = timeout;
   	}
 
+  function _RedirectSameTab(urlPtr) {
+          var url = UTF8ToString(urlPtr);
+          window.location.href = url;
+      }
+
   var webSocketInstances = [];
   function _SocketClose(socketInstance)
   {
@@ -18109,6 +18114,7 @@ var wasmImports = {
   "JS_WebRequest_SetRedirectLimit": _JS_WebRequest_SetRedirectLimit,
   "JS_WebRequest_SetRequestHeader": _JS_WebRequest_SetRequestHeader,
   "JS_WebRequest_SetTimeout": _JS_WebRequest_SetTimeout,
+  "RedirectSameTab": _RedirectSameTab,
   "SocketClose": _SocketClose,
   "SocketCreate": _SocketCreate,
   "SocketError": _SocketError,

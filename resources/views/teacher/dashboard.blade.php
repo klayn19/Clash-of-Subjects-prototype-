@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>Clash of Subject – Teacher Dashboard</title>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@550;700;800&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -753,7 +754,10 @@
         <div class="class-grid" id="classGrid">
           @foreach($classes as $c)
           <div class="class-card" data-section="{{ $c->section ?? '' }}">
-            <div class="class-circle" onclick="showClassStudents({{ $c->id }}, '{{ addslashes($c->name) }}')"
+            <div class="class-circle"
+                 data-class-id="{{ $c->id }}"
+                 data-class-name="{{ addslashes($c->name) }}"
+                 data-action="show-students"
                  style="cursor:pointer;">
               {{ $c->name }}
             </div>
@@ -765,9 +769,13 @@
             <div class="class-label" style="margin-bottom:10px;">{{ $c->student_count }} student(s)</div>
             <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
               <button class="pixel-btn" style="padding:7px 12px;font-size:11px;"
-                onclick="openEnrollModal({{ $c->id }}, '{{ addslashes($c->name) }}')">➕ ENROLL</button>
+                data-action="enroll"
+                data-class-id="{{ $c->id }}"
+                data-class-name="{{ addslashes($c->name) }}">➕ ENROLL</button>
               <button class="pixel-btn pixel-btn-red" style="padding:7px 12px;font-size:11px;"
-                onclick="deleteClass({{ $c->id }}, '{{ addslashes($c->name) }}')">🗑️ DROP</button>
+                data-action="delete-class"
+                data-class-id="{{ $c->id }}"
+                data-class-name="{{ addslashes($c->name) }}">🗑️ DROP</button>
             </div>
           </div>
           @endforeach
@@ -1339,6 +1347,18 @@ const fetchConfig = {
         'Accept': 'application/json'
     }
 };
+
+// Event delegation for class-grid actions (replaces inline Blade onclick handlers)
+document.getElementById('classGrid').addEventListener('click', function(e) {
+  const target = e.target.closest('[data-action]');
+  if (!target) return;
+  const action    = target.dataset.action;
+  const classId   = target.dataset.classId;
+  const className = target.dataset.className;
+  if (action === 'show-students') showClassStudents(classId, className);
+  if (action === 'enroll')        openEnrollModal(classId, className);
+  if (action === 'delete-class')  deleteClass(classId, className);
+});
 
 async function loadPrototypeGradeStudents() {
   const select = document.getElementById('prototypeGradeStudent');

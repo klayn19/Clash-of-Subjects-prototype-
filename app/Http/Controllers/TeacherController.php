@@ -209,31 +209,40 @@ class TeacherController extends Controller
             }
         }
 
-        if ($classId) {
-            $query->where('class_id', $classId);
-        } else {
-            $query->whereNull('class_id');
-        }
-        
-        $query->where('subject',  strtolower(trim($request->subject)));
+        $subject = strtolower(trim($request->subject));
+        $isMixed = ($subject === 'mixed' || $subject === 'all');
 
-        if ($request->filled('type')) {
-            $query->where('type', $request->type);
-        }
+        $buildQuery = function ($withClass) use ($request, $classId, $subject, $isMixed) {
+            $q = DB::table('questions');
+            if ($withClass && $classId) {
+                $q->where('class_id', $classId);
+            }
+            if ($isMixed) {
+                $q->whereIn('subject', ['english', 'math', 'science']);
+            } else {
+                $q->where('subject', $subject);
+            }
+            if ($request->filled('type')) {
+                $q->where('type', $request->type);
+            }
+            if ($request->filled('quarter')) {
+                $q->where('quarter', $request->quarter);
+            }
+            if ($request->filled('sequence_number')) {
+                $q->where('sequence_number', $request->sequence_number);
+            }
+            return $q;
+        };
 
-        if ($request->filled('quarter')) {
-            $query->where('quarter', $request->quarter);
-        }
-
-        if ($request->filled('sequence_number')) {
-            $query->where('sequence_number', $request->sequence_number);
+        $query = $buildQuery(true);
+        if ($classId && (clone $query)->count() === 0) {
+            $query = $buildQuery(false);
         }
 
         // Count total matching questions before filtering answered
         $totalQuestionsInPool = (clone $query)->count();
 
         // Avoid repeating recently-seen questions for this student session
-        // Unity passes answered IDs as a comma-separated string: ?answered=1,2,5
         $answeredIds = [];
         if ($request->filled('answered')) {
             $answeredIds = array_filter(
@@ -248,16 +257,23 @@ class TeacherController extends Controller
         $question = $query->inRandomOrder()->first();
 
         $isPrototype = false;
-        // If no regular question found, try to fetch a prototype question
+        // If no regular question found, try any available questions or prototype
+        if (!$question) {
+            $fallbackQuery = DB::table('questions');
+            if ($isMixed) {
+                $fallbackQuery->whereIn('subject', ['english', 'math', 'science']);
+            }
+            if ($request->filled('answered') && !empty($answeredIds)) {
+                $fallbackQuery->whereNotIn('id', $answeredIds);
+            }
+            $question = $fallbackQuery->inRandomOrder()->first();
+        }
+
         if (!$question) {
             $prototypeQuery = DB::table('questions')->where('type', 'prototype');
-            $totalQuestionsInPool = (clone $prototypeQuery)->count();
-            
             if ($request->filled('answered') && !empty($answeredIds)) {
                 $prototypeQuery->whereNotIn('id', $answeredIds);
             }
-
-            $remainingCount = (clone $prototypeQuery)->count();
             $question = $prototypeQuery->inRandomOrder()->first();
             $isPrototype = true;
         }
