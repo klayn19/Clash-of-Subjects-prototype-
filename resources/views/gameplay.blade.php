@@ -221,6 +221,11 @@
             justify-content: center;
             overflow: hidden;
             background: transparent;
+            padding: 58px 8px 8px;
+        }
+
+        #mobile-input-bar {
+            display: none !important;
         }
 
         /* Unity Frame Container */
@@ -958,11 +963,8 @@
         </div>
 
         <div class="hud-group">
-            <button id="keyboard-toggle-btn" class="hud-btn" title="Toggle Onscreen Keyboard" onclick="toggleMobileKeyboard()">
-                <i class="fas fa-keyboard"></i> <span class="btn-label">KEYBOARD</span>
-            </button>
             <button id="fit-toggle-btn" class="hud-btn" title="Toggle Aspect Mode (Fit / Stretch)" onclick="toggleFitMode()">
-                <i class="fas fa-expand-alt"></i> <span class="btn-label">STRETCH</span>
+                <i class="fas fa-compress-alt"></i> <span class="btn-label">FIT</span>
             </button>
             <button id="fullscreen-hud-btn" class="hud-btn" title="Toggle Fullscreen Arena" onclick="toggleFullscreen()">
                 <i class="fas fa-expand"></i> <span class="btn-label">FULLSCREEN</span>
@@ -993,16 +995,6 @@
             </div>
             
             <div id="unity-warning"></div>
-        </div>
-    </div>
-
-    <!-- COMPACT MOBILE KEYBOARD OVERLAY -->
-    <div id="mobile-input-bar">
-        <input type="text" id="mobile-text-input" placeholder="Type Room ID or Player Name..." autocomplete="off" autocapitalize="none" spellcheck="false">
-        <div class="mobile-input-buttons">
-            <button id="mobile-btn-backspace" class="mobile-helper-btn btn-backspace" title="Backspace">⌫</button>
-            <button id="mobile-btn-enter" class="mobile-helper-btn btn-enter" title="Enter">↵</button>
-            <button class="mobile-helper-btn btn-close" onclick="toggleMobileKeyboard(false)" title="Close Keyboard">✖</button>
         </div>
     </div>
 
@@ -1185,7 +1177,7 @@
         /* ============================================================
            AUTO-FIT GAMEPLAY CANVAS (MAXIMIZED VIEWPORT)
            ============================================================ */
-        let fitMode = 'STRETCH'; // 'FIT' (preserve aspect ratio) or 'STRETCH'
+        let fitMode = 'FIT'; // 'FIT' (preserve aspect ratio) or 'STRETCH'
 
         function fitGameToViewport() {
             const container = document.getElementById('unity-container');
