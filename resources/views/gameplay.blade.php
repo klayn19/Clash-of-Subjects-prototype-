@@ -579,6 +579,72 @@
             }
         }
 
+        /* ===== MOBILE / TABLET / iPHONE RESPONSIVE FIXES ===== */
+
+        /* iPhone safe-area support: push HUD away from notch/dynamic island */
+        @supports (padding: env(safe-area-inset-top)) {
+            #hud-container {
+                top: max(10px, env(safe-area-inset-top));
+                left: max(12px, env(safe-area-inset-left));
+                right: max(12px, env(safe-area-inset-right));
+            }
+            #game-stage {
+                padding-top: max(52px, calc(env(safe-area-inset-top) + 44px));
+                padding-left: max(4px, env(safe-area-inset-left));
+                padding-right: max(4px, env(safe-area-inset-right));
+                padding-bottom: max(4px, env(safe-area-inset-bottom));
+            }
+            #mobile-input-bar {
+                bottom: max(12px, calc(env(safe-area-inset-bottom) + 8px));
+            }
+        }
+
+        /* Small phones in landscape (height < 500px) — compact HUD + slim padding */
+        @media (max-width: 991px) and (orientation: landscape) and (max-height: 500px) {
+            #hud-container {
+                top: 4px;
+                left: 6px;
+                right: 6px;
+            }
+            .hud-btn {
+                padding: 5px 7px;
+                font-size: 7px;
+            }
+            .hud-title-badge {
+                padding: 4px 8px;
+                font-size: 7px;
+            }
+            #game-stage {
+                padding: 42px 4px 4px;
+            }
+        }
+
+        /* Tablets in landscape (min-width 768px up to 1024px) */
+        @media (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
+            #game-stage {
+                padding: 54px 8px 8px;
+            }
+            #fullscreen-hud-btn {
+                display: inline-flex; /* keep fullscreen btn visible on tablet */
+            }
+        }
+
+        /* General mobile landscape — make canvas fill properly */
+        @media (max-width: 991px) and (orientation: landscape) {
+            #mobile-input-bar {
+                display: none; /* hide keyboard bar unless toggled */
+            }
+            /* Ensure unity-frame doesn't overflow */
+            .unity-frame {
+                max-width: 100%;
+                max-height: 100%;
+                overflow: hidden;
+            }
+            #unity-canvas {
+                touch-action: none; /* prevent scroll interference */
+            }
+        }
+
         /* ===== QUESTION CYCLE RESULTS MODAL ===== */
         .results-modal-backdrop {
             display: none;
@@ -1184,23 +1250,28 @@
             const gameStage = document.getElementById('game-stage');
             if (!container || !gameStage) return;
 
-            const availW = gameStage.clientWidth || window.innerWidth;
-            const availH = gameStage.clientHeight || window.innerHeight;
+            // Use gameStage's inner content area (after CSS padding)
+            const stageRect = gameStage.getBoundingClientRect();
+            const stageStyle = getComputedStyle(gameStage);
+            const padTop    = parseFloat(stageStyle.paddingTop)    || 0;
+            const padBottom = parseFloat(stageStyle.paddingBottom) || 0;
+            const padLeft   = parseFloat(stageStyle.paddingLeft)   || 0;
+            const padRight  = parseFloat(stageStyle.paddingRight)  || 0;
 
-            if (availW <= 0 || availH <= 0) return;
+            const availW = Math.max(1, stageRect.width  - padLeft - padRight);
+            const availH = Math.max(1, stageRect.height - padTop  - padBottom);
 
             if (fitMode === 'STRETCH') {
-                container.style.width = availW + 'px';
-                container.style.height = availH + 'px';
+                container.style.width  = Math.floor(availW) + 'px';
+                container.style.height = Math.floor(availH) + 'px';
                 return;
             }
 
-            // Target aspect ratio of 960x600 = 1.6
-            const targetAspect = 960 / 600;
+            // Target aspect ratio 960×600 = 1.6
+            const targetAspect  = 960 / 600;
             const currentAspect = availW / availH;
 
             let finalW, finalH;
-
             if (currentAspect > targetAspect) {
                 finalH = availH;
                 finalW = availH * targetAspect;
@@ -1209,7 +1280,7 @@
                 finalH = availW / targetAspect;
             }
 
-            container.style.width = Math.floor(finalW) + 'px';
+            container.style.width  = Math.floor(finalW) + 'px';
             container.style.height = Math.floor(finalH) + 'px';
         }
 
@@ -1224,8 +1295,15 @@
 
         window.addEventListener('resize', fitGameToViewport);
         window.addEventListener('orientationchange', () => {
-            setTimeout(fitGameToViewport, 150);
+            // iOS needs several ticks after orientationchange to settle viewport size
+            setTimeout(fitGameToViewport, 100);
+            setTimeout(fitGameToViewport, 300);
+            setTimeout(fitGameToViewport, 600);
         });
+        // Use visualViewport API on iOS for more accurate sizing (accounts for safe areas)
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', fitGameToViewport);
+        }
         document.addEventListener('DOMContentLoaded', fitGameToViewport);
         fitGameToViewport();
 
