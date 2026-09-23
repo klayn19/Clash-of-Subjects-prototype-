@@ -110,8 +110,10 @@
             position: relative;
             background: #030007;
             border: 3px solid var(--blue-mid);
-            width: min(960px, calc(100vw - 32px), calc((100vh - 134px) * 1.6));
-            aspect-ratio: 960 / 600;
+            width: 100%;
+            height: 100%;
+            max-width: 100%;
+            max-height: 100%;
             box-shadow: 0 0 0 1px var(--gold),
                         0 20px 40px rgba(0, 0, 0, 0.6),
                         0 0 80px rgba(240, 160, 0, 0.2),
@@ -148,7 +150,7 @@
             background: #030007;
             width: 100%;
             height: 100%;
-            object-fit: contain;
+            object-fit: fill;
         }
 
         /* Loading overlay — pixel perfect */

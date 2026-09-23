@@ -192,7 +192,7 @@
             background: #030007;
             width: 100% !important;
             height: 100% !important;
-            object-fit: contain;
+            object-fit: fill;
             outline: none;
         }
 
@@ -1004,8 +1004,17 @@
             const availW = Math.max(1, stageRect.width  - padLeft - padRight);
             const availH = Math.max(1, stageRect.height - padTop  - padBottom);
 
-            // Target aspect ratio 960×600 = 1.6
-            const targetAspect  = 960 / 600;
+            // On mobile phones & tablets, adapt to fill 100% of the screen (eliminating black side bars)
+            const isMobile = window.innerWidth <= 1024 || (('ontouchstart' in window) || navigator.maxTouchPoints > 0);
+
+            if (isMobile || fitMode === 'STRETCH') {
+                container.style.width  = Math.floor(availW) + 'px';
+                container.style.height = Math.floor(availH) + 'px';
+                return;
+            }
+
+            // On desktop standard view, scale to 16:9 resolution
+            const targetAspect  = 16 / 9;
             const currentAspect = availW / availH;
 
             let finalW, finalH;
