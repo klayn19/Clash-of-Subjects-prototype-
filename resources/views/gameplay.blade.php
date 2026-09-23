@@ -939,9 +939,6 @@
         </div>
 
         <div class="hud-group">
-            <button id="fit-toggle-btn" class="hud-btn" title="Toggle Aspect Mode (Fit / Stretch)" onclick="toggleFitMode()">
-                <i class="fas fa-compress-alt"></i> <span class="btn-label">FIT</span>
-            </button>
             <button id="fullscreen-hud-btn" class="hud-btn" title="Toggle Fullscreen Arena" onclick="toggleFullscreen()">
                 <i class="fas fa-expand"></i> <span class="btn-label">FULLSCREEN</span>
             </button>
@@ -1034,10 +1031,8 @@
 
     <script>
         /* ============================================================
-           AUTO-FIT GAMEPLAY CANVAS (MAXIMIZED VIEWPORT)
+           AUTO-FIT GAMEPLAY CANVAS
            ============================================================ */
-        let fitMode = 'STRETCH'; // 'FIT' (preserve aspect ratio) or 'STRETCH'
-
         function fitGameToViewport() {
             const container = document.getElementById('unity-container');
             const gameStage = document.getElementById('game-stage');
@@ -1054,12 +1049,6 @@
             const availW = Math.max(1, stageRect.width  - padLeft - padRight);
             const availH = Math.max(1, stageRect.height - padTop  - padBottom);
 
-            if (fitMode === 'STRETCH') {
-                container.style.width  = Math.floor(availW) + 'px';
-                container.style.height = Math.floor(availH) + 'px';
-                return;
-            }
-
             // Target aspect ratio 960×600 = 1.6
             const targetAspect  = 960 / 600;
             const currentAspect = availW / availH;
@@ -1075,15 +1064,6 @@
 
             container.style.width  = Math.floor(finalW) + 'px';
             container.style.height = Math.floor(finalH) + 'px';
-        }
-
-        function toggleFitMode() {
-            fitMode = (fitMode === 'FIT') ? 'STRETCH' : 'FIT';
-            const btn = document.getElementById('fit-toggle-btn');
-            if (btn) {
-                btn.innerHTML = `<i class="fas fa-${fitMode === 'FIT' ? 'compress-alt' : 'expand-alt'}"></i> <span class="btn-label">${fitMode}</span>`;
-            }
-            fitGameToViewport();
         }
 
         window.addEventListener('resize', fitGameToViewport);
