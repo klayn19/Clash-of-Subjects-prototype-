@@ -35,90 +35,6 @@
             font-family: 'VT323', monospace;
         }
 
-        /* ===== ANIMATED PIXEL BACKGROUND ===== */
-        #bgCanvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 0;
-            display: block;
-        }
-
-        .scanlines {
-            position: fixed;
-            inset: 0;
-            z-index: 2;
-            pointer-events: none;
-            background: repeating-linear-gradient(0deg,
-                transparent, transparent 2px,
-                rgba(0, 0, 0, 0.15) 2px, rgba(0, 0, 0, 0.15) 4px);
-        }
-
-        .vignette {
-            position: fixed;
-            inset: 0;
-            z-index: 3;
-            pointer-events: none;
-            background: radial-gradient(ellipse at center, transparent 35%, rgba(0, 0, 0, 0.9) 100%);
-        }
-
-        /* ===== EMBERS ===== */
-        .embers {
-            position: fixed;
-            inset: 0;
-            z-index: 4;
-            pointer-events: none;
-        }
-        .ember {
-            position: absolute;
-            background: #f08000;
-            animation: emberUp linear infinite;
-            opacity: 0;
-            filter: blur(0.5px);
-        }
-        @keyframes emberUp {
-            0% { opacity: 0; transform: translate(0, 0) scale(1); }
-            10% { opacity: 1; }
-            80% { opacity: 0.6; }
-            100% { opacity: 0; transform: translate(var(--ex), var(--ey)) scale(0.3); }
-        }
-
-        /* ===== BATS ===== */
-        .bat-wrap {
-            position: fixed;
-            z-index: 4;
-            animation: batFly linear infinite;
-            pointer-events: none;
-        }
-        @keyframes batFly {
-            from { left: -80px; }
-            to { left: calc(100vw + 80px); }
-        }
-        .bat-sprite {
-            width: 28px;
-            height: 14px;
-            position: relative;
-            animation: batFlap 0.25s steps(2) infinite;
-        }
-        @keyframes batFlap {
-            0% { transform: scaleY(1); }
-            50% { transform: scaleY(-0.45); }
-            100% { transform: scaleY(1); }
-        }
-        .bat-sprite::before, .bat-sprite::after {
-            content: '';
-            position: absolute;
-            width: 12px;
-            height: 10px;
-            background: #0a0612;
-            clip-path: polygon(0 100%, 50% 0, 100% 80%, 60% 60%, 40% 60%);
-            top: 0;
-        }
-        .bat-sprite::before { left: 0; }
-        .bat-sprite::after { right: 0; transform: scaleX(-1); }
-
         /* ===== TOP BAR ===== */
         #top-bar {
             position: fixed;
@@ -186,8 +102,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            padding-top: 70px;  /* clear top bar */
-            padding-bottom: 20px;
+            padding: 76px 16px 58px;
         }
 
         /* Unity wrapper with gothic frame */
@@ -195,6 +110,8 @@
             position: relative;
             background: #030007;
             border: 3px solid var(--blue-mid);
+            width: min(960px, calc(100vw - 32px), calc((100vh - 134px) * 1.6));
+            aspect-ratio: 960 / 600;
             box-shadow: 0 0 0 1px var(--gold),
                         0 20px 40px rgba(0, 0, 0, 0.6),
                         0 0 80px rgba(240, 160, 0, 0.2),
@@ -231,6 +148,7 @@
             background: #030007;
             width: 100%;
             height: 100%;
+            object-fit: contain;
         }
 
         /* Loading overlay — pixel perfect */
@@ -350,43 +268,25 @@
             cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16'%3E%3Crect x='0' y='0' width='4' height='4' fill='%23f0a000'/%3E%3Crect x='0' y='4' width='4' height='4' fill='%23f0a000'/%3E%3Crect x='0' y='8' width='4' height='4' fill='%23f0a000'/%3E%3Crect x='4' y='4' width='4' height='4' fill='%23f0a000'/%3E%3Crect x='8' y='8' width='4' height='4' fill='%23f0a000'/%3E%3C/svg%3E") 0 0, default;
         }
 
-        /* responsive behavior: keep aspect ratio but center */
-        @media (max-width: 1000px) {
-            .unity-frame {
-                transform: scale(0.95);
+        /* Keep the game readable while leaving room for the top bar and footer. */
+        @media (max-width: 600px) {
+            #game-stage {
+                padding-left: 8px;
+                padding-right: 8px;
             }
-            #top-bar .realm-title {
-                font-size: 9px;
-            }
-            .logout-btn {
-                padding: 8px 14px;
-                font-size: 7px;
-            }
-        }
 
-        @media (max-width: 780px) {
-            .unity-frame {
-                transform: scale(0.85);
+            #top-bar .realm-title {
+                font-size: 8px;
             }
-            #top-bar {
-                padding: 10px 16px;
+
+            .logout-btn {
+                padding: 8px 10px;
+                font-size: 7px;
             }
         }
     </style>
 </head>
 <body>
-
-    <!-- pixel background canvas -->
-    <canvas id="bgCanvas"></canvas>
-    <div class="scanlines"></div>
-    <div class="vignette"></div>
-    <div class="embers" id="embers"></div>
-
-    <!-- bats (atmospheric) -->
-    <div class="bat-wrap" style="top:8%; animation-duration: 24s; animation-delay: -5s;"><div class="bat-sprite"></div></div>
-    <div class="bat-wrap" style="top:16%; animation-duration: 31s; animation-delay: -12s;"><div class="bat-sprite" style="transform: scale(0.7);"></div></div>
-    <div class="bat-wrap" style="top:22%; animation-duration: 19s; animation-delay: -2s;"><div class="bat-sprite" style="transform: scale(0.55);"></div></div>
-    <div class="bat-wrap" style="top:5%; animation-duration: 28s; animation-delay: -9s;"><div class="bat-sprite" style="transform: scale(0.6);"></div></div>
 
     <!-- top bar -->
     <div id="top-bar">
@@ -424,202 +324,6 @@
     </div>
 
     <script>
-        /* ============================================================
-           RETRO PIXEL BACKGROUND (identical to index.php aesthetic)
-           ============================================================ */
-        const bgCanvas = document.getElementById('bgCanvas');
-        const bgCtx = bgCanvas.getContext('2d');
-        bgCtx.imageSmoothingEnabled = false;
-        const TILE = 8;
-        let W, H, cols, rows, tick = 0;
-        const STAR_GRID = [];
-
-        function resizeBackground() {
-            W = bgCanvas.width = window.innerWidth;
-            H = bgCanvas.height = window.innerHeight;
-            cols = Math.ceil(W / TILE);
-            rows = Math.ceil(H / TILE);
-            STAR_GRID.length = 0;
-            for (let i = 0; i < 100; i++) {
-                STAR_GRID.push({
-                    x: Math.floor(Math.random() * cols),
-                    y: Math.floor(Math.random() * Math.floor(rows * 0.55)),
-                    phase: Math.random() * Math.PI * 2,
-                    speed: 0.018 + Math.random() * 0.045
-                });
-            }
-        }
-        window.addEventListener('resize', resizeBackground);
-        resizeBackground();
-
-        function lerpColor(a, b, t) {
-            return [
-                Math.round(a[0] + (b[0] - a[0]) * t),
-                Math.round(a[1] + (b[1] - a[1]) * t),
-                Math.round(a[2] + (b[2] - a[2]) * t)
-            ];
-        }
-        function rgb(c) { return `rgb(${c[0]},${c[1]},${c[2]})`; }
-
-        function drawBackground() {
-            if (!bgCtx) return;
-            bgCtx.clearRect(0, 0, W, H);
-            const horizonRow = Math.floor(rows * 0.72);
-            
-            // sky gradient
-            for (let r = 0; r < horizonRow; r++) {
-                let t = r / horizonRow;
-                let c;
-                if (t < 0.5) c = lerpColor([8, 2, 18], [22, 6, 38], t * 2);
-                else c = lerpColor([22, 6, 38], [50, 18, 5], (t - 0.5) * 2);
-                bgCtx.fillStyle = rgb(c);
-                bgCtx.fillRect(0, r * TILE, W, TILE);
-            }
-            // ground
-            for (let r = horizonRow; r < rows; r++) {
-                const t = (r - horizonRow) / (rows - horizonRow);
-                const c = lerpColor([10, 6, 2], [4, 2, 0], t);
-                bgCtx.fillStyle = rgb(c);
-                bgCtx.fillRect(0, r * TILE, W, TILE);
-            }
-            
-            // mountains
-            const mtns = [
-                {cx:0.05, h:18}, {cx:0.15, h:22}, {cx:0.28, h:16},
-                {cx:0.40, h:20}, {cx:0.55, h:26}, {cx:0.68, h:19},
-                {cx:0.80, h:22}, {cx:0.92, h:17}, {cx:1.0, h:14}
-            ];
-            mtns.forEach(m => {
-                const pc = Math.floor(m.cx * cols);
-                const pr = horizonRow - m.h;
-                bgCtx.fillStyle = rgb([10, 6, 3]);
-                for (let dr = 0; dr < m.h; dr++) {
-                    const half = Math.floor((dr / m.h) * m.h * 0.7) + 1;
-                    bgCtx.fillRect((pc - half) * TILE, (pr + dr) * TILE, half * 2 * TILE, TILE);
-                }
-                bgCtx.fillStyle = 'rgba(200,180,150,0.12)';
-                for (let dr = 0; dr < 3; dr++) {
-                    const half = Math.floor((dr / m.h) * m.h * 0.7) + 1;
-                    bgCtx.fillRect((pc - half) * TILE, (pr + dr) * TILE, half * 2 * TILE, TILE);
-                }
-            });
-            
-            // castle base
-            const cx = Math.floor(cols / 2);
-            const cb = horizonRow;
-            for (let dr = 0; dr < 12; dr++) {
-                bgCtx.fillStyle = dr === 0 ? '#1a0e06' : '#100804';
-                bgCtx.fillRect((cx - 9) * TILE, (cb - dr) * TILE, 18 * TILE, TILE);
-            }
-            for (let dr = 0; dr < 6; dr++) {
-                bgCtx.fillStyle = '#030201';
-                const gw = dr < 5 ? 4 : 2;
-                bgCtx.fillRect((cx - gw/2) * TILE, (cb - dr) * TILE, gw * TILE, TILE);
-            }
-            
-            // towers
-            const towers = [-10, -5, 0, 5, 10];
-            const tH = [16, 18, 22, 18, 16];
-            towers.forEach((off, i) => {
-                const tx = cx + off;
-                const th = tH[i];
-                for (let dr = 0; dr < th; dr++) {
-                    bgCtx.fillStyle = dr < 2 ? '#1e1208' : '#0c0804';
-                    bgCtx.fillRect((tx - 2) * TILE, (cb - 12 - dr) * TILE, 4 * TILE, TILE);
-                }
-                for (let b = 0; b < 3; b++) {
-                    if (b % 2 === 0) {
-                        bgCtx.fillStyle = '#0c0804';
-                        bgCtx.fillRect((tx - 2 + b) * TILE, (cb - 12 - th - 2) * TILE, TILE, 3 * TILE);
-                    }
-                }
-                // center tower flag
-                if (i === 2) {
-                    const fp = Math.sin(tick * 0.05);
-                    bgCtx.fillStyle = '#8b1a1a';
-                    for (let fr = 0; fr < 4; fr++) {
-                        const fw = Math.round(4 + fp * 1.5) - fr;
-                        if (fw > 0) bgCtx.fillRect(tx * TILE, (cb - 12 - th - 6 + fr) * TILE, fw * TILE, TILE);
-                    }
-                    bgCtx.fillStyle = '#5a3010';
-                    bgCtx.fillRect(tx * TILE - 1, (cb - 12 - th - 6) * TILE, 2, 6 * TILE);
-                }
-                const fl = 0.6 + 0.4 * Math.sin(tick * 0.08 + i * 1.3);
-                bgCtx.fillStyle = `rgba(255,180,40,${0.6 * fl})`;
-                bgCtx.fillRect(tx * TILE, (cb - 12 - Math.floor(th * 0.5)) * TILE, 2 * TILE, 2 * TILE);
-            });
-            
-            // torches
-            [Math.floor(cols * 0.18), Math.floor(cols * 0.82)].forEach(tx => {
-                bgCtx.fillStyle = '#4a2806';
-                bgCtx.fillRect(tx * TILE, (cb - 5) * TILE, TILE, 5 * TILE);
-                const flick = Math.floor(tick * 0.25) % 3;
-                const fc = [[255, 140, 0], [255, 80, 0], [255, 200, 0]][flick];
-                for (let fr = 0; fr < 3; fr++) {
-                    const fw = 3 - fr;
-                    const off2 = fr % 2 === 0 ? 0 : TILE;
-                    bgCtx.fillStyle = `rgba(${fc[0]}, ${fc[1]}, ${fc[2]}, ${0.9 - fr * 0.2})`;
-                    bgCtx.fillRect((tx - fw/2) * TILE + off2, (cb - 5 - fr - 1) * TILE, fw * TILE, TILE);
-                }
-                const grad = bgCtx.createRadialGradient((tx + 0.5) * TILE, (cb - 7) * TILE, 0, (tx + 0.5) * TILE, (cb - 7) * TILE, 8 * TILE);
-                grad.addColorStop(0, 'rgba(255,140,0,0.22)');
-                grad.addColorStop(1, 'rgba(255,100,0,0)');
-                bgCtx.fillStyle = grad;
-                bgCtx.fillRect((tx - 8) * TILE, (cb - 14) * TILE, 16 * TILE, 14 * TILE);
-            });
-            
-            // stars
-            STAR_GRID.forEach(s => {
-                const br = 0.4 + 0.6 * Math.abs(Math.sin(tick * s.speed + s.phase));
-                bgCtx.fillStyle = `rgba(255,250,220,${br})`;
-                if (br > 0.7) {
-                    bgCtx.fillRect(s.x * TILE, s.y * TILE, TILE, TILE);
-                    if (br > 0.9) {
-                        bgCtx.fillRect((s.x + 1) * TILE, s.y * TILE, TILE, TILE);
-                        bgCtx.fillRect(s.x * TILE, (s.y + 1) * TILE, TILE, TILE);
-                    }
-                } else {
-                    bgCtx.fillRect(s.x * TILE + 2, s.y * TILE + 2, TILE - 4, TILE - 4);
-                }
-            });
-            
-            // moon
-            const mx = Math.floor(cols * 0.82), my = 4;
-            const moonGlow = 0.7 + 0.3 * Math.sin(tick * 0.03);
-            const moonGrad = bgCtx.createRadialGradient((mx + 3) * TILE, (my + 3) * TILE, 0, (mx + 3) * TILE, (my + 3) * TILE, 10 * TILE);
-            moonGrad.addColorStop(0, `rgba(220,180,60,${0.3 * moonGlow})`);
-            moonGrad.addColorStop(1, 'rgba(200,140,20,0)');
-            bgCtx.fillStyle = moonGrad;
-            bgCtx.fillRect((mx - 7) * TILE, (my - 7) * TILE, 20 * TILE, 20 * TILE);
-            [[1,0,4],[0,1,6],[0,2,6],[0,3,6],[0,4,6],[0,5,6],[1,6,4]].forEach(([ox, oy, w]) => {
-                bgCtx.fillStyle = `rgba(240,210,80,${moonGlow})`;
-                bgCtx.fillRect((mx + ox) * TILE, (my + oy) * TILE, w * TILE, TILE);
-            });
-            
-            tick++;
-            requestAnimationFrame(drawBackground);
-        }
-        
-        drawBackground();
-        
-        /* ========== EMBERS ========== */
-        const embersContainer = document.getElementById('embers');
-        function spawnEmbers() {
-            [15, 48, 82].forEach(pct => {
-                for (let i = 0; i < 12; i++) {
-                    const e = document.createElement('div');
-                    e.className = 'ember';
-                    const spread = (Math.random() - 0.5) * 70;
-                    const size = Math.random() > 0.6 ? 6 : 4;
-                    e.style.cssText = `left:calc(${pct}% + ${spread}px); top:${65 + Math.random() * 12}%; animation-duration:${1.6 + Math.random() * 3.2}s; animation-delay:${-Math.random() * 6}s; width:${size}px; height:${size}px;`;
-                    e.style.setProperty('--ex', (Math.random() - 0.5) * 90 + 'px');
-                    e.style.setProperty('--ey', -(45 + Math.random() * 110) + 'px');
-                    embersContainer.appendChild(e);
-                }
-            });
-        }
-        spawnEmbers();
-        
         /* ========== UNITY LOADER (FIXED LAYOUT) ========== */
         const unityCanvas = document.querySelector("#unity-canvas");
         
@@ -657,16 +361,6 @@
             showBanner: unityShowBanner,
         };
         
-        // force canvas dimensions to avoid distortion
-        if (!/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-            unityCanvas.style.width = "960px";
-            unityCanvas.style.height = "600px";
-        } else {
-            unityCanvas.style.width = "100%";
-            unityCanvas.style.height = "auto";
-            document.querySelector("#unity-container").style.transform = "scale(0.92)";
-        }
-        
         document.querySelector("#unity-loading-bar").style.display = "flex";
         
         const script = document.createElement("script");
@@ -691,15 +385,6 @@
         };
         document.body.appendChild(script);
         
-        // manual resize to keep frame stable
-        window.addEventListener('resize', () => {
-            if (!unityCanvas) return;
-            if (window.innerWidth < 1000) {
-                if (!/Mobi/i.test(navigator.userAgent)) unityCanvas.style.transform = "scale(0.96)";
-            } else {
-                unityCanvas.style.transform = "";
-            }
-        });
     </script>
 </body>
 </html>
