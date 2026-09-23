@@ -349,13 +349,14 @@
             updateVisibility();
         }
         
+        const cacheVer = "<?= time() ?>";
         const buildUrl = "Build";
-        const loaderUrl = buildUrl + "/unityFinal.loader.js";
+        const loaderUrl = buildUrl + "/unityFinal.loader.js?v=" + cacheVer;
         const config = {
             arguments: [],
-            dataUrl: buildUrl + "/unityFinal.data",
-            frameworkUrl: buildUrl + "/unityFinal.framework.js",
-            codeUrl: buildUrl + "/unityFinal.wasm",
+            dataUrl: buildUrl + "/unityFinal.data?v=" + cacheVer,
+            frameworkUrl: buildUrl + "/unityFinal.framework.js?v=" + cacheVer,
+            codeUrl: buildUrl + "/unityFinal.wasm?v=" + cacheVer,
             streamingAssetsUrl: "StreamingAssets",
             companyName: "ClashStudio",
             productName: "ClashOfSubjects",
