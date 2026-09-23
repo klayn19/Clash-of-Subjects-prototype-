@@ -139,7 +139,7 @@
             justify-content: center;
             overflow: hidden;
             background: #030007;
-            padding: 58px 8px 8px;
+            padding: 0;
         }
 
         #mobile-input-bar {
@@ -150,8 +150,8 @@
         .unity-frame {
             position: relative;
             background: #030007;
-            box-shadow: 0 0 35px rgba(0, 0, 0, 0.9), 0 0 15px rgba(240, 192, 0, 0.25);
-            border: 1px solid rgba(240, 192, 0, 0.35);
+            box-shadow: none;
+            border: 0;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -510,10 +510,7 @@
                 right: max(12px, env(safe-area-inset-right));
             }
             #game-stage {
-                padding-top: max(52px, calc(env(safe-area-inset-top) + 44px));
-                padding-left: max(4px, env(safe-area-inset-left));
-                padding-right: max(4px, env(safe-area-inset-right));
-                padding-bottom: max(4px, env(safe-area-inset-bottom));
+                padding: 0;
             }
             #mobile-input-bar {
                 bottom: max(12px, calc(env(safe-area-inset-bottom) + 8px));
@@ -536,14 +533,14 @@
                 font-size: 7px;
             }
             #game-stage {
-                padding: 42px 4px 4px;
+                padding: 0;
             }
         }
 
         /* Tablets in landscape (min-width 768px up to 1024px) */
         @media (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
             #game-stage {
-                padding: 54px 8px 8px;
+                padding: 0;
             }
             #fullscreen-hud-btn {
                 display: inline-flex; /* keep fullscreen btn visible on tablet */
@@ -808,21 +805,6 @@
 </head>
 <body>
 
-    <!-- PORTRAIT ORIENTATION OVERLAY -->
-    <div id="portrait-rotate-overlay">
-        <div class="rotate-box">
-            <div class="corner tl"></div>
-            <div class="corner tr"></div>
-            <div class="corner bl"></div>
-            <div class="corner br"></div>
-            <div class="rotate-icon">📱🔄</div>
-            <div class="rotate-title">⚔️ LANDSCAPE MODE REQUIRED ⚔️</div>
-            <p class="rotate-text">
-                Please rotate your device to <b>Landscape</b> (horizontal) mode for the best subjects arena experience!
-            </p>
-        </div>
-    </div>
-
     <!-- NETWORK REQUEST INTERCEPTOR & CYCLE END DETECTOR -->
     <script>
         let isLastQuestionReached = false;
@@ -927,36 +909,9 @@
         };
     </script>
 
-    <!-- SLEEK FLOATING HUD -->
-    <div id="hud-container">
-        <div class="hud-group">
-            <a href="{{ route('student.dashboard') }}" class="hud-btn" title="Back to Student Dashboard">
-                <i class="fas fa-arrow-left"></i> <span class="btn-label">DASHBOARD</span>
-            </a>
-            <div class="hud-title-badge">
-                <i class="fas fa-swords" style="color: var(--gold);"></i> <span>CLASH OF SUBJECTS</span>
-            </div>
-        </div>
-
-        <div class="hud-group">
-            <button id="fullscreen-hud-btn" class="hud-btn" title="Toggle Fullscreen Arena" onclick="toggleFullscreen()">
-                <i class="fas fa-expand"></i> <span class="btn-label">FULLSCREEN</span>
-            </button>
-            <button id="hud-minimize-btn" class="hud-btn" title="Hide/Show HUD" onclick="toggleHudVisibility()" style="padding: 7px 9px;">
-                <i class="fas fa-eye-slash"></i>
-            </button>
-        </div>
-    </div>
-
     <!-- MAIN GAME STAGE (FULLSCREEN ERA) -->
     <div id="game-stage">
         <div id="unity-container" class="unity-frame">
-            <div class="unity-top-gold"></div>
-            <div class="corner tl"></div>
-            <div class="corner tr"></div>
-            <div class="corner bl"></div>
-            <div class="corner br"></div>
-            
             <canvas id="unity-canvas" width="960" height="600" tabindex="0"></canvas>
             
             <div id="unity-loading-bar">
