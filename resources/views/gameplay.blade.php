@@ -157,8 +157,8 @@
             justify-content: center;
             max-width: 100%;
             max-height: 100%;
-            width: min(960px, calc(100vw - 16px), calc((100vh - 66px) * 1.6));
-            aspect-ratio: 960 / 600;
+            width: 100%;
+            height: 100%;
             transition: width 0.12s ease-out, height 0.12s ease-out;
         }
 
@@ -1036,7 +1036,7 @@
         /* ============================================================
            AUTO-FIT GAMEPLAY CANVAS (MAXIMIZED VIEWPORT)
            ============================================================ */
-        let fitMode = 'FIT'; // 'FIT' (preserve aspect ratio) or 'STRETCH'
+        let fitMode = 'STRETCH'; // 'FIT' (preserve aspect ratio) or 'STRETCH'
 
         function fitGameToViewport() {
             const container = document.getElementById('unity-container');
