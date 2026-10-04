@@ -38,5 +38,17 @@ class DatabaseSeeder extends Seeder
                 'role'       => 'teacher',
             ]);
         }
+
+        // ── Student Account ─────────────────────────────────────────
+        if (!User::where('email', 'student@cos.com')->exists()) {
+            User::create([
+                'first_name' => 'Test',
+                'last_name'  => 'Student',
+                'age'        => 16,
+                'email'      => 'student@cos.com',
+                'password'   => \Illuminate\Support\Facades\Hash::make('student1234'),
+                'role'       => 'student',
+            ]);
+        }
     }
 }

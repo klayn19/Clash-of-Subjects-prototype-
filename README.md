@@ -7,6 +7,24 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+## Sample Accounts
+
+The database seeder creates these demo accounts if they do not already exist:
+
+| Role | Email | Password |
+| --- | --- | --- |
+| Admin | `admin@cos.com` | `admin1234` |
+| Teacher | `teacher@cos.com` | `teacher1234` |
+| Student | `student@cos.com` | `student1234` |
+
+To add them to the production database on Render, deploy the seeder changes, open the web service's Shell, and run:
+
+```sh
+php artisan db:seed --force
+```
+
+These are public demo credentials; change or remove them before using the app with real users or sensitive data.
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
