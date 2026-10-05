@@ -9,12 +9,23 @@ use Illuminate\Support\Facades\DB;
 use App\Models\User;
 use Carbon\Carbon;
 
-class AuthController extends Controller  // ← extends Controller (capital C)
+class AuthController extends Controller
 {
     // ─── SHOW LOGIN PAGE ───────────────────────────────────────────────
     public function index()
     {
-        $sections = \App\Models\Section::orderBy('name')->get();
+        $sections = [];
+
+        try {
+            if (\Schema::hasTable('sections')) {
+                $sections = \App\Models\Section::orderBy('name')->get();
+            }
+        } catch (\Throwable $e) {
+            \Log::warning('Unable to load sections for auth page.', [
+                'message' => $e->getMessage(),
+            ]);
+        }
+
         return view('auth.index', compact('sections'));
     }
 
