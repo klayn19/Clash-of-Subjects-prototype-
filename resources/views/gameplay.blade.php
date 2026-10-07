@@ -142,6 +142,40 @@
             padding: 0;
         }
 
+        .mobile-fullscreen-btn {
+            display: none;
+            position: fixed;
+            top: max(12px, env(safe-area-inset-top));
+            right: max(12px, env(safe-area-inset-right));
+            z-index: 60;
+            min-width: 44px;
+            min-height: 44px;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 12px;
+            border: 1px solid var(--gold);
+            border-radius: 8px;
+            background: rgba(9, 13, 30, 0.9);
+            color: var(--gold);
+            font-family: 'Press Start 2P', monospace;
+            font-size: 8px;
+            line-height: 1.4;
+            box-shadow: 0 0 12px rgba(240, 192, 0, 0.3);
+            cursor: pointer;
+            touch-action: manipulation;
+        }
+
+        .mobile-fullscreen-btn:active {
+            background: var(--gold);
+            color: #090d1e;
+        }
+
+        .mobile-fullscreen-btn:focus-visible {
+            outline: 2px solid #fff;
+            outline-offset: 3px;
+        }
+
         #mobile-input-bar {
             display: none !important;
         }
@@ -487,6 +521,12 @@
             }
             .hud-btn {
                 padding: 7px 9px;
+            }
+        }
+
+        @media (max-width: 991px) {
+            .mobile-fullscreen-btn {
+                display: inline-flex;
             }
         }
 
@@ -925,6 +965,16 @@
             <div id="unity-warning"></div>
         </div>
     </div>
+    <button
+        id="mobile-fullscreen-btn"
+        class="mobile-fullscreen-btn"
+        type="button"
+        aria-label="Enter fullscreen"
+        onclick="toggleFullscreen()"
+    >
+        <i class="fas fa-expand" aria-hidden="true"></i>
+        <span>FULLSCREEN</span>
+    </button>
 
     <!-- QUESTION CYCLE COMPLETED RESULTS MODAL -->
     <div id="results-modal-overlay" class="results-modal-backdrop">
@@ -1061,11 +1111,11 @@
 
             if (!document.fullscreenElement && !document.webkitFullscreenElement) {
                 if (requestFS) {
-                    requestFS.call(docEl).catch(err => console.log('FS error:', err));
+                    Promise.resolve(requestFS.call(docEl)).catch(err => console.warn('Fullscreen unavailable:', err));
                 }
             } else {
                 if (exitFS) {
-                    exitFS.call(document).catch(err => console.log('Exit FS error:', err));
+                    Promise.resolve(exitFS.call(document)).catch(err => console.warn('Could not exit fullscreen:', err));
                 }
             }
         }
