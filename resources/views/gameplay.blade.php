@@ -1140,6 +1140,27 @@
             }
         }
 
+        const openUnityWindow = window.open.bind(window);
+        const studentDashboardUrl = @json(route('student.dashboard'));
+
+        window.open = function(url, ...args) {
+            if (typeof url === 'string') {
+                try {
+                    const target = new URL(url, window.location.href);
+                    const targetPath = target.pathname.replace(/\/+$/, '');
+
+                    if (targetPath.endsWith('/student/dashboard')) {
+                        window.location.assign(studentDashboardUrl);
+                        return null;
+                    }
+                } catch (error) {
+                    console.warn('Unable to resolve Unity navigation target:', error);
+                }
+            }
+
+            return openUnityWindow(url, ...args);
+        };
+
         /* ============================================================
            UNITY WEBGL LOADER
            ============================================================ */
