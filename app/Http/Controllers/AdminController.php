@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use App\Models\User;
 use App\Models\Section;
 
@@ -71,30 +72,47 @@ class AdminController extends Controller
     public function updateStudent(Request $request)
     {
         if (session('user_role') !== 'admin') {
-            return response()->json(['success' => false, 'message' => 'Unauthorized']);
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
         }
 
-        $request->validate([
-            'student_id' => 'required|integer',
-            'lrn'        => 'nullable|string',
-            'section'    => 'nullable|string',
+        $validator = Validator::make($request->all(), [
+            'student_id' => 'required|integer|exists:users,id',
+            'lrn'        => ['nullable', 'string', 'regex:/^[0-9]{12}$/'],
+            'section'    => 'nullable|string|max:100',
+        ], [
+            'lrn.regex' => 'LRN must be exactly 12 numeric digits.',
         ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first(),
+            ], 422);
+        }
 
         $user = User::find($request->student_id);
         if (!$user || $user->role !== 'student') {
-            return response()->json(['success' => false, 'message' => 'Student not found']);
+            return response()->json(['success' => false, 'message' => 'Student not found'], 404);
         }
 
+        $cleanedLrn = $request->filled('lrn') ? trim($request->lrn) : null;
+
         // Ensure LRN is unique if changed
-        if ($request->lrn && $request->lrn !== $user->lrn) {
-            $exists = User::where('lrn', $request->lrn)->exists();
+        if ($cleanedLrn && $cleanedLrn !== $user->lrn) {
+            $exists = User::where('lrn', $cleanedLrn)
+                ->where('id', '!=', $user->id)
+                ->exists();
+
             if ($exists) {
-                return response()->json(['success' => false, 'message' => 'LRN already in use']);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'An account with this LRN already exists. Only one account per LRN is allowed.'
+                ], 422);
             }
         }
 
-        $user->lrn = $request->lrn;
-        $user->section = $request->section;
+        $user->lrn = $cleanedLrn;
+        $user->section = $request->section ? trim($request->section) : null;
         $user->save();
 
         return response()->json(['success' => true, 'message' => 'Student updated successfully']);

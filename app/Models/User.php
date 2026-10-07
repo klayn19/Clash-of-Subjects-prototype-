@@ -22,4 +22,12 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
     ];
+
+    /**
+     * Ensure LRN is cleanly stored without whitespace or empty strings.
+     */
+    public function setLrnAttribute($value)
+    {
+        $this->attributes['lrn'] = ($value !== null && trim($value) !== '') ? trim($value) : null;
+    }
 }

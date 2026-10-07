@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use App\Models\User;
 use Carbon\Carbon;
 
@@ -70,19 +71,36 @@ class AuthController extends Controller
     // ─── REGISTER ──────────────────────────────────────────────────────
     public function register(Request $request)
     {
-        $request->validate([
-            'lrn'              => 'required|string|unique:users,lrn',
-            'section'          => 'required|string',
-            'first_name'       => 'required|string',
-            'last_name'        => 'required|string',
-            'age'              => 'required|integer',
-            'email'            => 'required|email|unique:users,email',
+        $validator = Validator::make($request->all(), [
+            'lrn'              => [
+                'required',
+                'regex:/^[0-9]{12}$/',
+                'unique:users,lrn',
+            ],
+            'section'          => 'required|string|max:100',
+            'first_name'       => 'required|string|max:100',
+            'last_name'        => 'required|string|max:100',
+            'age'              => 'required|integer|min:1|max:120',
+            'email'            => 'required|email|max:150|unique:users,email',
             'password'         => 'required|min:6',
             'confirm_password' => 'required|same:password',
+        ], [
+            'lrn.required'     => 'LRN is required.',
+            'lrn.regex'        => 'LRN must be exactly 12 numeric digits.',
+            'lrn.unique'       => 'An account with this LRN already exists. Only one account per LRN is allowed.',
+            'email.unique'     => 'An account with this email already exists.',
+            'confirm_password.same' => 'Passwords do not match.',
         ]);
 
+        if ($validator->fails()) {
+            return back()
+                ->withErrors($validator)
+                ->withInput()
+                ->with('form', 'registerForm');
+        }
+
         User::create([
-            'lrn'        => $request->lrn,
+            'lrn'        => trim($request->lrn),
             'section'    => $request->section,
             'first_name' => $request->first_name,
             'last_name'  => $request->last_name,

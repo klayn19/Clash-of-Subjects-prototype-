@@ -1,5 +1,5 @@
 @php
-    $redirect_form = session('form', 'loginForm');
+    $redirect_form = session('form', (old('lrn') || old('first_name')) ? 'registerForm' : 'loginForm');
 @endphp
 <!DOCTYPE html>
 <html lang="en">
@@ -429,14 +429,14 @@ body {
             <label>First Name</label>
             <div class="input-wrap">
               <span class="input-icon">👤</span>
-              <input type="text" name="first_name" placeholder="First Name" required>
+              <input type="text" name="first_name" placeholder="First Name" value="{{ old('first_name') }}" required>
             </div>
           </div>
           <div class="field">
             <label>Last Name</label>
             <div class="input-wrap">
               <span class="input-icon">👤</span>
-              <input type="text" name="last_name" placeholder="Last Name" required>
+              <input type="text" name="last_name" placeholder="Last Name" value="{{ old('last_name') }}" required>
             </div>
           </div>
         </div>
@@ -445,15 +445,15 @@ body {
           <label>Age</label>
           <div class="input-wrap">
             <span class="input-icon">🎂</span>
-            <input type="number" name="age" placeholder="Age" min="1" max="100" required>
+            <input type="number" name="age" placeholder="Age" min="1" max="100" value="{{ old('age') }}" required>
           </div>
         </div>
 
         <div class="field">
-          <label>LRN</label>
+          <label>LRN (12 Digits)</label>
           <div class="input-wrap">
             <span class="input-icon">🆔</span>
-            <input type="text" name="lrn" placeholder="Learner Reference Number" required>
+            <input type="text" name="lrn" placeholder="12-digit Learner Reference Number" value="{{ old('lrn') }}" maxlength="12" pattern="[0-9]{12}" inputmode="numeric" title="LRN must be exactly 12 numeric digits" required>
           </div>
         </div>
 
@@ -462,9 +462,9 @@ body {
           <div class="input-wrap">
             <span class="input-icon">🏫</span>
             <select name="section" required>
-              <option value="" disabled selected>Select your section</option>
+              <option value="" disabled {{ old('section') ? '' : 'selected' }}>Select your section</option>
               @foreach($sections as $sec)
-                <option value="{{ $sec->name }}">{{ $sec->name }}</option>
+                <option value="{{ $sec->name }}" {{ old('section') === $sec->name ? 'selected' : '' }}>{{ $sec->name }}</option>
               @endforeach
             </select>
           </div>
@@ -474,7 +474,7 @@ body {
           <label>Email Address</label>
           <div class="input-wrap">
             <span class="input-icon">✉️</span>
-            <input type="email" name="email" placeholder="your@email.com" required>
+            <input type="email" name="email" placeholder="your@email.com" value="{{ old('email') }}" required>
           </div>
         </div>
 

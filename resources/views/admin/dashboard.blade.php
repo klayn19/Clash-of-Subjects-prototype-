@@ -503,8 +503,8 @@
     <div class="modal-title">✏️ EDIT STUDENT — <span id="editStudentName" style="color:#fff;font-family:'Outfit',sans-serif;font-size:16px;"></span></div>
 
     <div class="form-group">
-      <label class="form-label" for="editLrn">LEARNER REFERENCE NUMBER (LRN)</label>
-      <input type="text" id="editLrn" class="pixel-input" placeholder="Enter LRN">
+      <label class="form-label" for="editLrn">LEARNER REFERENCE NUMBER (LRN) <span style="font-size:12px;color:var(--text-muted);font-weight:normal;">(12 digits)</span></label>
+      <input type="text" id="editLrn" class="pixel-input" placeholder="12-digit LRN" maxlength="12" pattern="[0-9]{12}" inputmode="numeric">
     </div>
 
     <div class="form-group">
@@ -652,6 +652,12 @@
     const lrn     = document.getElementById('editLrn').value.trim();
     const section = document.getElementById('editSection').value.trim();
     const msg     = document.getElementById('editStudentMsg');
+
+    if (lrn && !/^[0-9]{12}$/.test(lrn)) {
+      msg.style.color = 'var(--red)';
+      msg.textContent  = 'LRN must be exactly 12 numeric digits.';
+      return;
+    }
 
     msg.style.color = 'var(--gold)';
     msg.textContent  = 'Saving...';
