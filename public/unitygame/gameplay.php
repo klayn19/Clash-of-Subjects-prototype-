@@ -7,7 +7,6 @@
     <title>Clash of Subjects | The Arena</title>
     <link rel="shortcut icon" href="TemplateData/favicon.ico">
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
-    <script src="quit-navigation.js?v=<?= filemtime(__DIR__ . '/quit-navigation.js') ?>"></script>
     <style>
         * {
             margin: 0;

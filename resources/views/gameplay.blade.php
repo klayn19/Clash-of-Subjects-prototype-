@@ -8,7 +8,6 @@
     <link rel="shortcut icon" href="{{ asset('unitygame/TemplateData/favicon.ico') }}">
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <script src="{{ asset('unitygame/quit-navigation.js') }}?v={{ filemtime(public_path('unitygame/quit-navigation.js')) }}"></script>
     <style>
         * {
             margin: 0;
