@@ -57,3 +57,8 @@ Route::get('/backend/get_class_students.php',  [TeacherController::class, 'getCl
 // GET /api/get_question?class_id=3&subject=english&type=quiz&quarter=1&answered=1,2,5
 Route::any('/api/get_question', [TeacherController::class, 'getQuestion'])->name('api.getQuestion');
 Route::any('/backend/get_question.php', [TeacherController::class, 'getQuestion']);
+
+// Called by Unity's GK Arena (AI Mode) to fetch one AI-style question.
+// GET /backend/generate_ai_question.php?subject=math&grade_level=Grade+8&difficulty=5&answered=1,2,3
+Route::any('/backend/generate_ai_question.php', [\App\Http\Controllers\GeneralKnowledgeController::class, 'generateAiQuestion']);
+Route::any('/api/generate_ai_question',         [\App\Http\Controllers\GeneralKnowledgeController::class, 'generateAiQuestion']);

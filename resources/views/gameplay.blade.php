@@ -862,6 +862,11 @@
                     const queryStr = qIndex !== -1 ? urlStr.substring(qIndex) : '';
                     return window.location.origin + '/api/save_score' + queryStr;
                 }
+                if (urlStr.includes('generate_ai_question')) {
+                    const qIndex = urlStr.indexOf('?');
+                    const queryStr = qIndex !== -1 ? urlStr.substring(qIndex) : '';
+                    return window.location.origin + '/api/generate_ai_question' + queryStr;
+                }
             }
             return urlStr;
         }
