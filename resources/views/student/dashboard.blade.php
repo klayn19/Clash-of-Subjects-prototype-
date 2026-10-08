@@ -299,6 +299,81 @@
     .badge-blue   { background: var(--blue-mid); color: var(--gold); border-color: var(--gold-dim); }
     .badge-red    { background: var(--red);    color: #fff; }
 
+    /* ===== MULTIPLAYER REWARD PREVIEW ===== */
+    .reward-card {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+    .reward-emblem {
+      width: 112px;
+      height: 112px;
+      flex: 0 0 112px;
+      display: grid;
+      place-items: center;
+      background: var(--blue-deep);
+      border: 2px solid var(--blue-mid);
+      box-shadow: 3px 3px 0 rgba(0,0,0,0.4);
+    }
+    .reward-emblem-icon {
+      font-size: 58px;
+      background: linear-gradient(to top, var(--gold) var(--win-progress), #37415c var(--win-progress));
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+    }
+    .reward-details { flex: 1; min-width: 0; }
+    .reward-name {
+      color: var(--gold);
+      font-family: 'Cinzel', serif;
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      margin-bottom: 6px;
+    }
+    .reward-caption {
+      color: var(--text-dim);
+      font-size: 13px;
+      margin-bottom: 14px;
+    }
+    .reward-progress-track {
+      height: 14px;
+      background: var(--blue-deep);
+      border: 2px solid var(--blue-mid);
+      margin-bottom: 8px;
+      overflow: hidden;
+    }
+    .reward-progress-fill {
+      height: 100%;
+      width: var(--win-progress);
+      background: var(--gold);
+      box-shadow: 0 0 10px rgba(240,192,48,0.5);
+      transition: width 0.25s ease;
+    }
+    .reward-progress-label {
+      color: var(--text-dim);
+      font-size: 12px;
+      letter-spacing: 0.06em;
+    }
+    .reward-milestones {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 16px;
+    }
+    .reward-milestone {
+      padding: 6px 9px;
+      color: var(--text-muted);
+      background: var(--blue-deep);
+      border: 1px solid var(--blue-mid);
+      font-size: 11px;
+      letter-spacing: 0.04em;
+    }
+    .reward-milestone.is-unlocked {
+      color: var(--gold);
+      border-color: var(--gold-dim);
+    }
+
     /* ===== HAMBURGER BUTTON ===== */
     .hamburger {
       display: none;
@@ -379,6 +454,10 @@
 
       .pixel-table { font-size: 13px; }
       .pixel-table th, .pixel-table td { padding: 7px 10px; white-space: nowrap; }
+
+      .reward-card { align-items: flex-start; gap: 16px; }
+      .reward-emblem { width: 80px; height: 80px; flex-basis: 80px; }
+      .reward-emblem-icon { font-size: 42px; }
     }
 
     @media (max-width: 480px) {
@@ -387,6 +466,11 @@
       .panel { padding: 14px 12px; }
       .panel-title { font-size: 14px; }
       .action-btn, .logout-btn { font-size: 9px; padding: 6px 8px; }
+      .reward-card { gap: 12px; }
+      .reward-emblem { width: 64px; height: 64px; flex-basis: 64px; }
+      .reward-emblem-icon { font-size: 34px; }
+      .reward-name { font-size: 13px; }
+      .reward-caption { font-size: 11px; }
     }
 
     /* ===== NOTES CONTAINER ===== */
@@ -493,6 +577,43 @@
           @else
             <p style="color:var(--text-muted); font-size:18px; text-align:center; padding: 20px;">No grades available yet.</p>
           @endif
+        </div>
+
+        @php
+          // Dashboard-only concept preview; multiplayer win tracking is not connected yet.
+          $multiplayerWins = 0;
+          $winProgress = min(100, ($multiplayerWins / 20) * 100);
+        @endphp
+        <div class="panel">
+          <div class="corner-bl"></div><div class="corner-br"></div>
+          <div class="panel-title">⚔ MULTIPLAYER REWARD</div>
+          <div class="reward-card" style="--win-progress: {{ $winProgress }}%;">
+            <div class="reward-emblem" role="img" aria-label="Multiplayer trophy badge, {{ $winProgress }} percent complete">
+              <i class="fas fa-trophy reward-emblem-icon" aria-hidden="true"></i>
+            </div>
+            <div class="reward-details">
+              <div class="reward-name">VICTORY BADGE</div>
+              <p class="reward-caption">Dashboard preview — multiplayer win tracking is not connected yet.</p>
+              <div
+                class="reward-progress-track"
+                role="progressbar"
+                aria-label="Progress toward the multiplayer victory badge"
+                aria-valuemin="0"
+                aria-valuemax="20"
+                aria-valuenow="{{ $multiplayerWins }}"
+              >
+                <div class="reward-progress-fill"></div>
+              </div>
+              <div class="reward-progress-label">{{ $multiplayerWins }} / 20 MULTIPLAYER WINS · {{ $winProgress }}%</div>
+              <div class="reward-milestones" aria-label="Badge milestones">
+                @foreach ([10, 15, 20] as $milestone)
+                  <span class="reward-milestone {{ $multiplayerWins >= $milestone ? 'is-unlocked' : '' }}">
+                    {{ $milestone }} WINS{{ $multiplayerWins >= $milestone ? ' · UNLOCKED' : '' }}
+                  </span>
+                @endforeach
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
