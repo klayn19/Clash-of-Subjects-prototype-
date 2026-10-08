@@ -351,12 +351,12 @@
         
         const cacheVer = "<?= time() ?>";
         const buildUrl = "Build";
-        const loaderUrl = buildUrl + "/unitygame.loader.js?v=" + cacheVer;
+        const loaderUrl = buildUrl + "/unityFinal.loader.js?v=" + cacheVer;
         const config = {
             arguments: [],
-            dataUrl: buildUrl + "/unitygame.data?v=" + cacheVer,
-            frameworkUrl: buildUrl + "/unitygame.framework.js?v=" + cacheVer,
-            codeUrl: buildUrl + "/unitygame.wasm?v=" + cacheVer,
+            dataUrl: buildUrl + "/unityFinal.data?v=" + cacheVer,
+            frameworkUrl: buildUrl + "/unityFinal.framework.js?v=" + cacheVer,
+            codeUrl: buildUrl + "/unityFinal.wasm?v=" + cacheVer,
             streamingAssetsUrl: "StreamingAssets",
             companyName: "ClashStudio",
             productName: "ClashOfSubjects",
