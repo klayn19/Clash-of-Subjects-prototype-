@@ -1167,12 +1167,12 @@
         
         const cacheVer = "{{ time() }}";
         const buildUrl = "{{ asset('unitygame/Build') }}";
-        const loaderUrl = buildUrl + "/unityFinal.loader.js?v=" + cacheVer;
+        const loaderUrl = buildUrl + "/unitygame.loader.js?v=" + cacheVer;
         const config = {
             arguments: [],
-            dataUrl: buildUrl + "/unityFinal.data?v=" + cacheVer,
-            frameworkUrl: buildUrl + "/unityFinal.framework.js?v=" + cacheVer,
-            codeUrl: buildUrl + "/unityFinal.wasm?v=" + cacheVer,
+            dataUrl: buildUrl + "/unitygame.data?v=" + cacheVer,
+            frameworkUrl: buildUrl + "/unitygame.framework.js?v=" + cacheVer,
+            codeUrl: buildUrl + "/unitygame.wasm?v=" + cacheVer,
             streamingAssetsUrl: "{{ asset('unitygame/StreamingAssets') }}",
             companyName: "ClashStudio",
             productName: "ClashOfSubjects",
