@@ -135,6 +135,7 @@ class GeneralKnowledgeController extends Controller
             'D'           => $question->choice_d,
             'answer'      => $question->answer,
             'explanation' => $question->explanation ?? '',
+            'definition'  => $question->explanation ?? '',
             'subject'     => $question->subject,
             'difficulty'  => $question->difficulty ?? '',
         ]);

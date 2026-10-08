@@ -297,6 +297,8 @@ class TeacherController extends Controller
             'C'               => $question->choice_c,
             'D'               => $question->choice_d,
             'answer'          => $question->answer,
+            'explanation'     => $question->explanation ?? '',
+            'definition'      => $question->explanation ?? '',
             'is_last'         => $isLast,
             'remaining'       => $remainingAfterThis,
             'total_questions' => $totalQuestionsInPool,
