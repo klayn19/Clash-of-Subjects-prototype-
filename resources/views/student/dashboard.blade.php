@@ -373,6 +373,42 @@
       color: var(--gold);
       border-color: var(--gold-dim);
     }
+    .subject-bests {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+    .subject-best {
+      --best-progress: 0%;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+      padding: 14px;
+      background: var(--blue-deep);
+      border: 2px solid var(--blue-mid);
+    }
+    .subject-best.is-earned { border-color: var(--gold-dim); }
+    .subject-best-icon {
+      flex: 0 0 auto;
+      font-size: 30px;
+      background: linear-gradient(to top, var(--gold) var(--best-progress), #37415c var(--best-progress));
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+    }
+    .subject-best-info { min-width: 0; }
+    .subject-best-name {
+      color: var(--gold);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+    }
+    .subject-best-score {
+      color: var(--text-dim);
+      font-size: 12px;
+      margin-top: 5px;
+    }
 
     /* ===== HAMBURGER BUTTON ===== */
     .hamburger {
@@ -458,6 +494,7 @@
       .reward-card { align-items: flex-start; gap: 16px; }
       .reward-emblem { width: 80px; height: 80px; flex-basis: 80px; }
       .reward-emblem-icon { font-size: 42px; }
+      .subject-bests { grid-template-columns: 1fr; gap: 10px; }
     }
 
     @media (max-width: 480px) {
@@ -471,6 +508,7 @@
       .reward-emblem-icon { font-size: 34px; }
       .reward-name { font-size: 13px; }
       .reward-caption { font-size: 11px; }
+      .subject-best { padding: 11px; }
     }
 
     /* ===== NOTES CONTAINER ===== */
@@ -613,6 +651,37 @@
                 @endforeach
               </div>
             </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="corner-bl"></div><div class="corner-br"></div>
+          <div class="panel-title">📚 SUBJECT PERSONAL BESTS</div>
+          <div class="subject-bests">
+            @foreach ([
+              'english' => ['name' => 'ENGLISH', 'icon' => 'fa-book-open'],
+              'math' => ['name' => 'MATH', 'icon' => 'fa-square-root-variable'],
+              'science' => ['name' => 'SCIENCE', 'icon' => 'fa-flask'],
+            ] as $subject => $badge)
+              @php
+                $bestScore = $bestSubjectScores[$subject];
+                $bestPercent = $bestScore ? min(100, max(0, (float) $bestScore->percent)) : 0;
+              @endphp
+              <div
+                class="subject-best {{ $bestScore ? 'is-earned' : '' }}"
+                style="--best-progress: {{ $bestPercent }}%;"
+                role="img"
+                aria-label="Best in {{ strtolower($badge['name']) }}: {{ $bestScore ? $bestPercent . '%' : 'no scores yet' }}"
+              >
+                <i class="fas {{ $badge['icon'] }} subject-best-icon" aria-hidden="true"></i>
+                <div class="subject-best-info">
+                  <div class="subject-best-name">BEST IN {{ $badge['name'] }}</div>
+                  <div class="subject-best-score">
+                    {{ $bestScore ? 'PERSONAL BEST: ' . $bestPercent . '%' : 'NO SCORES YET' }}
+                  </div>
+                </div>
+              </div>
+            @endforeach
           </div>
         </div>
       </section>

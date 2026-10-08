@@ -46,6 +46,14 @@ class StudentController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
+        $bestSubjectScores = [];
+        foreach (['english', 'math', 'science'] as $subject) {
+            $bestSubjectScores[$subject] = $scores
+                ->where('subject', $subject)
+                ->sortByDesc('percent')
+                ->first();
+        }
+
         // Fetch notes from teachers
         $notes = DB::table('student_notes')
             ->join('users', 'student_notes.teacher_id', '=', 'users.id')
@@ -54,6 +62,6 @@ class StudentController extends Controller
             ->orderBy('student_notes.created_at', 'desc')
             ->get();
 
-        return view('student.dashboard', compact('scores', 'notes'));
+        return view('student.dashboard', compact('scores', 'notes', 'bestSubjectScores'));
     }
 }
