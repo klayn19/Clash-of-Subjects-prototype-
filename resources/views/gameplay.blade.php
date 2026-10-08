@@ -1167,12 +1167,12 @@
         
         const cacheVer = "{{ time() }}";
         const buildUrl = "{{ asset('unitygame/Build') }}";
-        const loaderUrl = buildUrl + "/unitygame.loader.js?v=" + cacheVer;
+        const loaderUrl = buildUrl + "/unityFinal.loader.js?v=" + cacheVer;
         const config = {
             arguments: [],
-            dataUrl: buildUrl + "/unitygame.data?v=" + cacheVer,
-            frameworkUrl: buildUrl + "/unitygame.framework.js?v=" + cacheVer,
-            codeUrl: buildUrl + "/unitygame.wasm?v=" + cacheVer,
+            dataUrl: buildUrl + "/unityFinal.data?v=" + cacheVer,
+            frameworkUrl: buildUrl + "/unityFinal.framework.js?v=" + cacheVer,
+            codeUrl: buildUrl + "/unityFinal.wasm?v=" + cacheVer,
             streamingAssetsUrl: "{{ asset('unitygame/StreamingAssets') }}",
             companyName: "ClashStudio",
             productName: "ClashOfSubjects",
@@ -1182,6 +1182,16 @@
         
         document.querySelector("#unity-loading-bar").style.display = "flex";
         
+        window.addEventListener('error', function(e) {
+            console.error("Window error during Unity initialization:", e);
+            if (!globalUnityInstance) {
+                const loadingDiv = document.querySelector("#unity-loading-bar");
+                if (loadingDiv && loadingDiv.style.display !== "none") {
+                    loadingDiv.innerHTML = '<div style="color:#ff5566;font-family:monospace;text-align:center;padding:20px;max-width:80%;font-size:12px;">⚠ REALM FAILED TO LOAD<br><span style="color:#f0c030;font-size:10px;">' + (e.message || 'WebAssembly compilation failed') + '</span><br><br><button onclick="location.reload()" style="background:#f0c030;border:none;padding:6px 14px;cursor:pointer;font-family:inherit;font-weight:bold;margin-top:10px;">RETRY</button></div>';
+                }
+            }
+        });
+
         const script = document.createElement("script");
         script.src = loaderUrl;
         script.onload = () => {
@@ -1196,7 +1206,7 @@
                 console.warn("Unity error:", err);
                 const loadingDiv = document.querySelector("#unity-loading-bar");
                 if (loadingDiv) {
-                    loadingDiv.innerHTML = '<div style="color:#c01020;font-family:monospace;text-align:center;">⚠ REALM UNREACHABLE<br>RETRY LATER</div>';
+                    loadingDiv.innerHTML = '<div style="color:#c01020;font-family:monospace;text-align:center;">⚠ REALM UNREACHABLE<br>' + (err && err.message ? err.message : 'RETRY LATER') + '</div>';
                 }
             });
         };

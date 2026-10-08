@@ -22,10 +22,3 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
-
-# ─── Unity WebGL Build (large binary files — host on CDN or separately) ───────
-/public/unitygame/Build/*.wasm
-/public/unitygame/Build/*.data
-/public/unitygame/Build/*.framework.js
-/public/unitygame/Build/*.loader.js
-/public/unitygame/Build/*.symbols.json.gz
