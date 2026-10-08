@@ -341,6 +341,17 @@
     }
     .pixel-table tr:nth-child(even) td { background: rgba(14,21,48,0.5); }
     .pixel-table tr:hover td { background: rgba(30,42,80,0.6); }
+    .subject-best-list { display: flex; flex-wrap: wrap; gap: 5px; }
+    .subject-best-chip {
+      display: inline-block;
+      padding: 4px 6px;
+      background: var(--blue-deep);
+      border: 1px solid var(--blue-mid);
+      color: var(--text-muted);
+      font-size: 10px;
+      white-space: nowrap;
+    }
+    .subject-best-chip.is-earned { color: var(--gold); border-color: var(--gold-dim); }
 
     .badge {
       display: inline-block;
@@ -757,6 +768,7 @@
             <div class="class-circle"
                  data-class-id="{{ $c->id }}"
                  data-class-name="{{ addslashes($c->name) }}"
+                 data-section="{{ $c->section ?? '' }}"
                  data-action="show-students"
                  style="cursor:pointer;">
               {{ $c->name }}
@@ -819,6 +831,7 @@
                 <th>TYPE</th>
                 <th>SUBJECT</th>
                 <th>SCORE</th>
+                <th>SUBJECT BESTS</th>
                 <th colspan="2">ACTION</th>
               </tr>
             </thead>
@@ -1355,7 +1368,7 @@ document.getElementById('classGrid').addEventListener('click', function(e) {
   const action    = target.dataset.action;
   const classId   = target.dataset.classId;
   const className = target.dataset.className;
-  if (action === 'show-students') showClassStudents(classId, className);
+  if (action === 'show-students') showClassStudents(classId, className, target.dataset.section);
   if (action === 'enroll')        openEnrollModal(classId, className);
   if (action === 'delete-class')  deleteClass(classId, className);
 });
@@ -1479,9 +1492,10 @@ async function submitStudentNote() {
   }
 }
 
-async function showClassStudents(classId, className) {
+async function showClassStudents(classId, className, section) {
   currentClassId = classId;
-  document.getElementById('studentListTitle').textContent = `👥 ${className.toUpperCase()} – STUDENTS`;
+  const sectionLabel = section ? ` · ${section.toUpperCase()}` : '';
+  document.getElementById('studentListTitle').textContent = `👥 ${className.toUpperCase()}${sectionLabel} – STUDENTS`;
   document.getElementById('studentListPanel').style.display = 'block';
   document.getElementById('studentListPanel').scrollIntoView({ behavior:'smooth' });
   const subject = document.getElementById('filterSubject').value || 'all';
@@ -1491,18 +1505,18 @@ async function showClassStudents(classId, className) {
 
 async function fetchAndRenderStudents(classId, subject, type = 'all') {
   const tbody = document.getElementById('studentTableBody');
-  tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--gold);padding:16px;font-family:\'Outfit\',sans-serif;font-size:13px;font-weight:600;letter-spacing:0.08em;">⏳ LOADING...</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--gold);padding:16px;font-family:\'Outfit\',sans-serif;font-size:13px;font-weight:600;letter-spacing:0.08em;">⏳ LOADING...</td></tr>';
   try {
     const url = `/backend/get_class_students.php?class_id=${classId}&subject=${encodeURIComponent(subject)}&type=${encodeURIComponent(type)}`;
     const res  = await fetch(url);
     const data = await res.json();
     if (!data.success) {
-      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--red);font-size:14px;">${data.message}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--red);font-size:14px;">${data.message}</td></tr>`;
       return;
     }
     const students = data.students;
     if (students.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);font-size:14px;">NO STUDENTS ENROLLED IN THIS CLASS</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text-muted);font-size:14px;">NO STUDENTS ENROLLED IN THIS CLASS</td></tr>';
       return;
     }
     tbody.innerHTML = students.map((s, i) => {
@@ -1513,6 +1527,11 @@ async function fetchAndRenderStudents(classId, subject, type = 'all') {
       const typeDisp  = s.type    && s.type    !== '—' ? s.type.charAt(0).toUpperCase()    + s.type.slice(1)    : '—';
       const typeColor = s.type === 'quiz' ? 'badge-blue' : s.type === 'exam' ? 'badge-gold' : '';
       const safeName  = s.name.replace(/'/g, "\'");
+      const bestSubjects = ['english', 'math', 'science'].map(subject => {
+        const best = s.best_subjects?.[subject];
+        const label = subject === 'english' ? 'ENG' : subject === 'science' ? 'SCI' : 'MATH';
+        return `<span class="subject-best-chip ${best !== null && best !== undefined ? 'is-earned' : ''}">${label} ${best !== null && best !== undefined ? `${best}%` : '—'}</span>`;
+      }).join('');
       return `
         <tr id="student-row-${s.id}">
           <td>${i + 1}</td>
@@ -1520,6 +1539,7 @@ async function fetchAndRenderStudents(classId, subject, type = 'all') {
           <td>${typeColor ? `<span class="badge ${typeColor}">${typeDisp}</span>` : typeDisp}</td>
           <td><span class="badge badge-blue">${subjDisp}</span></td>
           <td><span class="badge ${badgeCls}">${scoreDisp}</span></td>
+          <td><div class="subject-best-list">${bestSubjects}</div></td>
           <td>
             <button class="pixel-btn" style="padding:7px 10px;font-size:7px;"
               onclick="viewStudentScore(${s.id}, '${safeName}')">VIEW</button>
@@ -1531,7 +1551,7 @@ async function fetchAndRenderStudents(classId, subject, type = 'all') {
         </tr>`;
     }).join('');
   } catch (err) {
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--red);font-size:14px;">NETWORK ERROR. CHECK CONSOLE.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--red);font-size:14px;">NETWORK ERROR. CHECK CONSOLE.</td></tr>';
     console.error('fetchAndRenderStudents error:', err);
   }
 }
@@ -2144,4 +2164,3 @@ function renderChart(analyticsData) {
 </script>
 </body>
 </html>
-

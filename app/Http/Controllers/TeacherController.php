@@ -363,11 +363,25 @@ class TeacherController extends Controller
             ->orderBy('users.last_name')
             ->get();
 
+        $bestSubjectScores = DB::table('student_scores')
+            ->where('class_id', $request->class_id)
+            ->whereIn('student_id', $students->pluck('id'))
+            ->whereIn('subject', ['english', 'math', 'science'])
+            ->select('student_id', 'subject', DB::raw('MAX(percent) as percent'))
+            ->groupBy('student_id', 'subject')
+            ->get()
+            ->keyBy(fn ($score) => $score->student_id . ':' . $score->subject);
+
         $subjectFilter = $request->query('subject', 'all');
         $typeFilter    = $request->query('type', 'all');
 
         foreach ($students as $student) {
             $student->name = trim($student->first_name . ' ' . $student->last_name);
+            $student->best_subjects = [];
+            foreach (['english', 'math', 'science'] as $subject) {
+                $bestScore = $bestSubjectScores->get($student->id . ':' . $subject);
+                $student->best_subjects[$subject] = $bestScore ? round((float) $bestScore->percent, 2) : null;
+            }
 
             $scoreQuery = DB::table('student_scores')
                 ->where('student_id', $student->id)
