@@ -19,7 +19,9 @@ Route::get('/logout',           [AuthController::class, 'logout'])->name('logout
 Route::get('/gameplay', function (\Illuminate\Http\Request $request) {
     if (!session('user_id')) return redirect('/');
 
-    if ($request->query('mode') === 'quizbee') {
+    $isQuizbee = $request->query('mode') === 'quizbee';
+
+    if ($isQuizbee) {
         $accessExpiresAt = session('quizbee_access_until');
         if (
             session('user_role') !== 'student'
@@ -31,7 +33,10 @@ Route::get('/gameplay', function (\Illuminate\Http\Request $request) {
         }
     }
 
-    return view('gameplay');
+    return view('gameplay', [
+        'unityBuildDirectory' => $isQuizbee ? 'unitygameQuizbee' : 'unitygame',
+        'unityBuildName' => $isQuizbee ? 'unitygameQuizbee' : 'unityFinal',
+    ]);
 })->name('gameplay');
 
 // ─── STUDENT DASHBOARD ─────────────────────────────────────────────

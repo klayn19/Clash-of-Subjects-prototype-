@@ -82,12 +82,21 @@ class QuizBeeAccessTest extends TestCase
         $accessCode = DB::table('quizbee_access_codes')->first();
         $this->assertNotNull($accessCode->redeemed_at);
 
-        $this->withSession([
+        $quizbeeGameplay = $this->withSession([
             'user_id' => $studentId,
             'user_role' => 'student',
             'quizbee_access_until' => $accessCode->expires_at,
             'quizbee_access_student_id' => $studentId,
-        ])->get('/gameplay?mode=quizbee&uid=' . $studentId)->assertOk();
+        ])->get('/gameplay?mode=quizbee&uid=' . $studentId);
+        $quizbeeGameplay->assertOk()
+            ->assertSee('unitygameQuizbee\\/Build\\/unitygameQuizbee.loader.js', false);
+
+        $regularGameplay = $this->withSession([
+            'user_id' => $studentId,
+            'user_role' => 'student',
+        ])->get('/gameplay');
+        $regularGameplay->assertOk()
+            ->assertSee('unitygame\\/Build\\/unityFinal.loader.js', false);
 
         $this->withSession([
             'user_id' => $studentId,

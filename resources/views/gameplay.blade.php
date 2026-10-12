@@ -5,7 +5,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0, viewport-fit=cover">
     <title>Clash of Subjects | The Arena</title>
-    <link rel="shortcut icon" href="{{ asset('unitygame/TemplateData/favicon.ico') }}">
+    <link rel="shortcut icon" href="{{ asset($unityBuildDirectory . '/TemplateData/favicon.ico') }}">
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
@@ -247,7 +247,7 @@
         #unity-logo {
             width: 90px;
             height: 90px;
-            background: url("{{ asset('unitygame/TemplateData/unity-logo-dark.png') }}") center/contain no-repeat;
+            background: url("{{ asset($unityBuildDirectory . '/TemplateData/unity-logo-dark.png') }}") center/contain no-repeat;
             filter: drop-shadow(0 0 20px var(--gold-glow));
             opacity: 0.9;
             animation: logoPulse 2s ease-in-out infinite;
@@ -1171,14 +1171,13 @@
         }
         
         const cacheVer = "{{ time() }}";
-        const buildUrl = "{{ asset('unitygame/Build') }}";
-        const loaderUrl = buildUrl + "/unityFinal.loader.js?v=" + cacheVer;
+        const loaderUrl = @json(asset($unityBuildDirectory . '/Build/' . $unityBuildName . '.loader.js')) + "?v=" + cacheVer;
         const config = {
             arguments: [],
-            dataUrl: buildUrl + "/unityFinal.data?v=" + cacheVer,
-            frameworkUrl: buildUrl + "/unityFinal.framework.js?v=" + cacheVer,
-            codeUrl: buildUrl + "/unityFinal.wasm?v=" + cacheVer,
-            streamingAssetsUrl: "{{ asset('unitygame/StreamingAssets') }}",
+            dataUrl: @json(asset($unityBuildDirectory . '/Build/' . $unityBuildName . '.data')) + "?v=" + cacheVer,
+            frameworkUrl: @json(asset($unityBuildDirectory . '/Build/' . $unityBuildName . '.framework.js')) + "?v=" + cacheVer,
+            codeUrl: @json(asset($unityBuildDirectory . '/Build/' . $unityBuildName . '.wasm')) + "?v=" + cacheVer,
+            streamingAssetsUrl: @json(asset($unityBuildDirectory . '/StreamingAssets')),
             companyName: "ClashStudio",
             productName: "ClashOfSubjects",
             productVersion: "1.0",
