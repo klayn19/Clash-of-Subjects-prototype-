@@ -50,6 +50,8 @@ class AuthController extends Controller
             return back()->with('error', 'Invalid password!')->with('form', 'loginForm');
         }
 
+        session()->forget(['quizbee_access_until', 'quizbee_access_student_id']);
+
         // Save user to session
         session([
             'user_id'   => $user->id,

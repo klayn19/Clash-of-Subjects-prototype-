@@ -1150,8 +1150,10 @@
         <textarea class="pixel-textarea" id="noteText" placeholder="Enter your note here..."></textarea>
         <div class="btn-row">
           <button class="pixel-btn pixel-btn-outline" onclick="submitStudentNote()">▶ SEND NOTE</button>
+          <button class="pixel-btn" onclick="issueQuizBeeCode()">▶ ISSUE QUIZBEE CODE</button>
           <span id="noteStatus" style="font-size:14px; font-family:'Outfit', sans-serif; letter-spacing:0.06em;"></span>
         </div>
+        <div id="quizBeeCodeStatus" aria-live="polite" style="margin-top:12px;font-size:16px;color:var(--gold);"></div>
       </div>
     </section>
 
@@ -1488,6 +1490,43 @@ async function submitStudentNote() {
     }
   } catch(err) {
     statusEl.textContent = '✕ Network error.';
+    statusEl.style.color = 'var(--red)';
+  }
+}
+
+async function issueQuizBeeCode() {
+  const studentId = document.getElementById('noteStudent').value;
+  const statusEl = document.getElementById('quizBeeCodeStatus');
+
+  if (!studentId) {
+    statusEl.textContent = '⚠ Please select a student.';
+    statusEl.style.color = 'var(--red)';
+    return;
+  }
+
+  statusEl.textContent = '⏳ GENERATING CODE...';
+  statusEl.style.color = 'var(--gold)';
+
+  try {
+    const response = await fetch('/backend/issue_quizbee_code.php', {
+      method: 'POST',
+      headers: fetchConfig.headers,
+      body: JSON.stringify({ student_id: studentId })
+    });
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      statusEl.textContent = `✕ Error: ${data.message || 'Could not issue code.'}`;
+      statusEl.style.color = 'var(--red)';
+      return;
+    }
+
+    const expiry = new Date(data.expires_at).toLocaleString();
+    statusEl.textContent = `✔ Code ${data.code} — valid until ${expiry}. Recorded in the student's notes.`;
+    statusEl.style.color = 'var(--green)';
+  } catch (error) {
+    console.error('QuizBee code issuance failed:', error);
+    statusEl.textContent = '✕ Network error while issuing code.';
     statusEl.style.color = 'var(--red)';
   }
 }

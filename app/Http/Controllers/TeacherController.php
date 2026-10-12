@@ -664,6 +664,70 @@ class TeacherController extends Controller
         return response()->json(['success' => true, 'message' => 'Note sent to student successfully!']);
     }
 
+    public function issueQuizBeeCode(Request $request)
+    {
+        if (session('user_role') !== 'teacher' || !session('user_id')) {
+            return response()->json(['success' => false, 'message' => 'Please log in as a teacher to issue QuizBee codes.'], 403);
+        }
+
+        $validated = $request->validate([
+            'student_id' => 'required|integer|exists:users,id',
+        ]);
+
+        $student = DB::table('users')
+            ->where('id', $validated['student_id'])
+            ->where('role', 'student')
+            ->first(['id']);
+
+        if (!$student) {
+            return response()->json(['success' => false, 'message' => 'Select a valid student.'], 422);
+        }
+
+        $appKey = (string) config('app.key');
+        if ($appKey === '') {
+            \Log::error('QuizBee code issuance is unavailable because the application key is not configured.');
+            return response()->json(['success' => false, 'message' => 'QuizBee access is temporarily unavailable. Please try again later.'], 500);
+        }
+
+        do {
+            $code = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+            $codeHash = hash_hmac('sha256', $code, $appKey);
+        } while (DB::table('quizbee_access_codes')
+            ->where('code_hash', $codeHash)
+            ->whereNull('redeemed_at')
+            ->where('expires_at', '>', now())
+            ->exists());
+
+        $expiresAt = now()->addHours(24);
+        $teacherId = session('user_id');
+
+        DB::transaction(function () use ($teacherId, $student, $codeHash, $expiresAt, $code) {
+            DB::table('quizbee_access_codes')->insert([
+                'teacher_id' => $teacherId,
+                'student_id' => $student->id,
+                'code_hash' => $codeHash,
+                'expires_at' => $expiresAt,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            DB::table('student_notes')->insert([
+                'teacher_id' => $teacherId,
+                'student_id' => $student->id,
+                'note' => 'QuizBee access code: ' . $code . '. Valid until ' . $expiresAt->format('Y-m-d H:i T') . '. Single-use.',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        });
+
+        return response()->json([
+            'success' => true,
+            'code' => $code,
+            'expires_at' => $expiresAt->toIso8601String(),
+            'message' => 'QuizBee code issued and recorded in the student notes.',
+        ]);
+    }
+
     private function ensureSupportedQuestionTypes(): void
     {
         if (DB::getDriverName() === 'pgsql') {

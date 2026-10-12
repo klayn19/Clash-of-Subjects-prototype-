@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>Clash of Subject – Student Dashboard</title>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@550;700;800&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -562,6 +563,7 @@
     </div>
     <div>
       <a href="{{ route('general.knowledge.play') }}" class="action-btn gk-btn"><i class="fas fa-brain"></i> GK ARENA</a>
+      <button type="button" class="action-btn gk-btn" onclick="enterQuizBee()"><i class="fas fa-key"></i> QUIZBEE</button>
       <a href="{{ route('gameplay') }}" class="action-btn"><i class="fas fa-gamepad"></i> LAUNCH GAMEPLAY</a>
       <a href="{{ route('logout') }}" class="logout-btn"><i class="fas fa-sign-out-alt"></i> LOGOUT</a>
     </div>
@@ -711,6 +713,40 @@
 </div>
 
 <script>
+async function enterQuizBee() {
+  const code = window.prompt('Enter the six-digit QuizBee code from your teacher:');
+  if (code === null) return;
+
+  const normalizedCode = code.trim();
+  if (!/^\d{6}$/.test(normalizedCode)) {
+    window.alert('Please enter a valid six-digit code.');
+    return;
+  }
+
+  try {
+    const response = await fetch(@json(route('student.quizbee.redeem')), {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+      },
+      body: JSON.stringify({ code: normalizedCode })
+    });
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      window.alert(data.message || 'QuizBee code could not be verified.');
+      return;
+    }
+
+    window.location.assign(data.redirect_url);
+  } catch (error) {
+    console.error('QuizBee code validation failed:', error);
+    window.alert('Could not verify the code because of a network error. Please try again.');
+  }
+}
+
 function toggleSidebar() {
   const sb = document.getElementById('sidebar');
   const ov = document.getElementById('sidebarOverlay');

@@ -16,13 +16,29 @@ Route::post('/reset-password',  [AuthController::class, 'resetPassword'])->name(
 Route::get('/logout',           [AuthController::class, 'logout'])->name('logout');
 
 // ─── GAMEPLAY ──────────────────────────────────────────────────────
-Route::get('/gameplay', function () {
+Route::get('/gameplay', function (\Illuminate\Http\Request $request) {
     if (!session('user_id')) return redirect('/');
+
+    if ($request->query('mode') === 'quizbee') {
+        $accessExpiresAt = session('quizbee_access_until');
+        if (
+            session('user_role') !== 'student'
+            || session('quizbee_access_student_id') != session('user_id')
+            || !$accessExpiresAt
+            || now()->gte(\Illuminate\Support\Carbon::parse($accessExpiresAt))
+        ) {
+            return redirect()->route('student.dashboard');
+        }
+    }
+
     return view('gameplay');
 })->name('gameplay');
 
 // ─── STUDENT DASHBOARD ─────────────────────────────────────────────
 Route::get('/student/dashboard', [\App\Http\Controllers\StudentController::class, 'index'])->name('student.dashboard');
+Route::post('/backend/redeem_quizbee_code.php', [\App\Http\Controllers\StudentController::class, 'redeemQuizBeeCode'])
+    ->middleware('throttle:5,1')
+    ->name('student.quizbee.redeem');
 Route::get('/student/general-knowledge', [\App\Http\Controllers\GeneralKnowledgeController::class, 'index'])->name('general.knowledge.play');
 
 // ─── ADMIN DASHBOARD ───────────────────────────────────────────────
@@ -44,6 +60,7 @@ Route::post('/backend/save_class.php',         [TeacherController::class, 'saveC
 Route::post('/backend/delete_class.php',       [TeacherController::class, 'deleteClass']);
 Route::post('/backend/save_questions.php',     [TeacherController::class, 'saveQuestions']);
 Route::post('/backend/save_student_note.php',  [TeacherController::class, 'saveStudentNote']);
+Route::post('/backend/issue_quizbee_code.php', [TeacherController::class, 'issueQuizBeeCode']);
 Route::get('/backend/get_students.php',        [TeacherController::class, 'getStudents']);
 Route::get('/backend/get_student_scores.php',  [TeacherController::class, 'getStudentScores']);
 Route::post('/backend/save_prototype_grade.php', [TeacherController::class, 'savePrototypeGrade']);
