@@ -25,6 +25,8 @@ class ScoreController extends Controller
             'total'           => 'required|integer|min:1',
         ]);
 
+        $this->ensureSupportedScoreTypes();
+
         $studentId = (int) $request->student_id;
         $subject   = strtolower(trim($request->subject));
         $correct   = (int) $request->correct;
@@ -84,6 +86,14 @@ class ScoreController extends Controller
      * Get highest score for a student
      * GET /api/student_high_score?student_id=X&subject=math
      */
+    private function ensureSupportedScoreTypes(): void
+    {
+        if (DB::getDriverName() === 'pgsql') {
+            DB::statement("ALTER TABLE questions DROP CONSTRAINT IF EXISTS questions_type_check");
+            DB::statement("ALTER TABLE student_scores DROP CONSTRAINT IF EXISTS student_scores_type_check");
+        }
+    }
+
     public function getHighScore(Request $request)
     {
         $studentId = $request->query('student_id', session('user_id'));

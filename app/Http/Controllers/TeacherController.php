@@ -153,6 +153,8 @@ class TeacherController extends Controller
                 ->delete();
         }
 
+        $this->ensureSupportedQuestionTypes();
+
         // Bulk insert new questions
         $rows = [];
         foreach ($request->questions as $q) {
@@ -615,6 +617,8 @@ class TeacherController extends Controller
             'grade' => 'required|numeric|min:60|max:100',
         ]);
 
+        $this->ensureSupportedQuestionTypes();
+
         DB::table('student_scores')->insert([
             'student_id' => $request->student_id,
             'class_id' => null,
@@ -658,6 +662,14 @@ class TeacherController extends Controller
         ]);
 
         return response()->json(['success' => true, 'message' => 'Note sent to student successfully!']);
+    }
+
+    private function ensureSupportedQuestionTypes(): void
+    {
+        if (DB::getDriverName() === 'pgsql') {
+            DB::statement("ALTER TABLE questions DROP CONSTRAINT IF EXISTS questions_type_check");
+            DB::statement("ALTER TABLE student_scores DROP CONSTRAINT IF EXISTS student_scores_type_check");
+        }
     }
 
     // ─── LOW GRADE EMAIL ALERT HELPER ─────────────────────────────────────
