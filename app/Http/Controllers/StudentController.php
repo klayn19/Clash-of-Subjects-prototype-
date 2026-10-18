@@ -36,8 +36,54 @@ class StudentController extends Controller
             ->select('student_notes.*', 'users.first_name as teacher_first', 'users.last_name as teacher_last')
             ->orderBy('student_notes.created_at', 'desc')
             ->get();
+        $unreadNotes = $notes->whereNull('read_at')->count();
 
-        return view('student.dashboard', compact('scores', 'notes', 'bestSubjectScores'));
+        return view('student.dashboard', compact('scores', 'notes', 'unreadNotes', 'bestSubjectScores'));
+    }
+
+    public function markNoteRead(int $noteId)
+    {
+        if (session('user_role') !== 'student' || !session('user_id')) {
+            return response()->json(['success' => false, 'message' => 'Please log in as a student.'], 403);
+        }
+
+        $note = DB::table('student_notes')
+            ->where('id', $noteId)
+            ->where('student_id', session('user_id'))
+            ->first(['id', 'read_at']);
+
+        if (!$note) {
+            return response()->json(['success' => false, 'message' => 'Message not found.'], 404);
+        }
+
+        if (!$note->read_at) {
+            DB::table('student_notes')
+                ->where('id', $note->id)
+                ->where('student_id', session('user_id'))
+                ->whereNull('read_at')
+                ->update(['read_at' => now(), 'updated_at' => now()]);
+        }
+
+        $unreadCount = DB::table('student_notes')
+            ->where('student_id', session('user_id'))
+            ->whereNull('read_at')
+            ->count();
+
+        return response()->json(['success' => true, 'unread_count' => $unreadCount]);
+    }
+
+    public function markAllNotesRead()
+    {
+        if (session('user_role') !== 'student' || !session('user_id')) {
+            return response()->json(['success' => false, 'message' => 'Please log in as a student.'], 403);
+        }
+
+        DB::table('student_notes')
+            ->where('student_id', session('user_id'))
+            ->whereNull('read_at')
+            ->update(['read_at' => now(), 'updated_at' => now()]);
+
+        return response()->json(['success' => true, 'unread_count' => 0]);
     }
 
     public function redeemQuizBeeCode(Request $request)

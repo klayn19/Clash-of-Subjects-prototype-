@@ -14,6 +14,7 @@ class User extends Authenticatable
         'last_name',
         'age',
         'email',
+        'parent_email',
         'password',
         'role',
         'section',

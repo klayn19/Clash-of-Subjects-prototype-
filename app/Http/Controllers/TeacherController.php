@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\LowGradeAlert;
+use App\Mail\ParentLowGradeAlert;
+use App\Models\Section;
 
 class TeacherController extends Controller
 {
@@ -18,20 +20,29 @@ class TeacherController extends Controller
 
         $teacherId = session('user_id');
 
+        $teacherClassIds = DB::table('classes')
+            ->where('teacher_id', $teacherId)
+            ->pluck('id');
+        foreach ($teacherClassIds as $classId) {
+            Section::syncClassRoster((int) $classId);
+        }
+
         $classes = DB::table('classes')
             ->leftJoin('class_students', 'classes.id', '=', 'class_students.class_id')
             ->select(
                 'classes.id',
                 'classes.name',
                 'classes.section',
-                DB::raw('COUNT(class_students.student_id) as student_count')
+                DB::raw('COUNT(DISTINCT class_students.student_id) as student_count')
             )
             ->where('classes.teacher_id', $teacherId)
             ->groupBy('classes.id', 'classes.name', 'classes.section')
             ->orderBy('classes.id')
             ->get();
 
-        return view('teacher.dashboard', compact('classes'));
+        $sections = Section::orderBy('name')->get();
+
+        return view('teacher.dashboard', compact('classes', 'sections'));
     }
 
     // ─── SAVE / UPDATE CLASS ──────────────────────────────────────
@@ -41,41 +52,79 @@ class TeacherController extends Controller
             return response()->json(['success' => false, 'message' => 'Session expired. Please refresh the page and log in.'], 403);
         }
 
-        $request->validate([
-            'name'    => 'required|string|max:255',
-            'section' => 'nullable|string|max:255',
-        ]);
-
         $teacherId = session('user_id');
 
         if ($request->filled('id')) {
-            // Update existing class (only if it belongs to this teacher)
-            $updated = DB::table('classes')
+            $request->validate([
+                'id' => 'required|integer',
+                'section_id' => 'required|integer|exists:sections,id',
+            ]);
+
+            $section = Section::findOrFail($request->section_id);
+            $class = DB::table('classes')
                 ->where('id', $request->id)
                 ->where('teacher_id', $teacherId)
-                ->update([
-                    'name'       => $request->name,
-                    'section'    => $request->section,
-                    'updated_at' => now(),
-                ]);
+                ->first();
 
-            if (!$updated) {
+            if (!$class) {
                 return response()->json(['success' => false, 'message' => 'Class not found or not yours']);
             }
 
-            return response()->json(['success' => true, 'message' => 'Class updated successfully']);
+            $alreadyAssigned = DB::table('classes')
+                ->where('teacher_id', $teacherId)
+                ->where('section', $section->name)
+                ->where('id', '!=', $class->id)
+                ->exists();
+
+            if ($alreadyAssigned) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You already have a class for this section.',
+                ], 422);
+            }
+
+            DB::table('classes')->where('id', $class->id)->update([
+                'name' => $section->name,
+                'section' => $section->name,
+                'updated_at' => now(),
+            ]);
+            Section::syncClassRoster((int) $class->id);
+
+            return response()->json(['success' => true, 'message' => 'Section updated successfully']);
         }
 
-        // Create new class
+        $request->validate([
+            'section_id' => 'required|integer|exists:sections,id',
+        ]);
+
+        $section = Section::findOrFail($request->section_id);
+        $alreadyAssigned = DB::table('classes')
+            ->where('teacher_id', $teacherId)
+            ->where('section', $section->name)
+            ->exists();
+
+        if ($alreadyAssigned) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You already have a class for this section.',
+            ], 422);
+        }
+
         $classId = DB::table('classes')->insertGetId([
-            'name'       => $request->name,
-            'section'    => $request->section,
+            'name'       => $section->name,
+            'section'    => $section->name,
             'teacher_id' => $teacherId,
             'created_at' => now(),
             'updated_at' => now(),
         ]);
 
-        return response()->json(['success' => true, 'message' => 'Class created successfully', 'class_id' => $classId]);
+        Section::syncClassRoster($classId);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Section added successfully.',
+            'class_id' => $classId,
+        ]);
     }
 
     // ─── DELETE CLASS ─────────────────────────────────────────────
@@ -116,11 +165,11 @@ class TeacherController extends Controller
         }
 
         $request->validate([
-            'class_id'             => 'nullable|integer',
-            'subject'              => 'nullable|string|max:100',
-            'type'                 => 'required|in:quiz,exam,assessment,prototype',
-            'quarter'              => 'nullable|integer|between:1,4',
-            'sequence_number'      => 'nullable|integer|min:1',
+            'class_id'             => 'required|integer|exists:classes,id',
+            'subject'              => 'required|string|max:100',
+            'type'                 => 'required|in:quiz,exam,assessment',
+            'quarter'              => 'required|integer|between:1,4',
+            'sequence_number'      => 'required|integer|min:1',
             'questions'            => 'required|array|min:1',
             'questions.*.question' => 'required|string',
             'questions.*.choice_a' => 'required|string',
@@ -132,38 +181,32 @@ class TeacherController extends Controller
 
         $teacherId = session('user_id');
 
-        if ($request->type !== 'prototype') {
-            // Verify the class belongs to this teacher
-            $class = DB::table('classes')
-                ->where('id', $request->class_id)
-                ->where('teacher_id', $teacherId)
-                ->first();
+        $class = DB::table('classes')
+            ->where('id', $request->class_id)
+            ->where('teacher_id', $teacherId)
+            ->first();
 
-            if (!$class) {
-                return response()->json(['success' => false, 'message' => 'Class not found or not yours']);
-            }
-
-            // Delete old questions for this class + subject + type + quarter + sequence_number (full replace)
-            DB::table('questions')
-                ->where('class_id', $request->class_id)
-                ->where('subject',  $request->subject)
-                ->where('type',     $request->type)
-                ->where('quarter',  $request->quarter)
-                ->where('sequence_number', $request->sequence_number)
-                ->delete();
+        if (!$class) {
+            return response()->json(['success' => false, 'message' => 'Class not found or not yours']);
         }
 
-        $this->ensureSupportedQuestionTypes();
+        DB::table('questions')
+            ->where('class_id', $request->class_id)
+            ->where('subject',  $request->subject)
+            ->where('type',     $request->type)
+            ->where('quarter',  $request->quarter)
+            ->where('sequence_number', $request->sequence_number)
+            ->delete();
 
         // Bulk insert new questions
         $rows = [];
         foreach ($request->questions as $q) {
             $rows[] = [
-                'class_id'        => $request->type === 'prototype' ? null : $request->class_id,
-                'subject'         => $request->type === 'prototype' ? 'prototype' : strtolower(trim($request->subject)),
+                'class_id'        => $request->class_id,
+                'subject'         => strtolower(trim($request->subject)),
                 'type'            => $request->type,
-                'quarter'         => $request->type === 'prototype' ? 1 : $request->quarter,
-                'sequence_number' => $request->type === 'prototype' ? 1 : $request->sequence_number,
+                'quarter'         => $request->quarter,
+                'sequence_number' => $request->sequence_number,
                 'question'        => $q['question'],
                 'choice_a'        => $q['choice_a'],
                 'choice_b'        => $q['choice_b'],
@@ -185,6 +228,161 @@ class TeacherController extends Controller
         ]);
     }
 
+    public function bulkUploadQuestions(Request $request)
+    {
+        if (session('user_role') !== 'teacher' || !session('user_id')) {
+            return response()->json(['success' => false, 'message' => 'Please log in as a teacher to upload questions.'], 403);
+        }
+
+        $validated = $request->validate([
+            'class_id' => 'required|integer|exists:classes,id',
+            'subject' => 'required|in:english,math,science',
+            'type' => 'required|in:quiz,exam,assessment',
+            'quarter' => 'required|integer|between:1,4',
+            'sequence_number' => 'required|integer|min:1',
+            'questions_file' => 'required|file|extensions:csv|max:5120',
+        ]);
+
+        $class = DB::table('classes')
+            ->where('id', $validated['class_id'])
+            ->where('teacher_id', session('user_id'))
+            ->first();
+
+        if (!$class) {
+            return response()->json(['success' => false, 'message' => 'Class not found or not yours.'], 404);
+        }
+
+        $handle = fopen($validated['questions_file']->getRealPath(), 'rb');
+        if ($handle === false) {
+            \Log::error('Could not open uploaded question CSV.');
+            return response()->json(['success' => false, 'message' => 'Could not read the uploaded CSV file.'], 500);
+        }
+
+        $requiredHeaders = ['question', 'choice_a', 'choice_b', 'choice_c', 'choice_d', 'answer'];
+        $headerIndexes = [];
+        $questions = [];
+        $rowNumber = 0;
+        $parseError = null;
+
+        try {
+            $headers = fgetcsv($handle, null, ',', '"', '\\');
+            $rowNumber++;
+            if ($headers === false) {
+                $parseError = 'The CSV file is empty.';
+            } else {
+                $headers[0] = preg_replace('/^\xEF\xBB\xBF/', '', (string) $headers[0]);
+                $normalizedHeaders = array_map(
+                    static fn ($header) => strtolower(trim((string) $header)),
+                    $headers
+                );
+
+                if (count($normalizedHeaders) !== count(array_unique($normalizedHeaders))) {
+                    $parseError = 'The CSV header contains duplicate column names.';
+                } else {
+                    foreach ($requiredHeaders as $requiredHeader) {
+                        $index = array_search($requiredHeader, $normalizedHeaders, true);
+                        if ($index === false) {
+                            $parseError = 'CSV is missing the required column: ' . $requiredHeader . '.';
+                            break;
+                        }
+                        $headerIndexes[$requiredHeader] = $index;
+                    }
+                }
+            }
+
+            while ($parseError === null && ($record = fgetcsv($handle, null, ',', '"', '\\')) !== false) {
+                $rowNumber++;
+                if (count(array_filter($record, static fn ($value) => trim((string) $value) !== '')) === 0) {
+                    continue;
+                }
+
+                if (count($questions) >= 500) {
+                    $parseError = 'A CSV upload may contain no more than 500 questions.';
+                    break;
+                }
+                if (count($record) !== count($headers)) {
+                    $parseError = 'CSV row ' . $rowNumber . ' has a different number of columns than the header.';
+                    break;
+                }
+
+                $question = [];
+                foreach ($requiredHeaders as $requiredHeader) {
+                    $question[$requiredHeader] = trim((string) $record[$headerIndexes[$requiredHeader]]);
+                }
+
+                foreach (['question', 'choice_a', 'choice_b', 'choice_c', 'choice_d'] as $requiredField) {
+                    if ($question[$requiredField] === '') {
+                        $parseError = 'CSV row ' . $rowNumber . ' is missing ' . $requiredField . '.';
+                        break;
+                    }
+                }
+                if ($parseError !== null) {
+                    break;
+                }
+
+                if (mb_strlen($question['question']) > 10000) {
+                    $parseError = 'CSV row ' . $rowNumber . ' question exceeds 10,000 characters.';
+                    break;
+                }
+                foreach (['choice_a', 'choice_b', 'choice_c', 'choice_d'] as $choiceField) {
+                    if (mb_strlen($question[$choiceField]) > 255) {
+                        $parseError = 'CSV row ' . $rowNumber . ' ' . $choiceField . ' exceeds 255 characters.';
+                        break;
+                    }
+                }
+                if ($parseError !== null) {
+                    break;
+                }
+
+                $question['answer'] = strtoupper($question['answer']);
+                if (!in_array($question['answer'], ['A', 'B', 'C', 'D'], true)) {
+                    $parseError = 'CSV row ' . $rowNumber . ' answer must be A, B, C, or D.';
+                    break;
+                }
+
+                $questions[] = $question;
+            }
+        } finally {
+            fclose($handle);
+        }
+
+        if ($parseError !== null) {
+            return response()->json(['success' => false, 'message' => $parseError], 422);
+        }
+        if ($questions === []) {
+            return response()->json(['success' => false, 'message' => 'The CSV contains no question rows.'], 422);
+        }
+
+        $now = now();
+        $rows = array_map(static fn ($question) => [
+            'class_id' => $validated['class_id'],
+            'subject' => $validated['subject'],
+            'type' => $validated['type'],
+            'quarter' => $validated['quarter'],
+            'sequence_number' => $validated['sequence_number'],
+            'question' => $question['question'],
+            'choice_a' => $question['choice_a'],
+            'choice_b' => $question['choice_b'],
+            'choice_c' => $question['choice_c'],
+            'choice_d' => $question['choice_d'],
+            'answer' => $question['answer'],
+            'created_at' => $now,
+            'updated_at' => $now,
+        ], $questions);
+
+        DB::transaction(function () use ($rows) {
+            foreach (array_chunk($rows, 100) as $batch) {
+                DB::table('questions')->insert($batch);
+            }
+        });
+
+        return response()->json([
+            'success' => true,
+            'inserted' => count($rows),
+            'message' => count($rows) . ' question(s) uploaded successfully and appended to the selected set.',
+        ]);
+    }
+
     // ─── GET QUESTION FOR UNITY GAME ─────────────────────────────
     // Called by Unity via GET /api/get_question
     // Params: class_id, subject, type, quarter, student_id (optional, to avoid repeats)
@@ -194,7 +392,7 @@ class TeacherController extends Controller
         $request->validate([
             'class_id'        => 'nullable|integer',
             'subject'         => 'required|string',
-            'type'            => 'nullable|in:quiz,exam,assessment,prototype',
+            'type'            => 'nullable|in:quiz,exam,assessment',
             'quarter'         => 'nullable|integer|between:1,4',
             'sequence_number' => 'nullable|integer|min:1',
         ]);
@@ -224,6 +422,7 @@ class TeacherController extends Controller
             } else {
                 $q->where('subject', $subject);
             }
+            $q->whereIn('type', ['quiz', 'exam', 'assessment']);
             if ($request->filled('type')) {
                 $q->where('type', $request->type);
             }
@@ -258,10 +457,10 @@ class TeacherController extends Controller
         $remainingCount = (clone $query)->count();
         $question = $query->inRandomOrder()->first();
 
-        $isPrototype = false;
-        // If no regular question found, try any available questions or prototype
+        // If no matching question is found, try another regular question.
         if (!$question) {
             $fallbackQuery = DB::table('questions');
+            $fallbackQuery->whereIn('type', ['quiz', 'exam', 'assessment']);
             if ($isMixed) {
                 $fallbackQuery->whereIn('subject', ['english', 'math', 'science']);
             }
@@ -269,15 +468,6 @@ class TeacherController extends Controller
                 $fallbackQuery->whereNotIn('id', $answeredIds);
             }
             $question = $fallbackQuery->inRandomOrder()->first();
-        }
-
-        if (!$question) {
-            $prototypeQuery = DB::table('questions')->where('type', 'prototype');
-            if ($request->filled('answered') && !empty($answeredIds)) {
-                $prototypeQuery->whereNotIn('id', $answeredIds);
-            }
-            $question = $prototypeQuery->inRandomOrder()->first();
-            $isPrototype = true;
         }
 
         if (!$question) {
@@ -304,7 +494,6 @@ class TeacherController extends Controller
             'is_last'         => $isLast,
             'remaining'       => $remainingAfterThis,
             'total_questions' => $totalQuestionsInPool,
-            'is_prototype'    => $isPrototype,
         ]);
     }
 
@@ -344,7 +533,12 @@ class TeacherController extends Controller
             return response()->json(['success' => false, 'message' => 'Session expired. Please refresh the page and log in.'], 403);
         }
 
-        $request->validate(['class_id' => 'required|integer']);
+        $validated = $request->validate([
+            'class_id' => 'required|integer',
+            'subject' => 'nullable|in:all,english,math,science',
+            'type' => 'nullable|in:all,quiz,exam,assessment,grade',
+            'quarter' => 'nullable|in:all,1,2,3,4',
+        ]);
 
         $teacherId = session('user_id');
 
@@ -358,10 +552,12 @@ class TeacherController extends Controller
             return response()->json(['success' => false, 'message' => 'Class not found']);
         }
 
+        Section::syncClassRoster((int) $class->id);
+
         $students = DB::table('class_students')
             ->join('users', 'class_students.student_id', '=', 'users.id')
             ->where('class_students.class_id', $request->class_id)
-            ->select('users.id', 'users.first_name', 'users.last_name', 'users.email')
+            ->select('users.id', 'users.first_name', 'users.last_name', 'users.email', 'users.parent_email')
             ->orderBy('users.last_name')
             ->get();
 
@@ -374,8 +570,9 @@ class TeacherController extends Controller
             ->get()
             ->keyBy(fn ($score) => $score->student_id . ':' . $score->subject);
 
-        $subjectFilter = $request->query('subject', 'all');
-        $typeFilter    = $request->query('type', 'all');
+        $subjectFilter = $validated['subject'] ?? 'all';
+        $typeFilter    = $validated['type'] ?? 'all';
+        $quarterFilter = $validated['quarter'] ?? 'all';
 
         foreach ($students as $student) {
             $student->name = trim($student->first_name . ' ' . $student->last_name);
@@ -395,8 +592,13 @@ class TeacherController extends Controller
             if ($typeFilter !== 'all') {
                 $scoreQuery->where('type', $typeFilter);
             }
+            if ($quarterFilter !== 'all') {
+                $scoreQuery->where('quarter', $quarterFilter);
+            }
 
             $scores = $scoreQuery->get();
+            $student->has_parent_email = !empty($student->parent_email);
+            unset($student->parent_email);
 
             if ($scores->isEmpty()) {
                 $student->score   = 0;
@@ -404,6 +606,7 @@ class TeacherController extends Controller
                 $student->correct = 0;
                 $student->subject = '—';
                 $student->type    = '—';
+                $student->quarter = '—';
             } else {
                 $totalCorrect = $scores->sum('correct');
                 $totalItems   = $scores->sum('total');
@@ -413,90 +616,109 @@ class TeacherController extends Controller
 
                 $student->subject = $subjectFilter !== 'all' ? $subjectFilter : 'Multiple';
                 $student->type    = $typeFilter !== 'all' ? $typeFilter : 'Multiple';
+                $quarters = $scores->pluck('quarter')->unique()->sort()->values();
+                $student->quarter = $quarterFilter !== 'all'
+                    ? 'Q' . $quarterFilter
+                    : ($quarters->count() === 1 ? 'Q' . $quarters->first() : 'Multiple');
             }
         }
 
         return response()->json(['success' => true, 'students' => $students]);
     }
 
-    // ─── ENROLL STUDENT ───────────────────────────────────────────
-    // POST /backend/enroll_student.php  { class_id, student_id }
-    public function enrollStudent(Request $request)
+    public function emailParentLowGrade(Request $request)
     {
-        if (session('user_role') !== 'teacher') {
-            return response()->json(['success' => false, 'message' => 'Session expired. Please refresh the page and log in.'], 403);
+        if (session('user_role') !== 'teacher' || !session('user_id')) {
+            return response()->json(['success' => false, 'message' => 'Please log in as a teacher to send parent alerts.'], 403);
         }
 
-        $request->validate([
-            'class_id'      => 'required|integer|exists:classes,id',
-            'student_ids'   => 'required|array',
-            'student_ids.*' => 'integer|exists:users,id',
-        ]);
-
-        $teacherId = session('user_id');
-
-        $class = DB::table('classes')
-            ->where('id', $request->class_id)
-            ->where('teacher_id', $teacherId)
-            ->first();
-
-        if (!$class) {
-            return response()->json(['success' => false, 'message' => 'Class not found']);
-        }
-
-        $enrolledCount = 0;
-
-        foreach ($request->student_ids as $studentId) {
-            // Prevent duplicate enrollment
-            $exists = DB::table('class_students')
-                ->where('class_id',   $request->class_id)
-                ->where('student_id', $studentId)
-                ->exists();
-
-            if (!$exists) {
-                DB::table('class_students')->insert([
-                    'class_id'   => $request->class_id,
-                    'student_id' => $studentId,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-                $enrolledCount++;
-            }
-        }
-
-        return response()->json(['success' => true, 'message' => $enrolledCount . ' student(s) enrolled successfully']);
-    }
-
-    // ─── UNENROLL STUDENT ─────────────────────────────────────────
-    // POST /backend/unenroll_student.php  { class_id, student_id }
-    public function unenrollStudent(Request $request)
-    {
-        if (session('user_role') !== 'teacher') {
-            return response()->json(['success' => false, 'message' => 'Session expired. Please refresh the page and log in.'], 403);
-        }
-
-        $request->validate([
-            'class_id'   => 'required|integer',
+        $validated = $request->validate([
+            'class_id' => 'required|integer',
             'student_id' => 'required|integer',
+            'subject' => 'required|in:all,english,math,science',
+            'type' => 'required|in:all,quiz,exam,assessment,grade',
+            'quarter' => 'required|in:all,1,2,3,4',
         ]);
 
-        $teacherId = session('user_id');
-
         $class = DB::table('classes')
-            ->where('id', $request->class_id)
-            ->where('teacher_id', $teacherId)
-            ->first();
-
+            ->where('id', $validated['class_id'])
+            ->where('teacher_id', session('user_id'))
+            ->first(['id']);
         if (!$class) {
-            return response()->json(['success' => false, 'message' => 'Class not found']);
+            return response()->json(['success' => false, 'message' => 'Class not found or not yours.'], 404);
         }
 
-        DB::table('class_students')
-            ->where('class_id',   $request->class_id)
-            ->where('student_id', $request->student_id)
-            ->delete();
+        $student = DB::table('users')
+            ->join('class_students', 'users.id', '=', 'class_students.student_id')
+            ->where('class_students.class_id', $class->id)
+            ->where('users.id', $validated['student_id'])
+            ->where('users.role', 'student')
+            ->first([
+                'users.id',
+                'users.first_name',
+                'users.last_name',
+                'users.parent_email',
+            ]);
+        if (!$student) {
+            return response()->json(['success' => false, 'message' => 'Student is not assigned to this class.'], 404);
+        }
+        if (empty($student->parent_email)) {
+            return response()->json(['success' => false, 'message' => 'Add a parent/guardian email to this student account before sending an alert.'], 422);
+        }
 
-        return response()->json(['success' => true, 'message' => 'Student unenrolled successfully']);
+        $scoresQuery = DB::table('student_scores')
+            ->where('class_id', $class->id)
+            ->where('student_id', $student->id);
+        if ($validated['subject'] !== 'all') {
+            $scoresQuery->where('subject', $validated['subject']);
+        }
+        if ($validated['type'] !== 'all') {
+            $scoresQuery->where('type', $validated['type']);
+        }
+        if ($validated['quarter'] !== 'all') {
+            $scoresQuery->where('quarter', $validated['quarter']);
+        }
+
+        $scores = $scoresQuery->get(['subject', 'type', 'quarter', 'correct', 'total']);
+        $totalCorrect = $scores->sum('correct');
+        $total = $scores->sum('total');
+        if ($total <= 0) {
+            return response()->json(['success' => false, 'message' => 'There are no scores for this student under the selected filters.'], 422);
+        }
+
+        $percentage = round(($totalCorrect / $total) * 100, 2);
+        if ($percentage >= 75) {
+            return response()->json(['success' => false, 'message' => 'This score is not below the 75% passing threshold.'], 422);
+        }
+
+        $studentName = trim($student->first_name . ' ' . $student->last_name);
+        $subjects = $scores->pluck('subject')->unique()->values();
+        $types = $scores->pluck('type')->unique()->values();
+        $quarters = $scores->pluck('quarter')->unique()->sort()->values();
+
+        try {
+            Mail::to($student->parent_email)->send(new ParentLowGradeAlert(
+                $studentName,
+                $subjects->count() === 1 ? $subjects->first() : 'Multiple Subjects',
+                $types->count() === 1 ? $types->first() : 'Multiple Assessments',
+                $percentage,
+                $validated['quarter'] !== 'all'
+                    ? (int) $validated['quarter']
+                    : ($quarters->count() === 1 ? (int) $quarters->first() : null),
+                (float) $totalCorrect,
+                (float) $total,
+            ));
+        } catch (\Throwable $exception) {
+            \Log::error('Parent low-grade alert email failed.', [
+                'teacher_id' => session('user_id'),
+                'student_id' => $student->id,
+                'message' => $exception->getMessage(),
+            ]);
+
+            return response()->json(['success' => false, 'message' => 'Email could not be sent. Check the mail configuration and try again.'], 502);
+        }
+
+        return response()->json(['success' => true, 'message' => 'Failing-score alert sent to the parent/guardian email.']);
     }
 
     // ─── GET STUDENT SCORES ───────────────────────────────────────
@@ -605,38 +827,75 @@ class TeacherController extends Controller
         return response()->json(['success' => true, 'analytics' => $analytics]);
     }
 
-    // ─── SAVE PROTOTYPE GRADE ───────────────────────────────────────────
-    public function savePrototypeGrade(Request $request)
+    public function saveManualGrade(Request $request)
     {
-        if (session('user_role') !== 'teacher') {
-            return response()->json(['success' => false, 'message' => 'Session expired. Please refresh the page and log in.'], 403);
+        if (session('user_role') !== 'teacher' || !session('user_id')) {
+            return response()->json(['success' => false, 'message' => 'Please log in as a teacher to save grades.'], 403);
         }
 
-        $request->validate([
-            'student_id' => 'required|integer',
-            'grade' => 'required|numeric|min:60|max:100',
+        $validated = $request->validate([
+            'class_id' => 'required|integer|exists:classes,id',
+            'student_id' => 'required|integer|exists:users,id',
+            'subject' => 'required|in:english,math,science',
+            'quarter' => 'required|integer|between:1,4',
+            'grade' => 'required|integer|min:0|max:100',
         ]);
 
-        $this->ensureSupportedQuestionTypes();
+        $class = DB::table('classes')
+            ->where('id', $validated['class_id'])
+            ->where('teacher_id', session('user_id'))
+            ->first();
+
+        if (!$class) {
+            return response()->json(['success' => false, 'message' => 'Class not found or not yours.'], 404);
+        }
+
+        $student = DB::table('users')
+            ->where('id', $validated['student_id'])
+            ->where('role', 'student')
+            ->exists();
+
+        if (!$student) {
+            return response()->json(['success' => false, 'message' => 'Student not found.'], 404);
+        }
+
+        Section::syncClassRoster((int) $class->id);
+        $isEnrolled = DB::table('class_students')
+            ->where('class_id', $class->id)
+            ->where('student_id', $validated['student_id'])
+            ->exists();
+
+        if (!$isEnrolled) {
+            return response()->json(['success' => false, 'message' => 'Student is not assigned to this class section.'], 422);
+        }
+
+        $sequenceNumber = DB::table('student_scores')
+            ->where('class_id', $class->id)
+            ->where('student_id', $validated['student_id'])
+            ->where('subject', $validated['subject'])
+            ->where('type', 'grade')
+            ->where('quarter', $validated['quarter'])
+            ->max('sequence_number') + 1;
+        $grade = (int) $validated['grade'];
 
         DB::table('student_scores')->insert([
-            'student_id' => $request->student_id,
-            'class_id' => null,
-            'subject' => 'prototype',
-            'type' => 'prototype',
-            'quarter' => 1,
-            'sequence_number' => 1,
-            'correct' => $request->grade,
+            'student_id' => $validated['student_id'],
+            'class_id' => $class->id,
+            'subject' => $validated['subject'],
+            'type' => 'grade',
+            'quarter' => $validated['quarter'],
+            'sequence_number' => $sequenceNumber,
+            'correct' => $grade,
             'total' => 100,
-            'percent' => $request->grade,
+            'percent' => $grade,
             'created_at' => now(),
             'updated_at' => now(),
         ]);
 
-        // Send low grade email alert if grade is below 75%
-        $this->sendLowGradeAlertIfNeeded($request->student_id, 'prototype', 'prototype', (float) $request->grade);
-
-        return response()->json(['success' => true, 'message' => 'Prototype grade saved successfully!']);
+        return response()->json([
+            'success' => true,
+            'message' => 'Grade saved successfully.',
+        ]);
     }
 
     // ─── SAVE STUDENT NOTE ──────────────────────────────────────────────
@@ -728,13 +987,7 @@ class TeacherController extends Controller
         ]);
     }
 
-    private function ensureSupportedQuestionTypes(): void
-    {
-        if (DB::getDriverName() === 'pgsql') {
-            DB::statement("ALTER TABLE questions DROP CONSTRAINT IF EXISTS questions_type_check");
-            DB::statement("ALTER TABLE student_scores DROP CONSTRAINT IF EXISTS student_scores_type_check");
-        }
-    }
+
 
     // ─── LOW GRADE EMAIL ALERT HELPER ─────────────────────────────────────
     private function sendLowGradeAlertIfNeeded(int $studentId, string $subject, string $type, float $grade): void

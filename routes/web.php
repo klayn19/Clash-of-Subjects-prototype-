@@ -41,6 +41,11 @@ Route::get('/gameplay', function (\Illuminate\Http\Request $request) {
 
 // ─── STUDENT DASHBOARD ─────────────────────────────────────────────
 Route::get('/student/dashboard', [\App\Http\Controllers\StudentController::class, 'index'])->name('student.dashboard');
+Route::post('/student/notes/{noteId}/read', [\App\Http\Controllers\StudentController::class, 'markNoteRead'])
+    ->whereNumber('noteId')
+    ->name('student.notes.read');
+Route::post('/student/notes/read-all', [\App\Http\Controllers\StudentController::class, 'markAllNotesRead'])
+    ->name('student.notes.read-all');
 Route::post('/backend/redeem_quizbee_code.php', [\App\Http\Controllers\StudentController::class, 'redeemQuizBeeCode'])
     ->middleware('throttle:5,1')
     ->name('student.quizbee.redeem');
@@ -64,15 +69,19 @@ Route::get('/teacher/dashboard', [TeacherController::class, 'index'])->name('tea
 Route::post('/backend/save_class.php',         [TeacherController::class, 'saveClass']);
 Route::post('/backend/delete_class.php',       [TeacherController::class, 'deleteClass']);
 Route::post('/backend/save_questions.php',     [TeacherController::class, 'saveQuestions']);
+Route::post('/backend/bulk_upload_questions.php', [TeacherController::class, 'bulkUploadQuestions'])
+    ->middleware('throttle:10,1')
+    ->name('teacher.questions.bulk-upload');
 Route::post('/backend/save_student_note.php',  [TeacherController::class, 'saveStudentNote']);
 Route::post('/backend/issue_quizbee_code.php', [TeacherController::class, 'issueQuizBeeCode']);
 Route::get('/backend/get_students.php',        [TeacherController::class, 'getStudents']);
 Route::get('/backend/get_student_scores.php',  [TeacherController::class, 'getStudentScores']);
-Route::post('/backend/save_prototype_grade.php', [TeacherController::class, 'savePrototypeGrade']);
+Route::post('/backend/save_manual_grade.php', [TeacherController::class, 'saveManualGrade']);
 Route::get('/backend/get_student_analytics.php',  [TeacherController::class, 'getStudentAnalytics']);
-Route::post('/backend/enroll_student.php',     [TeacherController::class, 'enrollStudent']);
-Route::post('/backend/unenroll_student.php',   [TeacherController::class, 'unenrollStudent']);
 Route::get('/backend/get_class_students.php',  [TeacherController::class, 'getClassStudents']);
+Route::post('/backend/email_parent_low_grade.php', [TeacherController::class, 'emailParentLowGrade'])
+    ->middleware('throttle:10,1')
+    ->name('teacher.parent-low-grade.email');
 
 // ─── UNITY GAME API ────────────────────────────────────────────────
 // Called by Unity's QuizManager to fetch a question from the DB.

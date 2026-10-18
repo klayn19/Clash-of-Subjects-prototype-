@@ -479,6 +479,14 @@ body {
         </div>
 
         <div class="field">
+          <label>Parent / Guardian Email <span style="opacity:.7;">(for grade alerts)</span></label>
+          <div class="input-wrap">
+            <span class="input-icon">👨‍👩‍👧</span>
+            <input type="email" name="parent_email" placeholder="parent@example.com" value="{{ old('parent_email') }}">
+          </div>
+        </div>
+
+        <div class="field">
           <label>Password</label>
           <div class="input-wrap pw-wrap">
             <span class="input-icon">🛡️</span>

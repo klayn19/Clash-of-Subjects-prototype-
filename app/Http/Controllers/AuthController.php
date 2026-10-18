@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use App\Models\User;
+use App\Models\Section;
 use Carbon\Carbon;
 
 class AuthController extends Controller
@@ -56,6 +57,7 @@ class AuthController extends Controller
         session([
             'user_id'   => $user->id,
             'user_name' => $user->first_name,
+            'user_full_name' => trim($user->first_name . ' ' . $user->last_name),
             'user_role' => $user->role,
         ]);
 
@@ -79,11 +81,12 @@ class AuthController extends Controller
                 'regex:/^[0-9]{12}$/',
                 'unique:users,lrn',
             ],
-            'section'          => 'required|string|max:100',
+            'section'          => 'required|string|max:100|exists:sections,name',
             'first_name'       => 'required|string|max:100',
             'last_name'        => 'required|string|max:100',
             'age'              => 'required|integer|min:1|max:120',
             'email'            => 'required|email|max:150|unique:users,email',
+            'parent_email'     => 'nullable|email|max:150',
             'password'         => 'required|min:6',
             'confirm_password' => 'required|same:password',
         ], [
@@ -101,16 +104,19 @@ class AuthController extends Controller
                 ->with('form', 'registerForm');
         }
 
-        User::create([
+        $student = User::create([
             'lrn'        => trim($request->lrn),
             'section'    => $request->section,
             'first_name' => $request->first_name,
             'last_name'  => $request->last_name,
             'age'        => $request->age,
             'email'      => $request->email,
+            'parent_email' => $request->parent_email,
             'password'   => Hash::make($request->password),
             'role'       => 'student',
         ]);
+
+        Section::syncStudentRoster((int) $student->id);
 
         return redirect('/')->with('success', 'Registration successful! Please login.')
                              ->with('form', 'loginForm');

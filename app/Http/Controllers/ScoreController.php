@@ -18,14 +18,12 @@ class ScoreController extends Controller
             'student_id'      => 'required|integer|exists:users,id',
             'class_id'        => 'nullable|integer',
             'subject'         => 'required|string|max:100',
-            'type'            => 'required|in:quiz,exam,assessment,prototype',
+            'type'            => 'required|in:quiz,exam,assessment',
             'quarter'         => 'required|integer|between:1,4',
             'sequence_number' => 'required|integer|min:1',
             'correct'         => 'required|integer|min:0',
             'total'           => 'required|integer|min:1',
         ]);
-
-        $this->ensureSupportedScoreTypes();
 
         $studentId = (int) $request->student_id;
         $subject   = strtolower(trim($request->subject));
@@ -86,14 +84,6 @@ class ScoreController extends Controller
      * Get highest score for a student
      * GET /api/student_high_score?student_id=X&subject=math
      */
-    private function ensureSupportedScoreTypes(): void
-    {
-        if (DB::getDriverName() === 'pgsql') {
-            DB::statement("ALTER TABLE questions DROP CONSTRAINT IF EXISTS questions_type_check");
-            DB::statement("ALTER TABLE student_scores DROP CONSTRAINT IF EXISTS student_scores_type_check");
-        }
-    }
-
     public function getHighScore(Request $request)
     {
         $studentId = $request->query('student_id', session('user_id'));
@@ -101,7 +91,8 @@ class ScoreController extends Controller
             return response()->json(['success' => false, 'message' => 'Student ID required'], 400);
         }
 
-        $query = DB::table('student_scores')->where('student_id', $studentId);
+        $query = DB::table('student_scores')
+            ->where('student_id', $studentId);
 
         if ($request->filled('subject')) {
             $query->where('subject', strtolower(trim($request->subject)));

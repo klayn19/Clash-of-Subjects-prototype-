@@ -48,7 +48,10 @@ class AdminController extends Controller
             return response()->json(['success' => false, 'message' => 'Student not found']);
         }
 
-        $scores = DB::table('student_scores')->where('student_id', $id)->orderBy('subject')->get();
+        $scores = DB::table('student_scores')
+            ->where('student_id', $id)
+            ->orderBy('subject')
+            ->get();
         $overallCorrect  = $scores->sum('correct');
         $overallTotal    = $scores->sum('total');
         $overallPercent  = $overallTotal > 0 ? round(($overallCorrect / $overallTotal) * 100, 2) : 0;
@@ -78,7 +81,8 @@ class AdminController extends Controller
         $validator = Validator::make($request->all(), [
             'student_id' => 'required|integer|exists:users,id',
             'lrn'        => ['nullable', 'string', 'regex:/^[0-9]{12}$/'],
-            'section'    => 'nullable|string|max:100',
+            'section'    => 'nullable|string|max:100|exists:sections,name',
+            'parent_email' => 'nullable|email|max:150',
         ], [
             'lrn.regex' => 'LRN must be exactly 12 numeric digits.',
         ]);
@@ -113,7 +117,10 @@ class AdminController extends Controller
 
         $user->lrn = $cleanedLrn;
         $user->section = $request->section ? trim($request->section) : null;
+        $user->parent_email = $request->filled('parent_email') ? trim($request->parent_email) : null;
         $user->save();
+
+        Section::syncStudentRoster((int) $user->id);
 
         return response()->json(['success' => true, 'message' => 'Student updated successfully']);
     }
@@ -179,12 +186,24 @@ class AdminController extends Controller
 
         $oldName = $section->name;
         $newName = $request->name;
+        $studentIds = User::where('role', 'student')->where('section', $oldName)->pluck('id');
 
         $section->name = $newName;
         $section->save();
 
         if ($oldName !== $newName) {
             User::where('role', 'student')->where('section', $oldName)->update(['section' => $newName]);
+            DB::table('classes')
+                ->where('section', $oldName)
+                ->where('name', $oldName)
+                ->update(['name' => $newName, 'section' => $newName, 'updated_at' => now()]);
+            DB::table('classes')
+                ->where('section', $oldName)
+                ->update(['section' => $newName, 'updated_at' => now()]);
+
+            foreach ($studentIds as $studentId) {
+                Section::syncStudentRoster((int) $studentId);
+            }
         }
 
         return response()->json(['success' => true]);
@@ -206,11 +225,15 @@ class AdminController extends Controller
         }
 
         $sectionName = $section->name;
+        $classIds = DB::table('classes')->where('section', $sectionName)->pluck('id');
         $section->delete();
 
         User::where('role', 'student')->where('section', $sectionName)->update(['section' => null]);
+        DB::table('classes')->where('section', $sectionName)->update(['section' => null, 'updated_at' => now()]);
+        if ($classIds->isNotEmpty()) {
+            DB::table('class_students')->whereIn('class_id', $classIds)->delete();
+        }
 
         return response()->json(['success' => true]);
     }
 }
-

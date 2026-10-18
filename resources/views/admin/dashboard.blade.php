@@ -12,17 +12,15 @@
     :root {
       --gold: #f0c030; --gold-dim: #7a6000; --gold-light: #ffe050;
       --blue-dark: #0e1530; --blue-mid: #1e2a50; --blue-deep: #090d1e; --blue-ui: #131d3a;
-      --text-dim: rgba(180,200,255,0.6); --text-muted: rgba(140,170,230,0.45);
+      --text-dim: #fff; --text-muted: rgba(255,255,255,0.82);
       --red: #c0392b; --green: #27ae60; --orange: #e67e22; --purple: #8e44ad;
       --grade-a: #27ae60; --grade-b: #2980b9; --grade-c: #f0c030; --grade-d: #e67e22; --grade-f: #c0392b;
     }
-    html, body { height: 100%; font-family: 'Outfit', sans-serif; background: #050308; color: rgba(180,200,255,0.85); }
+    html, body { min-height: 100%; font-family: 'Outfit', sans-serif; background: #080b1b; color: #fff; }
+    .dashboard-background { position: fixed; inset: 0; z-index: 0; pointer-events: none; background: radial-gradient(ellipse at 15% 15%, rgba(76,29,149,0.34), transparent 45%), radial-gradient(ellipse at 85% 25%, rgba(13,148,136,0.2), transparent 42%), radial-gradient(ellipse at 55% 85%, rgba(30,64,175,0.24), transparent 46%), linear-gradient(135deg, #080b1b 0%, #111a35 52%, #090d1e 100%); background-size: cover; background-repeat: no-repeat; }
     * { cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16'%3E%3Crect x='0' y='0' width='4' height='4' fill='%23f0a000'/%3E%3Crect x='0' y='4' width='4' height='4' fill='%23f0a000'/%3E%3Crect x='0' y='8' width='4' height='4' fill='%23f0a000'/%3E%3Crect x='4' y='4' width='4' height='4' fill='%23f0a000'/%3E%3Crect x='8' y='8' width='4' height='4' fill='%23f0a000'/%3E%3C/svg%3E") 0 0, default; }
 
     /* ===== LAYOUT ===== */
-    #bgCanvas { position: fixed; inset: 0; z-index: 0; }
-    .scanlines { position: fixed; inset: 0; z-index: 2; pointer-events: none; background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.15) 2px, rgba(0,0,0,0.15) 4px); }
-    .vignette { position: fixed; inset: 0; z-index: 2; pointer-events: none; background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.75) 100%); }
     .shell { position: relative; z-index: 10; display: flex; flex-direction: column; min-height: 100vh; }
 
     /* ===== TOPBAR ===== */
@@ -58,9 +56,28 @@
     .pixel-table th { background: var(--blue-deep); color: var(--gold); font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 600; letter-spacing: 0.08em; }
     .pixel-table tr:nth-child(even) td { background: rgba(14,21,48,0.5); }
     .pixel-table tr:hover td { background: rgba(30,42,80,0.6); }
+    .sort-header { padding: 0; color: inherit; background: transparent; border: 0; font: inherit; letter-spacing: inherit; cursor: pointer; }
+    .sort-header:hover { color: var(--gold-light); }
+    .sort-indicator { display: inline-block; min-width: 12px; margin-left: 4px; }
+    .student-pagination { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 14px; color: var(--text-muted); font-size: 12px; }
+    .student-pagination-controls { display: flex; align-items: center; gap: 8px; }
+    .student-pagination .pixel-btn { padding: 6px 10px; font-size: 10px; }
+    .student-pagination .pixel-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .student-action-buttons { display: flex; align-items: center; gap: 8px; min-width: 190px; }
+    .student-action-btn { min-height: 40px; padding: 8px 12px; font-size: 12px; line-height: 1.2; white-space: nowrap; }
+    .student-action-btn:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+    .student-action-btn--edit { background: var(--gold); color: #090d1e; }
+    .student-action-btn--grades { background: #218838; color: #fff; box-shadow: 4px 4px 0 #145523; }
+    .student-action-btn--grades:hover { background: #2fb34b; }
+    .section-action-buttons { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .section-action-btn { min-height: 34px; padding: 7px 10px; font-size: 10px; line-height: 1.2; white-space: nowrap; }
+    .section-action-btn:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+    .section-action-btn--edit { background: var(--gold); color: #090d1e; }
+    .section-action-btn--delete { background: var(--red); color: #fff; box-shadow: 4px 4px 0 #600010; }
+    .section-action-btn--delete:hover { background: #e04b3b; }
 
     /* ===== FORMS ===== */
-    .pixel-input, .pixel-select { width: 100%; padding: 11px 14px; background: var(--blue-deep); border: 2px solid var(--blue-mid); color: rgba(180,200,255,0.8); font-family: 'Outfit', sans-serif; font-size: 15px; letter-spacing: 0.06em; margin-bottom: 10px; outline: none; }
+    .pixel-input, .pixel-select { width: 100%; padding: 11px 14px; background: var(--blue-deep); border: 2px solid var(--blue-mid); color: #fff; font-family: 'Outfit', sans-serif; font-size: 15px; letter-spacing: 0.06em; margin-bottom: 10px; outline: none; }
     .pixel-input:focus, .pixel-select:focus { border-color: var(--gold); background: #0b1025; color: rgba(220,235,255,0.9); }
     .pixel-btn { display: inline-block; padding: 11px 18px; background: var(--gold); color: #0a0e1a; border: none; font-family: 'Outfit', sans-serif; font-size: 12px; font-weight: 600; cursor: pointer; box-shadow: 4px 4px 0 var(--gold-dim); letter-spacing: 0.1em; text-transform: uppercase; transition: all 0.05s steps(1); }
     .pixel-btn:hover { background: var(--gold-light); transform: translate(-1px,-1px); box-shadow: 5px 5px 0 var(--gold-dim); }
@@ -83,11 +100,9 @@
 
     /* ===== GRADE BADGE ===== */
     .grade-badge { display: inline-block; font-family: 'Outfit', sans-serif; font-size: 12px; font-weight: 700; padding: 4px 10px; border: 2px solid; min-width: 44px; text-align: center; }
-    .grade-a { color: var(--grade-a); border-color: var(--grade-a); background: rgba(39,174,96,0.12); }
-    .grade-b { color: var(--grade-b); border-color: var(--grade-b); background: rgba(41,128,185,0.12); }
-    .grade-c { color: var(--grade-c); border-color: var(--grade-c); background: rgba(240,192,48,0.12); }
-    .grade-d { color: var(--grade-d); border-color: var(--grade-d); background: rgba(230,126,34,0.12); }
-    .grade-f { color: var(--grade-f); border-color: var(--grade-f); background: rgba(192,57,43,0.12); }
+    .grade-a, .grade-b, .grade-green { color: #5dde90; border-color: var(--green); background: rgba(39,174,96,0.18); }
+    .grade-c, .grade-yellow { color: var(--gold-light); border-color: var(--gold); background: rgba(240,192,48,0.18); }
+    .grade-d, .grade-f, .grade-red { color: #ff7770; border-color: var(--red); background: rgba(192,57,43,0.18); }
     .grade-none { color: var(--text-muted); border-color: var(--blue-mid); background: transparent; font-size: 14px; }
 
     /* ===== PROGRESS BAR ===== */
@@ -109,7 +124,7 @@
     .overall-card { background: var(--blue-ui); border: 2px solid var(--gold-dim); padding: 16px 22px; margin-bottom: 18px; display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
     .overall-big { font-family: 'Cinzel', serif; font-weight: 700; font-size: 26px; }
     .overall-label { font-size: 16px; color: var(--text-dim); }
-    .overall-percent { font-size: 22px; color: rgba(180,200,255,0.85); }
+    .overall-percent { font-size: 22px; color: #fff; }
 
     /* ===== ALERTS ===== */
     .alert { padding: 12px 16px; margin-bottom: 16px; font-size: 18px; border-left: 4px solid; }
@@ -133,25 +148,76 @@
     /* ===== HAMBURGER ===== */
     .hamburger {
       display: none;
+      width: 44px;
+      height: 44px;
+      flex: 0 0 44px;
+      align-items: center;
+      justify-content: center;
       flex-direction: column;
       gap: 5px;
       cursor: pointer;
-      background: none;
-      border: none;
-      padding: 4px;
+      background: transparent;
+      border: 1px solid rgba(240,192,0,0.3);
+      border-radius: 4px;
+      padding: 0;
       margin-right: 10px;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: rgba(240,192,48,0.2);
     }
-    .hamburger span { display: block; width: 22px; height: 3px; background: var(--gold); }
+    .hamburger:hover, .hamburger:focus-visible {
+      background: rgba(240,192,0,0.1);
+      border-color: var(--gold);
+    }
+    .hamburger span { display: block; width: 22px; height: 3px; background: var(--gold); transition: all 0.2s; }
 
     /* ===== SIDEBAR OVERLAY ===== */
     .sidebar-overlay {
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.6);
-      z-index: 90;
+      background: rgba(0,0,0,0.65);
+      backdrop-filter: blur(2px);
+      -webkit-backdrop-filter: blur(2px);
+      z-index: 990;
     }
     .sidebar-overlay.open { display: block; }
+
+    /* ===== SIDEBAR MOBILE HEADER ===== */
+    .sidebar-mobile-header {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+      border-bottom: 2px solid var(--blue-mid);
+      margin-bottom: 8px;
+      background: var(--blue-deep);
+    }
+    .sidebar-mobile-title {
+      font-family: 'Cinzel', serif;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--gold);
+      letter-spacing: 0.1em;
+    }
+    .sidebar-close-btn {
+      background: none;
+      border: 1px solid var(--gold-dim);
+      color: var(--gold);
+      font-size: 22px;
+      line-height: 1;
+      width: 34px;
+      height: 34px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      border-radius: 4px;
+      padding: 0;
+    }
+    .sidebar-close-btn:hover {
+      background: var(--gold);
+      color: var(--blue-deep);
+    }
 
     /* ===== TABLET RESPONSIVE (769px – 1024px) ===== */
     @media (min-width: 769px) and (max-width: 1024px) {
@@ -170,15 +236,21 @@
     /* ===== MOBILE RESPONSIVE (≤768px) ===== */
     @media (max-width: 768px) {
       .hamburger { display: flex; }
+      .sidebar-mobile-header { display: flex; }
       .sidebar {
         position: fixed;
-        top: 0; left: 0;
+        top: 0; left: 0; bottom: 0;
         height: 100%;
-        z-index: 100;
+        height: 100dvh;
+        z-index: 1000;
         transform: translateX(-100%);
-        transition: transform 0.25s ease;
-        padding-top: 60px;
-        width: 200px;
+        transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        padding: 0 0 20px 0 !important;
+        width: 240px;
+        max-width: 80vw;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        box-shadow: 4px 0 25px rgba(0,0,0,0.7), 2px 0 0 var(--gold);
       }
       .sidebar.open { transform: translateX(0); }
       .wrapper { overflow: visible; }
@@ -201,19 +273,22 @@
       .panel-title { font-size: 14px; }
       .pixel-btn { font-size: 10px; padding: 9px 12px; }
       .logout-btn { font-size: 10px; padding: 6px 10px; }
+      .student-pagination { align-items: flex-start; flex-direction: column; }
+    }
+    *, *::before, *::after {
+      box-shadow: none !important;
+      text-shadow: none !important;
     }
   </style>
 </head>
 <body>
 
-<canvas id="bgCanvas"></canvas>
-<div class="scanlines"></div>
-<div class="vignette"></div>
-
-<!-- Sidebar overlay for mobile -->
-<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+<div class="dashboard-background" aria-hidden="true"></div>
 
 <div class="shell">
+  <!-- Sidebar overlay for mobile -->
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
   <!-- TOPBAR -->
   <div class="topbar">
     <div class="topbar-brand">
@@ -234,6 +309,10 @@
   <div class="wrapper">
     <!-- SIDEBAR -->
     <nav class="sidebar" id="sidebar">
+      <div class="sidebar-mobile-header">
+        <span class="sidebar-mobile-title">⚔ MENU</span>
+        <button type="button" class="sidebar-close-btn" onclick="closeSidebar()" aria-label="Close menu">&times;</button>
+      </div>
       <button class="nav-btn active" id="nav-students" onclick="showSection('students', this)">
         <i class="fas fa-users"></i>STUDENTS
       </button>
@@ -292,7 +371,11 @@
                   <th>NAME</th>
                   <th>SECTION</th>
                   <th>GRADE</th>
-                  <th>OVERALL %</th>
+                  <th aria-sort="none" id="adminScoreSortHeader">
+                    <button type="button" class="sort-header" onclick="sortAdminStudentsByScore()" aria-label="Sort students by overall percentage">
+                      OVERALL % <span class="sort-indicator" id="adminScoreSortIndicator" aria-hidden="true">↕</span>
+                    </button>
+                  </th>
                   <th>ACTIONS</th>
                 </tr>
               </thead>
@@ -302,37 +385,24 @@
                     $sm = $scoreMap[$s->id] ?? null;
                     $pct = $sm ? (float)$sm->overall_percent : null;
                     if ($pct === null) {
-                      $letter = null; $gradeClass = 'grade-none';
-                    } elseif ($pct >= 90) {
-                      $letter = 'A'; $gradeClass = 'grade-a';
-                    } elseif ($pct >= 80) {
-                      $letter = 'B'; $gradeClass = 'grade-b';
-                    } elseif ($pct >= 70) {
-                      $letter = 'C'; $gradeClass = 'grade-c';
-                    } elseif ($pct >= 60) {
-                      $letter = 'D'; $gradeClass = 'grade-d';
+                      $gradeClass = 'grade-none';
                     } else {
-                      $letter = 'F'; $gradeClass = 'grade-f';
+                      $gradeClass = $pct >= 86 ? 'grade-green' : ($pct >= 75 ? 'grade-yellow' : 'grade-red');
                     }
-                    $progColor = match($gradeClass) {
-                      'grade-a' => '#27ae60',
-                      'grade-b' => '#2980b9',
-                      'grade-c' => '#f0c030',
-                      'grade-d' => '#e67e22',
-                      'grade-f' => '#c0392b',
-                      default   => '#1e2a50',
-                    };
+                    $progColor = $pct === null ? '#1e2a50' : ($pct >= 86 ? '#27ae60' : ($pct >= 75 ? '#f0c030' : '#c0392b'));
                   @endphp
                   <tr class="student-row"
                       data-section="{{ strtolower($s->section ?? '') }}"
                       data-name="{{ strtolower($s->first_name.' '.$s->last_name) }}"
-                      data-lrn="{{ $s->lrn ?? '' }}">
+                      data-lrn="{{ $s->lrn ?? '' }}"
+                      data-parent-email="{{ $s->parent_email ?? '' }}"
+                      data-overall-percent="{{ $pct ?? '' }}">
                     <td>{{ $s->id }}</td>
                     <td><span style="color:var(--gold);">{{ $s->lrn ?: '—' }}</span></td>
                     <td>{{ $s->first_name }} {{ $s->last_name }}</td>
                     <td>{{ $s->section ?: '—' }}</td>
                     <td>
-                      <span class="grade-badge {{ $gradeClass }}">{{ $letter ?? 'N/A' }}</span>
+                      <span class="grade-badge {{ $gradeClass }}">{{ $pct !== null ? $pct.'%' : 'N/A' }}</span>
                     </td>
                     <td>
                       @if($pct !== null)
@@ -344,15 +414,17 @@
                         <span style="color:var(--text-muted);font-size:15px;">No data</span>
                       @endif
                     </td>
-                    <td style="white-space:nowrap;">
-                      <button class="pixel-btn btn-sm"
-                        onclick="openEditStudent({{ $s->id }}, '{{ addslashes($s->lrn ?? '') }}', '{{ addslashes($s->section ?? '') }}', '{{ addslashes($s->first_name.' '.$s->last_name) }}')">
+                    <td>
+                      <div class="student-action-buttons">
+                      <button class="pixel-btn btn-sm student-action-btn student-action-btn--edit"
+                        onclick="openEditStudent({{ $s->id }}, '{{ addslashes($s->lrn ?? '') }}', '{{ addslashes($s->section ?? '') }}', '{{ addslashes($s->first_name.' '.$s->last_name) }}', this.closest('tr').dataset.parentEmail)">
                         <i class="fas fa-pen"></i> EDIT
                       </button>
-                      <button class="pixel-btn btn-sm btn-green" style="margin-left:6px;"
+                      <button class="pixel-btn btn-sm btn-green student-action-btn student-action-btn--grades"
                         onclick="openGrades({{ $s->id }}, '{{ addslashes($s->first_name.' '.$s->last_name) }}')">
                         <i class="fas fa-chart-bar"></i> GRADES
                       </button>
+                      </div>
                     </td>
                   </tr>
                 @empty
@@ -360,6 +432,14 @@
                 @endforelse
               </tbody>
             </table>
+          </div>
+          <div class="student-pagination" id="adminStudentPagination" hidden>
+            <span id="adminStudentPageInfo"></span>
+            <div class="student-pagination-controls">
+              <button type="button" class="pixel-btn" id="adminStudentPrev" onclick="changeAdminStudentPage(-1)">PREVIOUS</button>
+              <span id="adminStudentPageNumber"></span>
+              <button type="button" class="pixel-btn" id="adminStudentNext" onclick="changeAdminStudentPage(1)">NEXT</button>
+            </div>
           </div>
         </div>
       </section>
@@ -465,19 +545,19 @@
                       <input type="text" id="section-name-input-{{ $sec->id }}" class="pixel-input" value="{{ $sec->name }}" style="display: none; width: 100%; margin: 0; padding: 6px 10px;">
                     </td>
                     <td>
-                      <div id="section-actions-view-{{ $sec->id }}">
-                        <button class="pixel-btn btn-sm" onclick="startEditSection({{ $sec->id }})">
+                      <div id="section-actions-view-{{ $sec->id }}" class="section-action-buttons">
+                        <button class="pixel-btn section-action-btn section-action-btn--edit" onclick="startEditSection({{ $sec->id }})">
                           <i class="fas fa-pen"></i> EDIT
                         </button>
-                        <button class="pixel-btn btn-sm btn-outline" style="margin-left:6px; background:var(--red); color:#fff; border-color:var(--red); box-shadow:4px 4px 0 #600010;" onclick="deleteSection({{ $sec->id }})">
+                        <button class="pixel-btn section-action-btn section-action-btn--delete" onclick="deleteSection({{ $sec->id }})">
                           <i class="fas fa-trash"></i> DELETE
                         </button>
                       </div>
-                      <div id="section-actions-edit-{{ $sec->id }}" style="display: none;">
-                        <button class="pixel-btn btn-sm btn-green" onclick="saveSectionEdit({{ $sec->id }})">
+                      <div id="section-actions-edit-{{ $sec->id }}" class="section-action-buttons" style="display: none;">
+                        <button class="pixel-btn section-action-btn btn-green" onclick="saveSectionEdit({{ $sec->id }})">
                           <i class="fas fa-save"></i> SAVE
                         </button>
-                        <button class="pixel-btn btn-sm btn-outline" style="margin-left:6px;" onclick="cancelEditSection({{ $sec->id }})">
+                        <button class="pixel-btn section-action-btn btn-outline" onclick="cancelEditSection({{ $sec->id }})">
                           <i class="fas fa-times"></i> CANCEL
                         </button>
                       </div>
@@ -515,6 +595,11 @@
           <option value="{{ $sec->name }}">{{ $sec->name }}</option>
         @endforeach
       </select>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="editParentEmail">PARENT / GUARDIAN EMAIL</label>
+      <input type="email" id="editParentEmail" class="pixel-input" placeholder="parent@example.com" maxlength="150">
     </div>
 
     <p id="editStudentMsg" style="font-size:16px;margin-bottom:10px;min-height:20px;"></p>
@@ -557,15 +642,25 @@
   function toggleSidebar() {
     const sb = document.getElementById('sidebar');
     const ov = document.getElementById('sidebarOverlay');
-    sb.classList.toggle('open');
-    ov.classList.toggle('open');
+    const btn = document.getElementById('hamburgerBtn');
+    if (!sb || !ov) return;
+    const isOpen = sb.classList.toggle('open');
+    ov.classList.toggle('open', isOpen);
+    if (btn) btn.setAttribute('aria-expanded', String(isOpen));
+    document.body.style.overflow = isOpen ? 'hidden' : '';
   }
   function closeSidebar() {
     const sb = document.getElementById('sidebar');
     const ov = document.getElementById('sidebarOverlay');
+    const btn = document.getElementById('hamburgerBtn');
     if (sb) sb.classList.remove('open');
     if (ov) ov.classList.remove('open');
+    if (btn) btn.setAttribute('aria-expanded', 'false');
+    document.body.style.overflow = '';
   }
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeSidebar();
+  });
 
   function showSection(id, btn) {
     closeSidebar();
@@ -593,30 +688,102 @@
   });
 
   // ===== FILTER / SEARCH STUDENTS =====
+  let adminStudentPage = 1;
+  let adminFilteredStudents = [];
+  let adminScoreSortDirection = null;
+  const adminStudentPageSize = 10;
+
   function filterStudents(sectionVal) {
     const secFilter = sectionVal !== undefined ? sectionVal : document.getElementById('filterStudentSection').value;
     const search    = document.getElementById('searchStudent').value.trim().toLowerCase();
-
-    document.querySelectorAll('.student-row').forEach(row => {
+    const rows = Array.from(document.querySelectorAll('.student-row'));
+    adminScoreSortDirection = null;
+    document.getElementById('adminScoreSortHeader').setAttribute('aria-sort', 'none');
+    document.getElementById('adminScoreSortIndicator').textContent = '↕';
+    adminFilteredStudents = rows.filter(row => {
       const rowSec  = row.getAttribute('data-section');
       const rowName = row.getAttribute('data-name');
       const rowLrn  = row.getAttribute('data-lrn').toLowerCase();
       const secOk   = secFilter === 'all' || rowSec === secFilter.toLowerCase();
       const srchOk  = !search || rowName.includes(search) || rowLrn.includes(search);
-      row.style.display = (secOk && srchOk) ? 'table-row' : 'none';
+      return secOk && srchOk;
     });
+
+    adminStudentPage = 1;
+    renderAdminStudentPage(rows);
+  }
+
+  function renderAdminStudentPage(rows = Array.from(document.querySelectorAll('.student-row'))) {
+    const filteredRows = adminFilteredStudents;
+    const pageCount = Math.max(1, Math.ceil(filteredRows.length / adminStudentPageSize));
+    adminStudentPage = Math.min(adminStudentPage, pageCount);
+    const pageStart = (adminStudentPage - 1) * adminStudentPageSize;
+    const visibleRows = filteredRows.slice(pageStart, pageStart + adminStudentPageSize);
+    rows.forEach(row => { row.style.display = 'none'; });
+    visibleRows.forEach(row => { row.style.display = 'table-row'; });
+
+    const pagination = document.getElementById('adminStudentPagination');
+    pagination.hidden = filteredRows.length <= adminStudentPageSize;
+    document.getElementById('adminStudentPageInfo').textContent = filteredRows.length
+      ? `Showing ${pageStart + 1}–${pageStart + visibleRows.length} of ${filteredRows.length} students`
+      : 'No students match your filters';
+    document.getElementById('adminStudentPageNumber').textContent = `Page ${adminStudentPage} of ${pageCount}`;
+    document.getElementById('adminStudentPrev').disabled = adminStudentPage === 1;
+    document.getElementById('adminStudentNext').disabled = adminStudentPage === pageCount;
+
+    let noResults = document.getElementById('studentNoResults');
+    if (!noResults && rows.length) {
+      noResults = document.createElement('tr');
+      noResults.id = 'studentNoResults';
+      noResults.innerHTML = '<td colspan="7" style="text-align:center;color:var(--text-muted);padding:20px;">No students match your filters.</td>';
+      document.getElementById('studentsTableBody').appendChild(noResults);
+    }
+    if (noResults) noResults.style.display = filteredRows.length ? 'none' : 'table-row';
+  }
+
+  function changeAdminStudentPage(direction) {
+    adminStudentPage += direction;
+    const rows = Array.from(document.querySelectorAll('.student-row'));
+    renderAdminStudentPage(rows);
+  }
+
+  function sortAdminStudentsByScore() {
+    adminScoreSortDirection = adminScoreSortDirection === 'asc' ? 'desc' : 'asc';
+    const direction = adminScoreSortDirection === 'asc' ? 1 : -1;
+    adminFilteredStudents.sort((a, b) => {
+      const scoreA = a.dataset.overallPercent === '' ? null : Number(a.dataset.overallPercent);
+      const scoreB = b.dataset.overallPercent === '' ? null : Number(b.dataset.overallPercent);
+      if (scoreA === null || scoreB === null) {
+        if (scoreA === scoreB) return Number(a.cells[0].textContent) - Number(b.cells[0].textContent);
+        return scoreA === null ? 1 : -1;
+      }
+      const scoreDifference = scoreA - scoreB;
+      return scoreDifference === 0
+        ? Number(a.cells[0].textContent) - Number(b.cells[0].textContent)
+        : scoreDifference * direction;
+    });
+    adminStudentPage = 1;
+    document.getElementById('adminScoreSortHeader').setAttribute(
+      'aria-sort',
+      adminScoreSortDirection === 'asc' ? 'ascending' : 'descending'
+    );
+    document.getElementById('adminScoreSortIndicator').textContent =
+      adminScoreSortDirection === 'asc' ? '↑' : '↓';
+    renderAdminStudentPage();
   }
 
   // Keep section filter in sync when typing in search
   document.getElementById('searchStudent').addEventListener('input', () => filterStudents());
+  filterStudents();
 
   // ===== EDIT STUDENT MODAL =====
   let currentStudentId = null;
 
-  function openEditStudent(id, lrn, section, name) {
+  function openEditStudent(id, lrn, section, name, parentEmail = '') {
     currentStudentId = id;
     document.getElementById('editStudentName').textContent = name;
     document.getElementById('editLrn').value     = lrn;
+    document.getElementById('editParentEmail').value = parentEmail;
     
     // Set editSection dropdown value
     const select = document.getElementById('editSection');
@@ -651,6 +818,7 @@
   async function saveStudent() {
     const lrn     = document.getElementById('editLrn').value.trim();
     const section = document.getElementById('editSection').value.trim();
+    const parentEmail = document.getElementById('editParentEmail').value.trim();
     const msg     = document.getElementById('editStudentMsg');
 
     if (lrn && !/^[0-9]{12}$/.test(lrn)) {
@@ -666,7 +834,7 @@
       const res = await fetch("/backend/admin/update_student", {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-        body: JSON.stringify({ student_id: currentStudentId, lrn, section })
+        body: JSON.stringify({ student_id: currentStudentId, lrn, section, parent_email: parentEmail })
       });
       const data = await res.json();
       if (data.success) {
@@ -685,11 +853,9 @@
 
   // ===== GRADE MODAL =====
   function letterGrade(pct) {
-    if (pct >= 90) return { letter: 'A', cls: 'grade-a' };
-    if (pct >= 80) return { letter: 'B', cls: 'grade-b' };
-    if (pct >= 70) return { letter: 'C', cls: 'grade-c' };
-    if (pct >= 60) return { letter: 'D', cls: 'grade-d' };
-    return { letter: 'F', cls: 'grade-f' };
+    const letter = pct >= 90 ? 'A' : pct >= 80 ? 'B' : pct >= 70 ? 'C' : pct >= 60 ? 'D' : 'F';
+    const cls = pct >= 86 ? 'grade-green' : pct >= 75 ? 'grade-yellow' : 'grade-red';
+    return { letter, cls };
   }
 
   async function openGrades(id, name) {
@@ -744,7 +910,7 @@
       data.scores.forEach(s => {
         const pct  = s.total > 0 ? Math.round((s.correct / s.total) * 100) : 0;
         const g    = letterGrade(pct);
-        const fill = `background:${pct >= 90 ? '#27ae60' : pct >= 80 ? '#2980b9' : pct >= 70 ? '#f0c030' : pct >= 60 ? '#e67e22' : '#c0392b'}`;
+        const fill = `background:${pct >= 86 ? '#27ae60' : pct >= 75 ? '#f0c030' : '#c0392b'}`;
         rows += `<tr>
           <td>${s.subject}</td>
           <td><span style="text-transform:capitalize;">${s.type}</span></td>
@@ -774,16 +940,6 @@
     } catch (e) {
       document.getElementById('gradesTableWrap').innerHTML = '<p style="color:var(--red);">Failed to load grades.</p>';
     }
-  }
-
-  // ===== SIDEBAR TOGGLE =====
-  function toggleSidebar() {
-    document.getElementById('sidebar').classList.toggle('open');
-    document.getElementById('sidebarOverlay').classList.toggle('open');
-  }
-  function closeSidebar() {
-    document.getElementById('sidebar').classList.remove('open');
-    document.getElementById('sidebarOverlay').classList.remove('open');
   }
 
   // Close modal on overlay click
@@ -880,24 +1036,6 @@
     }
   }
 
-  // ===== PARTICLE BACKGROUND =====
-  const canvas = document.getElementById('bgCanvas');
-  const ctx    = canvas.getContext('2d');
-  let width, height, particles = [];
-  function resize() { width = canvas.width = window.innerWidth; height = canvas.height = window.innerHeight; }
-  window.addEventListener('resize', resize); resize();
-  for (let i = 0; i < 40; i++) particles.push({ x: Math.random()*width, y: Math.random()*height, size: Math.random()*3+1, speed: Math.random()*0.5+0.1 });
-  function draw() {
-    ctx.clearRect(0, 0, width, height);
-    ctx.fillStyle = 'rgba(240, 192, 0, 0.35)';
-    particles.forEach(p => {
-      ctx.fillRect(p.x, p.y, p.size, p.size);
-      p.y -= p.speed;
-      if (p.y < -10) p.y = height + 10;
-    });
-    requestAnimationFrame(draw);
-  }
-  draw();
 </script>
 </body>
 </html>

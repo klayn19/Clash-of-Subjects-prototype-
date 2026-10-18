@@ -22,8 +22,8 @@
       --blue-mid:   #1e2a50;
       --blue-deep:  #090d1e;
       --blue-ui:    #131d3a;
-      --text-dim:   rgba(180,200,255,0.6);
-      --text-muted: rgba(140,170,230,0.45);
+      --text-dim:   #fff;
+      --text-muted: rgba(255,255,255,0.82);
       --red:        #c0392b;
       --green:      #27ae60;
     }
@@ -31,8 +31,21 @@
     html, body {
       height: 100%;
       font-family: 'Outfit', sans-serif;
-      background: #050308;
-      color: rgba(180,200,255,0.85);
+      background: #080b1b;
+      color: #fff;
+    }
+    .dashboard-background {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(ellipse at 15% 15%, rgba(76,29,149,0.34), transparent 45%),
+        radial-gradient(ellipse at 85% 25%, rgba(13,148,136,0.2), transparent 42%),
+        radial-gradient(ellipse at 55% 85%, rgba(30,64,175,0.24), transparent 46%),
+        linear-gradient(135deg, #080b1b 0%, #111a35 52%, #090d1e 100%);
+      background-size: cover;
+      background-repeat: no-repeat;
     }
 
     /* pixel cursor */
@@ -41,21 +54,13 @@
     }
 
     /* ===== SCANLINES & VIGNETTE ===== */
-    #bgCanvas { position: fixed; inset: 0; z-index: 0; }
-    .scanlines {
-      position: fixed; inset: 0; z-index: 2; pointer-events: none;
-      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.15) 2px, rgba(0,0,0,0.15) 4px);
-    }
-    .vignette {
-      position: fixed; inset: 0; z-index: 2; pointer-events: none;
-      background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.75) 100%);
-    }
-
     /* ===== LAYOUT SHELL ===== */
     .shell {
       position: relative; z-index: 10;
       display: flex; flex-direction: column;
-      min-height: 100vh;
+      height: 100vh;
+      height: 100dvh;
+      overflow: hidden;
     }
 
     /* ===== TOP BAR ===== */
@@ -70,6 +75,7 @@
       position: sticky;
       top: 0;
       z-index: 100;
+      flex-shrink: 0;
     }
 
     /* gold top edge line */
@@ -130,6 +136,8 @@
     .wrapper {
       display: flex;
       flex: 1;
+      min-height: 0;
+      overflow: hidden;
     }
 
     /* ===== SIDEBAR ===== */
@@ -144,6 +152,7 @@
       padding: 20px 0;
       flex-shrink: 0;
       position: relative;
+      overflow: hidden;
     }
     /* pixel dot pattern */
     .sidebar::after {
@@ -194,6 +203,7 @@
     /* ===== MAIN CONTENT ===== */
     .main {
       flex: 1;
+      min-height: 0;
       padding: 24px;
       overflow-y: auto;
       position: relative; z-index: 1;
@@ -339,8 +349,60 @@
       font-weight: 600;
       letter-spacing: 0.08em;
     }
+    .sort-header {
+      padding: 0;
+      color: inherit;
+      background: transparent;
+      border: 0;
+      font: inherit;
+      letter-spacing: inherit;
+      cursor: pointer;
+    }
+    .sort-header:hover { color: var(--gold-light); }
+    .sort-indicator { display: inline-block; min-width: 12px; margin-left: 4px; }
     .pixel-table tr:nth-child(even) td { background: rgba(14,21,48,0.5); }
     .pixel-table tr:hover td { background: rgba(30,42,80,0.6); }
+    .student-action-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      min-width: 148px;
+    }
+    .student-action-btn {
+      min-height: 36px;
+      padding: 8px 12px;
+      border: 2px solid var(--gold);
+      font-size: 11px;
+      font-weight: 700;
+      line-height: 1.2;
+      letter-spacing: 0.05em;
+      white-space: nowrap;
+    }
+    .student-action-btn.student-email-btn {
+      color: #fff;
+      background: #8f211b;
+      border-color: #ff8a80;
+      box-shadow: 3px 3px 0 #4a1111;
+    }
+    .student-action-btn.student-email-btn:hover:not(:disabled) {
+      color: #fff;
+      background: #b52d26;
+      border-color: #ffc1bc;
+      box-shadow: 4px 4px 0 #4a1111;
+    }
+    .student-action-btn:focus-visible {
+      outline: 3px solid #fff;
+      outline-offset: 2px;
+    }
+    .student-action-btn:disabled {
+      color: #e2e5eb;
+      background: #3b465d;
+      border-color: #aab4c4;
+      box-shadow: none;
+      opacity: 1;
+      cursor: not-allowed;
+    }
     .subject-best-list { display: flex; flex-wrap: wrap; gap: 5px; }
     .subject-best-chip {
       display: inline-block;
@@ -352,6 +414,21 @@
       white-space: nowrap;
     }
     .subject-best-chip.is-earned { color: var(--gold); border-color: var(--gold-dim); }
+    .student-pagination {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 14px;
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+    .student-pagination-controls { display: flex; align-items: center; gap: 8px; }
+    .student-pagination .pixel-btn { padding: 6px 10px; font-size: 10px; }
+    .student-pagination .pixel-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    @media (max-width: 480px) {
+      .student-pagination { align-items: flex-start; flex-direction: column; }
+    }
 
     .badge {
       display: inline-block;
@@ -365,6 +442,7 @@
     }
     .badge-green  { background: var(--green);  color: #fff; }
     .badge-gold   { background: var(--gold);   color: #0a0e1a; }
+    .badge-yellow { background: var(--gold); color: #0a0e1a; }
     .badge-blue   { background: var(--blue-mid); color: var(--gold); border-color: var(--gold-dim); }
     .badge-red    { background: var(--red);    color: #fff; }
 
@@ -399,7 +477,7 @@
       padding: 11px 14px;
       background: var(--blue-deep);
       border: 2px solid var(--blue-mid);
-      color: rgba(180,200,255,0.8);
+      color: #fff;
       font-family: 'Outfit', sans-serif;
       font-size: 15px;
       letter-spacing: 0.06em;
@@ -410,14 +488,14 @@
     .pixel-input:focus, .pixel-textarea:focus, .pixel-select:focus {
       border-color: var(--gold);
       background: #0b1025;
-      color: rgba(220,235,255,0.9);
+      color: #fff;
     }
     .pixel-input::placeholder, .pixel-textarea::placeholder {
-      color: rgba(100,130,200,0.3);
+      color: rgba(255,255,255,0.65);
     }
     .pixel-textarea { resize: vertical; min-height: 80px; }
     .pixel-select { appearance: none; -webkit-appearance: none; cursor: pointer; }
-    .pixel-select option { background: var(--blue-deep); color: rgba(180,200,255,0.85); }
+    .pixel-select option { background: var(--blue-deep); color: #fff; }
 
     .choices-grid {
       display: grid;
@@ -592,13 +670,25 @@
     /* ===== HAMBURGER ===== */
     .hamburger {
       display: none;
+      width: 44px;
+      height: 44px;
+      flex: 0 0 44px;
+      align-items: center;
+      justify-content: center;
       flex-direction: column;
       gap: 5px;
       cursor: pointer;
-      background: none;
-      border: none;
-      padding: 4px;
+      background: transparent;
+      border: 1px solid rgba(240,192,0,0.3);
+      border-radius: 4px;
+      padding: 0;
       margin-right: 10px;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: rgba(240,192,48,0.2);
+    }
+    .hamburger:hover, .hamburger:focus-visible {
+      background: rgba(240,192,0,0.1);
+      border-color: var(--gold);
     }
     .hamburger span { display: block; width: 22px; height: 3px; background: var(--gold); transition: all 0.2s; }
 
@@ -607,10 +697,49 @@
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.6);
-      z-index: 90;
+      background: rgba(0,0,0,0.65);
+      backdrop-filter: blur(2px);
+      -webkit-backdrop-filter: blur(2px);
+      z-index: 990;
     }
     .sidebar-overlay.open { display: block; }
+
+    /* ===== SIDEBAR MOBILE HEADER ===== */
+    .sidebar-mobile-header {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+      border-bottom: 2px solid var(--blue-mid);
+      margin-bottom: 8px;
+      background: var(--blue-deep);
+    }
+    .sidebar-mobile-title {
+      font-family: 'Cinzel', serif;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--gold);
+      letter-spacing: 0.1em;
+    }
+    .sidebar-close-btn {
+      background: none;
+      border: 1px solid var(--gold-dim);
+      color: var(--gold);
+      font-size: 22px;
+      line-height: 1;
+      width: 34px;
+      height: 34px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      border-radius: 4px;
+      padding: 0;
+    }
+    .sidebar-close-btn:hover {
+      background: var(--gold);
+      color: var(--blue-deep);
+    }
 
     /* ===== TABLE SCROLL ===== */
     .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
@@ -637,18 +766,24 @@
     /* ===== MOBILE RESPONSIVE (≤768px) ===== */
     @media (max-width: 768px) {
       .hamburger { display: flex; }
+      .sidebar-mobile-header { display: flex; }
       .sidebar {
         position: fixed;
-        top: 0; left: 0;
+        top: 0; left: 0; bottom: 0;
         height: 100%;
-        z-index: 100;
+        height: 100dvh;
+        z-index: 1000;
         transform: translateX(-100%);
-        transition: transform 0.25s ease;
-        padding-top: 60px;
-        width: 200px;
+        transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        padding: 0 0 20px 0 !important;
+        width: 240px;
+        max-width: 80vw;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        box-shadow: 4px 0 25px rgba(0,0,0,0.7), 2px 0 0 var(--gold);
       }
       .sidebar.open { transform: translateX(0); }
-      .wrapper { overflow: visible; }
+      .wrapper { overflow: hidden; }
       .topbar { padding: 12px 16px; flex-wrap: wrap; gap: 6px; }
       .topbar-title { font-size: 13px; }
       .topbar-subtitle { display: none; }
@@ -673,19 +808,21 @@
       .class-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
       .class-circle { width: 72px; height: 72px; font-size: 11px; }
     }
+    *, *::before, *::after {
+      box-shadow: none !important;
+      text-shadow: none !important;
+    }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
-<canvas id="bgCanvas"></canvas>
-<div class="scanlines"></div>
-<div class="vignette"></div>
+<div class="dashboard-background" aria-hidden="true"></div>
+
+<div class="shell">
 
 <!-- Sidebar overlay for mobile -->
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
-
-<div class="shell">
 
 <!-- TOP BAR -->
 <div class="topbar">
@@ -710,6 +847,10 @@
 
   <!-- SIDEBAR -->
   <nav class="sidebar" id="sidebar">
+    <div class="sidebar-mobile-header">
+      <span class="sidebar-mobile-title">⚔ MENU</span>
+      <button type="button" class="sidebar-close-btn" onclick="closeSidebar()" aria-label="Close menu">&times;</button>
+    </div>
     <button class="nav-btn active" onclick="showSection('classes', this)">
       <i class="fas fa-users"></i>CLASSES
     </button>
@@ -724,11 +865,8 @@
       <i class="fas fa-bolt"></i>QUIZ
     </button>
     <div class="nav-divider"></div>
-    <button class="nav-btn" onclick="showSection('prototype', this)">
-      <i class="fas fa-flask"></i>PROTOTYPE
-    </button>
-    <button class="nav-btn" onclick="showSection('prototype-grades', this)">
-      <i class="fas fa-percent"></i>PROTOTYPE GRADES
+    <button class="nav-btn" onclick="showSection('grades', this)">
+      <i class="fas fa-percent"></i>GRADES
     </button>
     <div class="nav-divider"></div>
     <button class="nav-btn" onclick="showSection('submissions', this)">
@@ -747,13 +885,14 @@
     <section id="section-classes" class="section active">
       <div class="panel">
         <div class="corner-bl"></div><div class="corner-br"></div>
-        <div class="panel-title">⚔ SUBJECT ASSESSMENT</div>
+        <div class="panel-title">⚔ MY CLASS SECTIONS</div>
 
         @php
             $uniqueSections = collect($classes)->pluck('section')->filter()->unique();
+            $availableSections = $sections->whereNotIn('name', $uniqueSections);
         @endphp
         <div class="filter-row" style="margin-bottom: 20px;">
-          <span class="filter-label">CLASS SECTION:</span>
+          <span class="filter-label">SECTION:</span>
           <select class="pixel-select" style="width:auto;margin:0;" id="filterClassSection" onchange="filterClassGrid(this.value)">
             <option value="all">All Sections</option>
             @foreach($uniqueSections as $sec)
@@ -780,10 +919,6 @@
             @endif
             <div class="class-label" style="margin-bottom:10px;">{{ $c->student_count }} student(s)</div>
             <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
-              <button class="pixel-btn" style="padding:7px 12px;font-size:11px;"
-                data-action="enroll"
-                data-class-id="{{ $c->id }}"
-                data-class-name="{{ addslashes($c->name) }}">➕ ENROLL</button>
               <button class="pixel-btn pixel-btn-red" style="padding:7px 12px;font-size:11px;"
                 data-action="delete-class"
                 data-class-id="{{ $c->id }}"
@@ -792,11 +927,16 @@
           </div>
           @endforeach
 
-          <!-- Add new class -->
-          <div class="class-card" onclick="openModal('modalAddClass')">
-            <div class="class-circle"><span class="add-class">+</span></div>
-            <div class="class-label">add class</div>
-          </div>
+          @if($availableSections->isNotEmpty())
+            <div class="class-card" onclick="openModal('modalAddClass')">
+              <div class="class-circle"><span class="add-class">+</span></div>
+              <div class="class-label">add section</div>
+            </div>
+          @elseif($sections->isNotEmpty())
+            <p style="grid-column:1/-1;color:var(--text-muted);text-align:center;">All admin-defined sections have been added to your classes.</p>
+          @else
+            <p style="grid-column:1/-1;color:var(--text-muted);text-align:center;">No sections are available. Ask an admin to create a section first.</p>
+          @endif
         </div>
       </div>
 
@@ -818,9 +958,20 @@
             <option value="all">All Types</option>
             <option value="quiz">⚡ Quiz</option>
             <option value="exam">📜 Exam</option>
+            <option value="assessment">🛡️ Assessment</option>
+            <option value="grade">💯 Grade</option>
+          </select>
+          <span class="filter-label">QUARTER:</span>
+          <select class="pixel-select" style="width:auto;margin:0;" id="filterQuarter">
+            <option value="all">All Quarters</option>
+            <option value="1">Quarter 1</option>
+            <option value="2">Quarter 2</option>
+            <option value="3">Quarter 3</option>
+            <option value="4">Quarter 4</option>
           </select>
           <button class="pixel-btn pixel-btn-red" style="padding:8px 12px;font-size:7px;" onclick="closeStudentList()">✕ CLOSE</button>
         </div>
+        <p id="parentAlertStatus" role="status" aria-live="polite" style="min-height:18px;margin:0 0 10px;color:var(--text-muted);font-size:12px;"></p>
 
         <div class="table-scroll">
           <table class="pixel-table" id="studentTable">
@@ -830,13 +981,26 @@
                 <th>STUDENT</th>
                 <th>TYPE</th>
                 <th>SUBJECT</th>
-                <th>SCORE</th>
+                <th>QUARTER</th>
+                <th aria-sort="none" id="teacherScoreSortHeader">
+                  <button type="button" class="sort-header" onclick="sortTeacherStudents()" aria-label="Sort students by score">
+                    SCORE <span class="sort-indicator" id="teacherScoreSortIndicator" aria-hidden="true">↕</span>
+                  </button>
+                </th>
                 <th>SUBJECT BESTS</th>
-                <th colspan="2">ACTION</th>
+                <th>ACTION</th>
               </tr>
             </thead>
             <tbody id="studentTableBody"></tbody>
           </table>
+        </div>
+        <div class="student-pagination" id="teacherStudentPagination" hidden>
+          <span id="teacherStudentPageInfo"></span>
+          <div class="student-pagination-controls">
+            <button type="button" class="pixel-btn" id="teacherStudentPrev" onclick="changeTeacherStudentPage(-1)">PREVIOUS</button>
+            <span id="teacherStudentPageNumber"></span>
+            <button type="button" class="pixel-btn" id="teacherStudentNext" onclick="changeTeacherStudentPage(1)">NEXT</button>
+          </div>
         </div>
       </div>
     </section>
@@ -892,7 +1056,11 @@
         <div class="btn-row">
           <button class="pixel-btn" onclick="addQuestion('assessment')">+ ADD QUESTION</button>
           <button class="pixel-btn pixel-btn-outline" onclick="submitQuestions('assessment')">▶ SUBMIT</button>
+          <input type="file" id="assessmentCsvFile" accept=".csv,text/csv" hidden onchange="uploadQuestionCsv('assessment', this)">
+          <button type="button" class="pixel-btn pixel-btn-outline" onclick="document.getElementById('assessmentCsvFile').click()">UPLOAD CSV</button>
+          <button type="button" class="pixel-btn pixel-btn-outline" onclick="downloadQuestionCsvTemplate()">CSV TEMPLATE</button>
           <span id="assessmentItems" style="font-size:16px;color:var(--text-muted);letter-spacing:0.06em;">Items: ready for new questions</span>
+          <span style="font-size:12px;color:var(--text-muted);">CSV uploads append; manual SUBMIT replaces the selected question set.</span>
         </div>
       </div>
     </section>
@@ -948,7 +1116,11 @@
         <div class="btn-row">
           <button class="pixel-btn" onclick="addQuestion('exam')">+ ADD QUESTION</button>
           <button class="pixel-btn pixel-btn-outline" onclick="submitQuestions('exam')">▶ SUBMIT</button>
+          <input type="file" id="examCsvFile" accept=".csv,text/csv" hidden onchange="uploadQuestionCsv('exam', this)">
+          <button type="button" class="pixel-btn pixel-btn-outline" onclick="document.getElementById('examCsvFile').click()">UPLOAD CSV</button>
+          <button type="button" class="pixel-btn pixel-btn-outline" onclick="downloadQuestionCsvTemplate()">CSV TEMPLATE</button>
           <span id="examItems" style="font-size:16px;color:var(--text-muted);letter-spacing:0.06em;">Items: ready for new questions</span>
+          <span style="font-size:12px;color:var(--text-muted);">CSV uploads append; manual SUBMIT replaces the selected question set.</span>
         </div>
       </div>
     </section>
@@ -1004,68 +1176,53 @@
         <div class="btn-row">
           <button class="pixel-btn" onclick="addQuestion('quiz')">+ ADD QUESTION</button>
           <button class="pixel-btn pixel-btn-outline" onclick="submitQuestions('quiz')">▶ SUBMIT</button>
+          <input type="file" id="quizCsvFile" accept=".csv,text/csv" hidden onchange="uploadQuestionCsv('quiz', this)">
+          <button type="button" class="pixel-btn pixel-btn-outline" onclick="document.getElementById('quizCsvFile').click()">UPLOAD CSV</button>
+          <button type="button" class="pixel-btn pixel-btn-outline" onclick="downloadQuestionCsvTemplate()">CSV TEMPLATE</button>
           <span id="quizItems" style="font-size:16px;color:var(--text-muted);letter-spacing:0.06em;">Items: ready for new questions</span>
+          <span style="font-size:12px;color:var(--text-muted);">CSV uploads append; manual SUBMIT replaces the selected question set.</span>
         </div>
       </div>
     </section>
 
-    <!-- ===== PROTOTYPE SECTION ===== -->
-    <section id="section-prototype" class="section">
+    <!-- ===== MANUAL GRADES SECTION ===== -->
+    <section id="section-grades" class="section">
       <div class="panel">
         <div class="corner-bl"></div><div class="corner-br"></div>
-        <div class="panel-title">🧪 PROTOTYPE — QUICK ADD</div>
-
-        <div class="filter-row" style="margin-bottom:10px;">
-          <span class="filter-label" style="color:var(--text-muted);font-size:12px;text-transform:none;">Add questions quickly for testing/presentation. No class required!</span>
-        </div>
-
-        <div id="prototypeQuestions">
-          <div class="question-block" id="prototypeQ1">
-            <div class="q-number">QUESTION 1</div>
-            <textarea class="pixel-textarea" placeholder="Enter question here..."></textarea>
-            <div class="choices-grid">
-              <div class="choice-row"><span class="choice-label">A:</span><input class="pixel-input" style="margin:0;" placeholder="Choice A"></div>
-              <div class="choice-row"><span class="choice-label">B:</span><input class="pixel-input" style="margin:0;" placeholder="Choice B"></div>
-              <div class="choice-row"><span class="choice-label">C:</span><input class="pixel-input" style="margin:0;" placeholder="Choice C"></div>
-              <div class="choice-row"><span class="choice-label">D:</span><input class="pixel-input" style="margin:0;" placeholder="Choice D"></div>
-            </div>
-            <div class="filter-row" style="gap:8px;">
-              <span class="filter-label">ANSWER:</span>
-              <select class="pixel-select" style="width:auto;margin:0;">
-                <option>A</option><option>B</option><option>C</option><option>D</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <div class="btn-row">
-          <button class="pixel-btn" onclick="addQuestion('prototype')">+ ADD QUESTION</button>
-          <button class="pixel-btn pixel-btn-outline" onclick="submitQuestions('prototype')">▶ SUBMIT</button>
-          <span id="prototypeItems" style="font-size:16px;color:var(--text-muted);letter-spacing:0.06em;">Items: ready for new questions</span>
-        </div>
-      </div>
-    </section>
-
-    <!-- ===== PROTOTYPE GRADES SECTION ===== -->
-    <section id="section-prototype-grades" class="section">
-      <div class="panel">
-        <div class="corner-bl"></div><div class="corner-br"></div>
-        <div class="panel-title">💯 PROTOTYPE GRADES</div>
-
-        <div class="filter-row" style="margin-bottom:10px;">
-          <span class="filter-label" style="color:var(--text-muted);font-size:12px;text-transform:none;">Quickly input grades for testing.</span>
-        </div>
+        <div class="panel-title">💯 ADD STUDENT GRADE</div>
+        <p style="font-family:'Outfit',sans-serif;color:var(--text-muted);font-size:14px;margin-bottom:18px;">
+          Record a grade for a student in one of your classes. Grades are saved separately from quizzes and exams.
+        </p>
 
         <div class="filter-row">
-          <span class="filter-label">STUDENT:</span>
-          <select class="pixel-select" style="width:auto;margin:0;" id="prototypeGradeStudent">
-            <option value="">-- Loading Students --</option>
+          <span class="filter-label">CLASS:</span>
+          <select class="pixel-select" style="width:auto;margin:0;" id="manualGradeClass" onchange="loadManualGradeStudents()">
+            <option value="">-- Select Class --</option>
+            @foreach($classes as $c)
+              <option value="{{ $c->id }}">{{ $c->name }}{{ $c->section ? ' - '.$c->section : '' }}</option>
+            @endforeach
           </select>
-          <span class="filter-label">GRADE (60-100):</span>
-          <input type="number" class="pixel-input" style="width:100px;margin:0;padding:5px;" id="prototypeGradeValue" value="80" min="60" max="100">
-          <button class="pixel-btn pixel-btn-outline" onclick="submitPrototypeGrade()">▶ SUBMIT GRADE</button>
+          <span class="filter-label">STUDENT:</span>
+          <select class="pixel-select" style="width:auto;margin:0;" id="manualGradeStudent" disabled>
+            <option value="">-- Select a class first --</option>
+          </select>
         </div>
-        <div id="prototypeGradeStatus" style="margin-top:10px; font-size:14px; font-family:'Outfit', sans-serif; letter-spacing:0.06em;"></div>
+        <div class="filter-row">
+          <span class="filter-label">SUBJECT:</span>
+          <select class="pixel-select" style="width:auto;margin:0;" id="manualGradeSubject">
+            <option value="english">English</option>
+            <option value="math">Math</option>
+            <option value="science">Science</option>
+          </select>
+          <span class="filter-label">QUARTER:</span>
+          <select class="pixel-select" style="width:auto;margin:0;" id="manualGradeQuarter">
+            <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option>
+          </select>
+          <span class="filter-label">GRADE (%):</span>
+          <input type="number" class="pixel-input" style="width:100px;margin:0;padding:5px;" id="manualGradeValue" min="0" max="100" step="1" placeholder="0-100">
+          <button class="pixel-btn pixel-btn-outline" id="manualGradeSubmit" onclick="submitManualGrade()">▶ SAVE GRADE</button>
+        </div>
+        <div id="manualGradeStatus" aria-live="polite" style="margin-top:10px;font-size:14px;font-family:'Outfit',sans-serif;letter-spacing:0.06em;"></div>
       </div>
     </section>
 
@@ -1116,11 +1273,11 @@
             <div style="font-family:'Cinzel',serif; font-size:14px; font-weight:700; color:var(--gold); letter-spacing:0.1em; margin-bottom:6px;">CLASS OVERVIEW</div>
             <div style="display:flex; align-items:center; gap:14px;">
               <div style="width:18px;height:18px;background:#27ae60;border:2px solid #1a6e3c;flex-shrink:0;"></div>
-              <span style="font-family:'Outfit',sans-serif;font-size:13px;color:rgba(180,200,255,0.9);">PASSED <span id="passedCount" style="color:#27ae60;">0</span> students</span>
+              <span style="font-family:'Outfit',sans-serif;font-size:13px;color:#fff;">PASSED <span id="passedCount" style="color:#27ae60;">0</span> students</span>
             </div>
             <div style="display:flex; align-items:center; gap:14px;">
               <div style="width:18px;height:18px;background:#c0392b;border:2px solid #7b241c;flex-shrink:0;"></div>
-              <span style="font-family:'Outfit',sans-serif;font-size:13px;color:rgba(180,200,255,0.9);">FAILED <span id="failedCount" style="color:#c0392b;">0</span> students</span>
+              <span style="font-family:'Outfit',sans-serif;font-size:13px;color:#fff;">FAILED <span id="failedCount" style="color:#c0392b;">0</span> students</span>
             </div>
             <div style="margin-top:10px;padding:12px 16px;background:var(--blue-ui);border:2px solid var(--blue-mid);">
               <div style="font-family:'Outfit',sans-serif;font-size:11px;color:var(--text-muted);margin-bottom:6px;">PASS RATE</div>
@@ -1174,64 +1331,24 @@
   </div>
 </div>
 
-<!-- ===== MODAL: ENROLL STUDENTS ===== -->
-<div class="modal-overlay" id="modalEnroll">
-  <div class="modal-box" style="max-width:560px;">
-    <div class="mc tl"></div><div class="mc tr"></div>
-    <div class="mc bl"></div><div class="mc br"></div>
-    <div class="modal-title">➕ ENROLL STUDENTS — <span id="enrollClassName"></span></div>
-
-    <div style="font-family:'Outfit',sans-serif;font-size:11px;font-weight:600;color:var(--text-muted);margin-bottom:12px;letter-spacing:0.08em;">
-      SELECT STUDENTS TO ADD TO THIS CLASS:
-    </div>
-
-    <div style="display:flex; gap:10px; margin-bottom:12px;">
-      <select class="pixel-select" id="enrollSectionFilter" style="flex:1;" onchange="filterEnrollList()">
-        <option value="all">All Sections</option>
-      </select>
-      <input class="pixel-input" id="enrollSearch" placeholder="Search student name..."
-             oninput="filterEnrollList()" style="flex:2;">
-    </div>
-
-    <div id="enrollList" style="max-height:280px;overflow-y:auto;border:2px solid var(--blue-mid);
-         background:var(--blue-deep);padding:8px;">
-      <p style="font-family:'Outfit',sans-serif;font-size:13px;color:var(--text-muted);text-align:center;padding:16px 0;">
-        ⏳ Loading students...
-      </p>
-    </div>
-
-    <div style="display:flex;gap:10px;margin-top:10px;align-items:center;">
-      <button class="pixel-btn" style="padding:8px 12px;font-size:11px;"
-              onclick="toggleSelectAll(true)">✔ ALL</button>
-      <button class="pixel-btn pixel-btn-red" style="padding:8px 12px;font-size:11px;"
-              onclick="toggleSelectAll(false)">✕ NONE</button>
-      <span id="enrollSelectedCount" style="font-family:'Outfit',sans-serif;font-size:12px;font-weight:600;color:var(--gold);margin-left:auto;letter-spacing:0.08em;">
-        0 selected
-      </span>
-    </div>
-
-    <div class="btn-row" style="margin-top:14px;">
-      <button class="pixel-btn" id="enrollConfirmBtn"
-              onclick="confirmEnroll()">✔ ENROLL SELECTED</button>
-      <button class="pixel-btn pixel-btn-red"
-              onclick="closeModal('modalEnroll')">✕ CANCEL</button>
-    </div>
-    <div id="enrollStatus" style="font-family:'Outfit',sans-serif;font-size:12px;margin-top:10px;min-height:16px;letter-spacing:0.06em;"></div>
-  </div>
-</div>
-
 <!-- ===== MODAL: ADD CLASS ===== -->
 <div class="modal-overlay" id="modalAddClass">
   <div class="modal-box">
     <div class="mc tl"></div><div class="mc tr"></div>
     <div class="mc bl"></div><div class="mc br"></div>
-    <div class="modal-title">➕ ADD NEW CLASS</div>
-    <label class="field-label">CLASS NAME</label>
-    <input class="pixel-input" id="newClassName" placeholder="e.g. Class 5">
-    <label class="field-label" style="margin-top:8px;">GRADE / SECTION</label>
-    <input class="pixel-input" id="newClassSection" placeholder="e.g. Grade 7 - Rizal">
+    <div class="modal-title">➕ ADD A SECTION</div>
+    <label class="field-label" for="newClassSection">ADMIN-DEFINED SECTION</label>
+    <select class="pixel-select" id="newClassSection" required>
+      <option value="">-- Select a section --</option>
+      @foreach($availableSections as $section)
+        <option value="{{ $section->id }}">{{ $section->name }}</option>
+      @endforeach
+    </select>
+    <p style="font-family:'Outfit',sans-serif;color:var(--text-muted);font-size:13px;margin-top:10px;">
+      Students assigned to this section by the admin will appear in this class automatically.
+    </p>
     <div class="btn-row">
-      <button class="pixel-btn" onclick="confirmAddClass()">▶ CONFIRM</button>
+      <button class="pixel-btn" onclick="confirmAddClass()">▶ ADD SECTION</button>
       <button class="pixel-btn pixel-btn-red" onclick="closeModal('modalAddClass')">✕ CANCEL</button>
     </div>
   </div>
@@ -1242,95 +1359,29 @@
 
 <!-- ===== BACKGROUND CANVAS (same as index) ===== -->
 <script>
-/* ══════════════ PIXEL BACKGROUND ══════════════ */
-const canvas = document.getElementById('bgCanvas');
-const ctx = canvas.getContext('2d');
-ctx.imageSmoothingEnabled = false;
-const TILE = 8;
-let W, H, cols, rows, tick = 0;
-const STAR_GRID = [];
-
-function resize() {
-  W = canvas.width = window.innerWidth;
-  H = canvas.height = window.innerHeight;
-  cols = Math.ceil(W / TILE); rows = Math.ceil(H / TILE);
-  STAR_GRID.length = 0;
-  for (let i = 0; i < 80; i++) {
-    STAR_GRID.push({ x: Math.floor(Math.random()*cols), y: Math.floor(Math.random()*Math.floor(rows*0.5)), phase: Math.random()*Math.PI*2, speed: 0.02+Math.random()*0.04 });
-  }
-}
-window.addEventListener('resize', resize); resize();
-
-function lerpColor(a,b,t) { return [Math.round(a[0]+(b[0]-a[0])*t),Math.round(a[1]+(b[1]-a[1])*t),Math.round(a[2]+(b[2]-a[2])*t)]; }
-function rgb(c) { return `rgb(${c[0]},${c[1]},${c[2]})`; }
-
-function drawScene() {
-  ctx.clearRect(0,0,W,H);
-  const horizonRow = Math.floor(rows*0.72);
-  for (let r=0;r<horizonRow;r++) {
-    let t=r/horizonRow, c;
-    if(t<0.5) c=lerpColor([8,2,18],[22,6,38],t*2); else c=lerpColor([22,6,38],[50,18,5],(t-0.5)*2);
-    ctx.fillStyle=rgb(c); ctx.fillRect(0,r*TILE,W,TILE);
-  }
-  for (let r=horizonRow;r<rows;r++) {
-    const t=(r-horizonRow)/(rows-horizonRow), c=lerpColor([10,6,2],[4,2,0],t);
-    ctx.fillStyle=rgb(c); ctx.fillRect(0,r*TILE,W,TILE);
-  }
-  const mtns=[{cx:0.05,h:18},{cx:0.15,h:22},{cx:0.28,h:16},{cx:0.40,h:20},{cx:0.55,h:26},{cx:0.68,h:19},{cx:0.80,h:22},{cx:0.92,h:17},{cx:1.0,h:14}];
-  mtns.forEach(m => {
-    const pc=Math.floor(m.cx*cols), pr=horizonRow-m.h;
-    ctx.fillStyle=rgb([10,6,3]);
-    for(let dr=0;dr<m.h;dr++){const half=Math.floor((dr/m.h)*m.h*0.7)+1;ctx.fillRect((pc-half)*TILE,(pr+dr)*TILE,half*2*TILE,TILE);}
-    ctx.fillStyle='rgba(200,180,150,0.15)';
-    for(let dr=0;dr<3;dr++){const half=Math.floor((dr/m.h)*m.h*0.7)+1;ctx.fillRect((pc-half)*TILE,(pr+dr)*TILE,half*2*TILE,TILE);}
-  });
-  const cx=Math.floor(cols/2), cb=horizonRow;
-  for(let dr=0;dr<12;dr++){ctx.fillStyle=dr===0?'#1a0e06':'#100804';ctx.fillRect((cx-9)*TILE,(cb-dr)*TILE,18*TILE,TILE);}
-  for(let dr=0;dr<6;dr++){ctx.fillStyle='#030201';const gw=dr<5?4:2;ctx.fillRect((cx-gw/2)*TILE,(cb-dr)*TILE,gw*TILE,TILE);}
-  const towers=[-10,-5,0,5,10], tH=[16,18,22,18,16];
-  towers.forEach((off,i)=>{
-    const tx=cx+off, th=tH[i];
-    for(let dr=0;dr<th;dr++){ctx.fillStyle=dr<2?'#1e1208':'#0c0804';ctx.fillRect((tx-2)*TILE,(cb-12-dr)*TILE,4*TILE,TILE);}
-    for(let b=0;b<3;b++){if(b%2===0){ctx.fillStyle='#0c0804';ctx.fillRect((tx-2+b)*TILE,(cb-12-th-2)*TILE,TILE,3*TILE);}}
-    if(i===2){const fp=Math.sin(tick*0.05);ctx.fillStyle='#8b1a1a';for(let fr=0;fr<4;fr++){const fw=Math.round(4+fp*1.5)-fr;if(fw>0)ctx.fillRect(tx*TILE,(cb-12-th-6+fr)*TILE,fw*TILE,TILE);}ctx.fillStyle='#5a3010';ctx.fillRect(tx*TILE-1,(cb-12-th-6)*TILE,2,6*TILE);}
-    const fl=0.6+0.4*Math.sin(tick*0.08+i*1.3);ctx.fillStyle=`rgba(255,180,40,${0.6*fl})`;ctx.fillRect(tx*TILE,(cb-12-Math.floor(th*0.5))*TILE,2*TILE,2*TILE);
-  });
-  [Math.floor(cols*0.18),Math.floor(cols*0.82)].forEach((tx,ti)=>{
-    ctx.fillStyle='#4a2806';ctx.fillRect(tx*TILE,(cb-5)*TILE,TILE,5*TILE);
-    const flick=Math.floor(tick*0.25)%3;const fc=[[255,140,0],[255,80,0],[255,200,0]][flick];
-    for(let fr=0;fr<3;fr++){const fw=3-fr,off2=fr%2===0?0:TILE;ctx.fillStyle=`rgba(${fc[0]},${fc[1]},${fc[2]},${0.9-fr*0.2})`;ctx.fillRect((tx-fw/2)*TILE+off2,(cb-5-fr-1)*TILE,fw*TILE,TILE);}
-    const g=ctx.createRadialGradient((tx+0.5)*TILE,(cb-7)*TILE,0,(tx+0.5)*TILE,(cb-7)*TILE,8*TILE);
-    g.addColorStop(0,'rgba(255,140,0,0.25)');g.addColorStop(1,'rgba(255,100,0,0)');
-    ctx.fillStyle=g;ctx.fillRect((tx-8)*TILE,(cb-14)*TILE,16*TILE,14*TILE);
-  });
-  STAR_GRID.forEach(s=>{
-    const br=0.4+0.6*Math.abs(Math.sin(tick*s.speed+s.phase));
-    ctx.fillStyle=`rgba(255,250,220,${br})`;
-    if(br>0.7){ctx.fillRect(s.x*TILE,s.y*TILE,TILE,TILE);if(br>0.9){ctx.fillRect((s.x+1)*TILE,s.y*TILE,TILE,TILE);ctx.fillRect(s.x*TILE,(s.y+1)*TILE,TILE,TILE);}}
-    else{ctx.fillRect(s.x*TILE+2,s.y*TILE+2,TILE-4,TILE-4);}
-  });
-  const mx=Math.floor(cols*0.82),my=4,mg2=0.7+0.3*Math.sin(tick*0.03);
-  const gr=ctx.createRadialGradient((mx+3)*TILE,(my+3)*TILE,0,(mx+3)*TILE,(my+3)*TILE,10*TILE);
-  gr.addColorStop(0,`rgba(220,180,60,${0.3*mg2})`);gr.addColorStop(1,'rgba(200,140,20,0)');
-  ctx.fillStyle=gr;ctx.fillRect((mx-7)*TILE,(my-7)*TILE,20*TILE,20*TILE);
-  [[1,0,4],[0,1,6],[0,2,6],[0,3,6],[0,4,6],[0,5,6],[1,6,4]].forEach(([ox,oy,w])=>{ctx.fillStyle=`rgba(240,210,80,${mg2})`;ctx.fillRect((mx+ox)*TILE,(my+oy)*TILE,w*TILE,TILE);});
-  tick++;
-}
-(function animBG(){drawScene();requestAnimationFrame(animBG);})();
-
 /* ══════════════ UI LOGIC ══════════════ */
 function toggleSidebar() {
   const sb = document.getElementById('sidebar');
   const ov = document.getElementById('sidebarOverlay');
-  sb.classList.toggle('open');
-  ov.classList.toggle('open');
+  const btn = document.getElementById('hamburgerBtn');
+  if (!sb || !ov) return;
+  const isOpen = sb.classList.toggle('open');
+  ov.classList.toggle('open', isOpen);
+  if (btn) btn.setAttribute('aria-expanded', String(isOpen));
+  document.body.style.overflow = isOpen ? 'hidden' : '';
 }
 function closeSidebar() {
   const sb = document.getElementById('sidebar');
   const ov = document.getElementById('sidebarOverlay');
+  const btn = document.getElementById('hamburgerBtn');
   if (sb) sb.classList.remove('open');
   if (ov) ov.classList.remove('open');
+  if (btn) btn.setAttribute('aria-expanded', 'false');
+  document.body.style.overflow = '';
 }
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeSidebar();
+});
 
 function showSection(id, btn) {
   closeSidebar();
@@ -1338,9 +1389,6 @@ function showSection(id, btn) {
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('section-' + id).classList.add('active');
   btn.classList.add('active');
-  if (id === 'prototype-grades' && document.getElementById('prototypeGradeStudent').options.length <= 1) {
-    loadPrototypeGradeStudents();
-  }
   if (id === 'notes' && document.getElementById('noteStudent').options.length <= 1) {
     loadNoteStudents();
   }
@@ -1354,6 +1402,10 @@ document.querySelectorAll('.modal-overlay').forEach(overlay => {
 });
 
 let currentClassId = null;
+let teacherStudents = [];
+let teacherStudentPage = 1;
+let teacherScoreSortDirection = null;
+const teacherStudentPageSize = 10;
 
 const fetchConfig = {
     headers: {
@@ -1371,66 +1423,94 @@ document.getElementById('classGrid').addEventListener('click', function(e) {
   const classId   = target.dataset.classId;
   const className = target.dataset.className;
   if (action === 'show-students') showClassStudents(classId, className, target.dataset.section);
-  if (action === 'enroll')        openEnrollModal(classId, className);
   if (action === 'delete-class')  deleteClass(classId, className);
 });
 
-async function loadPrototypeGradeStudents() {
-  const select = document.getElementById('prototypeGradeStudent');
-  select.innerHTML = '<option value="">-- Loading --</option>';
+async function loadManualGradeStudents() {
+  const classId = document.getElementById('manualGradeClass').value;
+  const studentSelect = document.getElementById('manualGradeStudent');
+  const status = document.getElementById('manualGradeStatus');
+  studentSelect.disabled = true;
+  studentSelect.innerHTML = '<option value="">-- Loading students --</option>';
+  status.textContent = '';
+
+  if (!classId) {
+    studentSelect.innerHTML = '<option value="">-- Select a class first --</option>';
+    return;
+  }
+
   try {
-    const res = await fetch('/backend/get_students.php');
-    const data = await res.json();
-    if (data.success) {
-      select.innerHTML = '<option value="">-- Select Student --</option>';
-      data.students.forEach(s => {
-        select.innerHTML += `<option value="${s.id}">${s.name}</option>`;
-      });
-    } else {
-      select.innerHTML = `<option value="">Error: ${data.message}</option>`;
+    const response = await fetch(`/backend/get_class_students.php?class_id=${encodeURIComponent(classId)}`);
+    const data = await response.json();
+    if (!response.ok || !data.success) {
+      throw new Error(data.message || 'Could not load class students.');
     }
-  } catch(err) {
-    select.innerHTML = '<option value="">Network error.</option>';
+
+    studentSelect.innerHTML = '<option value="">-- Select Student --</option>';
+    data.students.forEach(student => {
+      const option = document.createElement('option');
+      option.value = student.id;
+      option.textContent = student.name;
+      studentSelect.appendChild(option);
+    });
+    studentSelect.disabled = data.students.length === 0;
+    if (data.students.length === 0) {
+      studentSelect.innerHTML = '<option value="">-- No students in this class --</option>';
+    }
+  } catch (error) {
+    studentSelect.innerHTML = '<option value="">-- Could not load students --</option>';
+    status.textContent = `✕ ${error.message}`;
+    status.style.color = 'var(--red)';
+    console.error('Loading students for grade entry failed:', error);
   }
 }
 
-async function submitPrototypeGrade() {
-  const studentId = document.getElementById('prototypeGradeStudent').value;
-  const grade = document.getElementById('prototypeGradeValue').value;
-  const statusEl = document.getElementById('prototypeGradeStatus');
-  
-  if (!studentId) {
-    statusEl.textContent = '⚠ Please select a student.';
-    statusEl.style.color = 'var(--red)';
+async function submitManualGrade() {
+  const status = document.getElementById('manualGradeStatus');
+  const button = document.getElementById('manualGradeSubmit');
+  const gradeValue = document.getElementById('manualGradeValue').value;
+  const payload = {
+    class_id: document.getElementById('manualGradeClass').value,
+    student_id: document.getElementById('manualGradeStudent').value,
+    subject: document.getElementById('manualGradeSubject').value,
+    quarter: document.getElementById('manualGradeQuarter').value,
+    grade: gradeValue,
+  };
+
+  if (!payload.class_id || !payload.student_id) {
+    status.textContent = '⚠ Select a class and student.';
+    status.style.color = 'var(--red)';
     return;
   }
-  if (!grade || grade < 60 || grade > 100) {
-    statusEl.textContent = '⚠ Grade must be between 60 and 100.';
-    statusEl.style.color = 'var(--red)';
+  if (gradeValue === '' || Number(gradeValue) < 0 || Number(gradeValue) > 100) {
+    status.textContent = '⚠ Enter a grade from 0 to 100.';
+    status.style.color = 'var(--red)';
     return;
   }
 
-  statusEl.textContent = '⏳ SAVING...';
-  statusEl.style.color = 'var(--gold)';
-
+  button.disabled = true;
+  status.textContent = '⏳ SAVING GRADE...';
+  status.style.color = 'var(--gold)';
   try {
-    const res = await fetch('/backend/save_prototype_grade.php', {
+    const response = await fetch('/backend/save_manual_grade.php', {
       method: 'POST',
       headers: fetchConfig.headers,
-      body: JSON.stringify({ student_id: studentId, grade: grade })
+      body: JSON.stringify(payload),
     });
-    const data = await res.json();
-    if (data.success) {
-      statusEl.textContent = `✔ ${data.message}`;
-      statusEl.style.color = 'var(--green)';
-      setTimeout(() => statusEl.textContent = '', 3000);
-    } else {
-      statusEl.textContent = `✕ Error: ${data.message}`;
-      statusEl.style.color = 'var(--red)';
+    const data = await response.json();
+    if (!response.ok || !data.success) {
+      throw new Error(data.message || 'Could not save grade.');
     }
-  } catch(err) {
-    statusEl.textContent = '✕ Network error.';
-    statusEl.style.color = 'var(--red)';
+
+    status.textContent = `✔ ${data.message}`;
+    status.style.color = 'var(--green)';
+    document.getElementById('manualGradeValue').value = '';
+  } catch (error) {
+    status.textContent = `✕ ${error.message}`;
+    status.style.color = 'var(--red)';
+    console.error('Saving manual grade failed:', error);
+  } finally {
+    button.disabled = false;
   }
 }
 
@@ -1539,183 +1619,170 @@ async function showClassStudents(classId, className, section) {
   document.getElementById('studentListPanel').scrollIntoView({ behavior:'smooth' });
   const subject = document.getElementById('filterSubject').value || 'all';
   const type    = document.getElementById('filterType').value    || 'all';
-  await fetchAndRenderStudents(classId, subject, type);
+  const quarter = document.getElementById('filterQuarter').value || 'all';
+  await fetchAndRenderStudents(classId, subject, type, quarter);
 }
 
-async function fetchAndRenderStudents(classId, subject, type = 'all') {
+async function fetchAndRenderStudents(classId, subject, type = 'all', quarter = 'all') {
   const tbody = document.getElementById('studentTableBody');
+  teacherScoreSortDirection = null;
+  document.getElementById('teacherScoreSortHeader').setAttribute('aria-sort', 'none');
+  document.getElementById('teacherScoreSortIndicator').textContent = '↕';
+  document.getElementById('teacherStudentPagination').hidden = true;
+  document.getElementById('parentAlertStatus').textContent = '';
   tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--gold);padding:16px;font-family:\'Outfit\',sans-serif;font-size:13px;font-weight:600;letter-spacing:0.08em;">⏳ LOADING...</td></tr>';
   try {
-    const url = `/backend/get_class_students.php?class_id=${classId}&subject=${encodeURIComponent(subject)}&type=${encodeURIComponent(type)}`;
+    const url = `/backend/get_class_students.php?class_id=${classId}&subject=${encodeURIComponent(subject)}&type=${encodeURIComponent(type)}&quarter=${encodeURIComponent(quarter)}`;
     const res  = await fetch(url);
     const data = await res.json();
     if (!data.success) {
       tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--red);font-size:14px;">${data.message}</td></tr>`;
       return;
     }
-    const students = data.students;
-    if (students.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text-muted);font-size:14px;">NO STUDENTS ENROLLED IN THIS CLASS</td></tr>';
+    teacherStudents = data.students;
+    teacherStudentPage = 1;
+    renderTeacherStudentPage();
+  } catch (err) {
+    teacherStudents = [];
+    document.getElementById('teacherStudentPagination').hidden = true;
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--red);font-size:14px;">NETWORK ERROR. CHECK CONSOLE.</td></tr>';
+    console.error('fetchAndRenderStudents error:', err);
+  }
+}
+
+function renderTeacherStudentPage() {
+  const tbody = document.getElementById('studentTableBody');
+  const pagination = document.getElementById('teacherStudentPagination');
+  if (teacherStudents.length === 0) {
+    pagination.hidden = true;
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text-muted);font-size:14px;">NO STUDENTS IN THIS SECTION YET</td></tr>';
       return;
-    }
-    tbody.innerHTML = students.map((s, i) => {
+  }
+
+  const pageCount = Math.ceil(teacherStudents.length / teacherStudentPageSize);
+  teacherStudentPage = Math.min(teacherStudentPage, pageCount);
+  const pageStart = (teacherStudentPage - 1) * teacherStudentPageSize;
+  const pageStudents = teacherStudents.slice(pageStart, pageStart + teacherStudentPageSize);
+  tbody.innerHTML = pageStudents.map((s, i) => {
       const pct       = s.score;
-      const badgeCls  = pct >= 90 ? 'badge-gold' : pct >= 75 ? 'badge-green' : pct >= 50 ? 'badge-blue' : 'badge-red';
+      const badgeCls  = pct >= 86 ? 'badge-green' : pct >= 75 ? 'badge-yellow' : 'badge-red';
       const scoreDisp = s.total > 0 ? `${s.correct}/${s.total} (${pct}%)` : 'No data';
       const subjDisp  = s.subject && s.subject !== '—' ? s.subject.charAt(0).toUpperCase() + s.subject.slice(1) : '—';
       const typeDisp  = s.type    && s.type    !== '—' ? s.type.charAt(0).toUpperCase()    + s.type.slice(1)    : '—';
-      const typeColor = s.type === 'quiz' ? 'badge-blue' : s.type === 'exam' ? 'badge-gold' : '';
-      const safeName  = s.name.replace(/'/g, "\'");
+      const typeColor  = s.type === 'quiz' ? 'badge-blue' : s.type === 'exam' || s.type === 'grade' ? 'badge-gold' : '';
+    const safeName = escapeAttribute(s.name);
       const bestSubjects = ['english', 'math', 'science'].map(subject => {
         const best = s.best_subjects?.[subject];
         const label = subject === 'english' ? 'ENG' : subject === 'science' ? 'SCI' : 'MATH';
         return `<span class="subject-best-chip ${best !== null && best !== undefined ? 'is-earned' : ''}">${label} ${best !== null && best !== undefined ? `${best}%` : '—'}</span>`;
       }).join('');
       return `
-        <tr id="student-row-${s.id}">
-          <td>${i + 1}</td>
+        <tr id="student-row-${s.id}" data-student-name="${safeName}">
+          <td>${pageStart + i + 1}</td>
           <td>${s.name}</td>
           <td>${typeColor ? `<span class="badge ${typeColor}">${typeDisp}</span>` : typeDisp}</td>
           <td><span class="badge badge-blue">${subjDisp}</span></td>
+          <td>${s.quarter}</td>
           <td><span class="badge ${badgeCls}">${scoreDisp}</span></td>
           <td><div class="subject-best-list">${bestSubjects}</div></td>
           <td>
-            <button class="pixel-btn" style="padding:7px 10px;font-size:7px;"
-              onclick="viewStudentScore(${s.id}, '${safeName}')">VIEW</button>
-          </td>
-          <td>
-            <button class="pixel-btn pixel-btn-red" style="padding:7px 10px;font-size:7px;"
-              onclick="unenrollStudent(${s.id}, '${safeName}', ${currentClassId})">UNENROLL</button>
+            <div class="student-action-buttons">
+            <button class="pixel-btn student-action-btn"
+              onclick="viewStudentScore(${s.id}, this.closest('tr').dataset.studentName)">VIEW SCORES</button>
+            ${s.total > 0 && s.score < 75
+              ? `<button class="pixel-btn student-action-btn student-email-btn" ${s.has_parent_email ? '' : 'disabled title="Add a parent/guardian email to this student account first"'} onclick="emailParentLowGrade(${s.id}, this)">EMAIL PARENT</button>`
+              : ''}
+            </div>
           </td>
         </tr>`;
-    }).join('');
-  } catch (err) {
-    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--red);font-size:14px;">NETWORK ERROR. CHECK CONSOLE.</td></tr>';
-    console.error('fetchAndRenderStudents error:', err);
-  }
+  }).join('');
+
+  pagination.hidden = pageCount <= 1;
+  document.getElementById('teacherStudentPageInfo').textContent =
+    `Showing ${pageStart + 1}–${pageStart + pageStudents.length} of ${teacherStudents.length} students`;
+  document.getElementById('teacherStudentPageNumber').textContent = `Page ${teacherStudentPage} of ${pageCount}`;
+  document.getElementById('teacherStudentPrev').disabled = teacherStudentPage === 1;
+  document.getElementById('teacherStudentNext').disabled = teacherStudentPage === pageCount;
+}
+
+function escapeAttribute(value) {
+  return String(value).replace(/[&<>"']/g, character => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+  })[character]);
+}
+
+function sortTeacherStudents() {
+  teacherScoreSortDirection = teacherScoreSortDirection === 'asc' ? 'desc' : 'asc';
+  const direction = teacherScoreSortDirection === 'asc' ? 1 : -1;
+  teacherStudents.sort((a, b) => {
+    const scoreDifference = Number(a.score) - Number(b.score);
+    return scoreDifference === 0
+      ? a.name.localeCompare(b.name) * direction
+      : scoreDifference * direction;
+  });
+  teacherStudentPage = 1;
+  document.getElementById('teacherScoreSortHeader').setAttribute(
+    'aria-sort',
+    teacherScoreSortDirection === 'asc' ? 'ascending' : 'descending'
+  );
+  document.getElementById('teacherScoreSortIndicator').textContent =
+    teacherScoreSortDirection === 'asc' ? '↑' : '↓';
+  renderTeacherStudentPage();
+}
+
+function changeTeacherStudentPage(direction) {
+  teacherStudentPage += direction;
+  renderTeacherStudentPage();
 }
 
 document.getElementById('filterSubject').addEventListener('change', function() {
-  if (currentClassId) fetchAndRenderStudents(currentClassId, this.value || 'all', document.getElementById('filterType').value || 'all');
+  if (currentClassId) fetchAndRenderStudents(currentClassId, this.value || 'all', document.getElementById('filterType').value || 'all', document.getElementById('filterQuarter').value || 'all');
 });
 document.getElementById('filterType').addEventListener('change', function() {
-  if (currentClassId) fetchAndRenderStudents(currentClassId, document.getElementById('filterSubject').value || 'all', this.value || 'all');
+  if (currentClassId) fetchAndRenderStudents(currentClassId, document.getElementById('filterSubject').value || 'all', this.value || 'all', document.getElementById('filterQuarter').value || 'all');
+});
+document.getElementById('filterQuarter').addEventListener('change', function() {
+  if (currentClassId) fetchAndRenderStudents(currentClassId, document.getElementById('filterSubject').value || 'all', document.getElementById('filterType').value || 'all', this.value || 'all');
 });
 
-async function unenrollStudent(studentId, studentName, classId) {
-  if (!confirm(`Remove ${studentName} from this class?\nThis will NOT delete their scores.`)) return;
+async function emailParentLowGrade(studentId, button) {
+  const status = document.getElementById('parentAlertStatus');
+  button.disabled = true;
+  status.textContent = 'Sending failing-score notification...';
+  status.style.color = 'var(--gold)';
+
   try {
-    const res  = await fetch('/backend/unenroll_student.php', {
-      method:  'POST',
+    const response = await fetch('/backend/email_parent_low_grade.php', {
+      method: 'POST',
       headers: fetchConfig.headers,
-      body:    JSON.stringify({ class_id: classId, student_id: studentId }),
+      body: JSON.stringify({
+        class_id: currentClassId,
+        student_id: studentId,
+        subject: document.getElementById('filterSubject').value || 'all',
+        type: document.getElementById('filterType').value || 'all',
+        quarter: document.getElementById('filterQuarter').value || 'all',
+      }),
     });
-    const data = await res.json();
-    if (data.success) {
-      const row = document.getElementById(`student-row-${studentId}`);
-      if (row) {
-        row.style.transition = 'opacity 0.3s';
-        row.style.opacity    = '0';
-        setTimeout(() => {
-          row.remove();
-          document.querySelectorAll('#studentTableBody tr').forEach((tr, i) => {
-            const firstCell = tr.querySelector('td');
-            if (firstCell) firstCell.textContent = i + 1;
-          });
-          const tbody = document.getElementById('studentTableBody');
-          if (tbody.querySelectorAll('tr').length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);font-size:14px;">NO STUDENTS ENROLLED IN THIS CLASS</td></tr>';
-          }
-        }, 300);
-      }
-      const title = document.getElementById('studentListTitle');
-      const orig  = title.textContent;
-      title.textContent = `✔ ${data.message}`;
-      title.style.color = 'var(--green)';
-      setTimeout(() => { title.textContent = orig; title.style.color = ''; }, 2000);
-    } else {
-      alert('Error: ' + data.message);
+    const result = await response.json();
+    if (!response.ok || !result.success) {
+      throw new Error(result.message || 'Could not send the parent email.');
     }
-  } catch(err) {
-    alert('Network error. Check console.');
-    console.error('unenrollStudent error:', err);
+    status.textContent = result.message;
+    status.style.color = 'var(--green)';
+  } catch (error) {
+    status.textContent = error.message || 'Network error while sending parent email.';
+    status.style.color = 'var(--red)';
+    button.disabled = false;
   }
 }
 
 function closeStudentList() {
   document.getElementById('studentListPanel').style.display = 'none';
   currentClassId = null;
-}
-
-// ENROLL
-let enrollClassId = null;
-let allEnrollStudents = [];
-
-async function openEnrollModal(classId, className) {
-  enrollClassId = classId;
-  document.getElementById('enrollClassName').textContent = className.toUpperCase();
-  document.getElementById('enrollStatus').textContent    = '';
-  document.getElementById('enrollSearch').value          = '';
-  document.getElementById('enrollList').innerHTML =
-    '<p style="font-family:\'Outfit\',sans-serif;font-size:13px;color:var(--text-muted);text-align:center;padding:16px 0;">⏳ Loading...</p>';
-  document.getElementById('enrollSelectedCount').textContent = '0 selected';
-  openModal('modalEnroll');
-  try {
-    const res  = await fetch(`/backend/get_students.php?class_id=${classId}`);
-    const data = await res.json();
-    if (!data.success) {
-      document.getElementById('enrollList').innerHTML = `<p style="color:var(--red);font-size:14px;text-align:center;">${data.message}</p>`;
-      return;
-    }
-    allEnrollStudents = data.students;
-
-    // Populate Section Filter in Enroll Modal
-    const select = document.getElementById('enrollSectionFilter');
-    select.innerHTML = '<option value="all">All Sections</option>';
-    const sections = [...new Set(allEnrollStudents.map(s => s.section).filter(Boolean))];
-    sections.forEach(sec => {
-        select.innerHTML += `<option value="${sec}">${sec}</option>`;
-    });
-
-    renderEnrollList(allEnrollStudents);
-  } catch(err) {
-    document.getElementById('enrollList').innerHTML = '<p style="color:var(--red);font-size:14px;text-align:center;">Network error.</p>';
-    console.error('openEnrollModal error:', err);
-  }
-}
-
-function renderEnrollList(students) {
-  const list = document.getElementById('enrollList');
-  if (students.length === 0) {
-    list.innerHTML = '<p style="font-family:\'Outfit\',sans-serif;font-size:13px;color:var(--text-muted);text-align:center;padding:16px 0;">All registered students are already enrolled.</p>';
-    return;
-  }
-  list.innerHTML = students.map(s => `
-    <label style="display:flex;align-items:center;gap:10px;padding:8px 6px;
-           border-bottom:2px solid var(--blue-mid);cursor:pointer;"
-           onmouseover="this.style.background='rgba(30,42,80,0.5)'"
-           onmouseout="this.style.background='transparent'">
-      <input type="checkbox" class="enroll-chk" value="${s.id}"
-             onchange="updateEnrollCount()"
-             style="width:14px;height:14px;cursor:pointer;accent-color:var(--gold);">
-      <span style="flex:1;">
-        <span style="font-size:18px;color:rgba(180,200,255,0.85);display:block;">${s.name}</span>
-        <span style="font-size:16px;color:var(--text-muted);">Sec: ${s.section || 'N/A'} &bull; ${s.email || 'N/A'}</span>
-      </span>
-    </label>`).join('');
-  updateEnrollCount();
-}
-
-function filterEnrollList() {
-  const query = document.getElementById('enrollSearch').value.toLowerCase();
-  const secFilter = document.getElementById('enrollSectionFilter').value;
-  
-  const filtered = allEnrollStudents.filter(s => {
-    const matchesQuery = s.name.toLowerCase().includes(query) || (s.email && s.email.toLowerCase().includes(query));
-    const matchesSection = secFilter === 'all' || s.section === secFilter;
-    return matchesQuery && matchesSection;
-  });
-  renderEnrollList(filtered);
 }
 
 function filterClassGrid(val) {
@@ -1729,55 +1796,6 @@ function filterClassGrid(val) {
       }
     }
   });
-}
-
-function toggleSelectAll(checked) {
-  document.querySelectorAll('.enroll-chk').forEach(c => c.checked = checked);
-  updateEnrollCount();
-}
-
-function updateEnrollCount() {
-  const count = document.querySelectorAll('.enroll-chk:checked').length;
-  document.getElementById('enrollSelectedCount').textContent = `${count} selected`;
-}
-
-async function confirmEnroll() {
-  const checked = [...document.querySelectorAll('.enroll-chk:checked')].map(c => parseInt(c.value));
-  if (checked.length === 0) {
-    document.getElementById('enrollStatus').textContent = '⚠ No students selected.';
-    document.getElementById('enrollStatus').style.color = 'var(--red)';
-    return;
-  }
-  const btn = document.getElementById('enrollConfirmBtn');
-  btn.disabled    = true;
-  btn.textContent = '⏳ ENROLLING...';
-  document.getElementById('enrollStatus').textContent = '';
-  try {
-    const res  = await fetch('/backend/enroll_student.php', {
-      method:  'POST',
-      headers: fetchConfig.headers,
-      body:    JSON.stringify({ class_id: enrollClassId, student_ids: checked }),
-    });
-    const data = await res.json();
-    if (data.success) {
-      document.getElementById('enrollStatus').textContent = `✔ ${data.message}`;
-      document.getElementById('enrollStatus').style.color = 'var(--green)';
-      if (currentClassId === enrollClassId) {
-        fetchAndRenderStudents(enrollClassId, document.getElementById('filterSubject').value || 'all');
-      }
-      setTimeout(() => { closeModal('modalEnroll'); location.reload(); }, 1200);
-    } else {
-      document.getElementById('enrollStatus').textContent = '✕ ' + data.message;
-      document.getElementById('enrollStatus').style.color = 'var(--red)';
-    }
-  } catch(err) {
-    document.getElementById('enrollStatus').textContent = '✕ Network error.';
-    document.getElementById('enrollStatus').style.color = 'var(--red)';
-    console.error('confirmEnroll error:', err);
-  } finally {
-    btn.disabled    = false;
-    btn.textContent = '✔ ENROLL SELECTED';
-  }
 }
 
 async function viewStudentScore(studentId, studentName) {
@@ -1813,7 +1831,7 @@ async function viewStudentScore(studentId, studentName) {
           <div style="flex:1;height:10px;background:var(--blue-deep);border:2px solid var(--blue-mid);">
             <div style="width:${pct}%;height:100%;background:${barColor};"></div>
           </div>
-          <span style="font-size:16px;color:rgba(180,200,255,0.85);width:100px;text-align:right;">
+          <span style="font-size:16px;color:#fff;width:100px;text-align:right;">
             ${r.correct}/${r.total} (${pct}%)
           </span>
         </div>`;
@@ -1839,7 +1857,7 @@ async function viewStudentScore(studentId, studentName) {
           <div style="flex:1;height:12px;background:var(--blue-deep);border:2px solid var(--blue-mid);">
             <div style="width:${op}%;height:100%;background:${ovColor};"></div>
           </div>
-          <span style="font-size:16px;color:rgba(180,200,255,0.85);width:110px;text-align:right;">
+          <span style="font-size:16px;color:#fff;width:110px;text-align:right;">
             ${totalCorrect}/${totalItems} (${op}%)
           </span>
         </div>
@@ -1854,12 +1872,10 @@ async function viewStudentScore(studentId, studentName) {
 
 // ADD CLASS
 async function confirmAddClass() {
-  const nameEl    = document.getElementById('newClassName');
   const sectionEl = document.getElementById('newClassSection');
-  const name      = nameEl.value.trim();
-  const section   = sectionEl.value.trim();
-  nameEl.style.borderColor = name === '' ? 'var(--red)' : 'var(--blue-mid)';
-  if (name === '') { nameEl.focus(); return; }
+  const sectionId = sectionEl.value;
+  sectionEl.style.borderColor = sectionId === '' ? 'var(--red)' : 'var(--blue-mid)';
+  if (sectionId === '') { sectionEl.focus(); return; }
   const confirmBtn = document.querySelector('#modalAddClass .pixel-btn:not(.pixel-btn-red)');
   const origText   = confirmBtn.textContent;
   confirmBtn.disabled    = true;
@@ -1868,18 +1884,16 @@ async function confirmAddClass() {
     const res  = await fetch('/backend/save_class.php', {
       method:  'POST',
       headers: fetchConfig.headers,
-      body:    JSON.stringify({ name, section }),
+      body:    JSON.stringify({ section_id: sectionId }),
     });
     const data = await res.json();
-    if (data.success) {
-      addClassCardToGrid(data.class_id, name);
-      nameEl.value    = '';
+    if (res.ok && data.success) {
       sectionEl.value = '';
-      nameEl.style.borderColor = 'var(--blue-mid)';
+      sectionEl.style.borderColor = 'var(--blue-mid)';
       closeModal('modalAddClass');
-      location.reload(); // Quick refresh to assign correct ID properly
+      location.reload();
     } else {
-      nameEl.style.borderColor = 'var(--red)';
+      sectionEl.style.borderColor = 'var(--red)';
       alert('Error: ' + data.message);
     }
   } catch (err) {
@@ -1889,18 +1903,6 @@ async function confirmAddClass() {
     confirmBtn.disabled    = false;
     confirmBtn.textContent = origText;
   }
-}
-
-function addClassCardToGrid(classId, className) {
-  const grid   = document.getElementById('classGrid');
-  const addBtn = grid.querySelector('.class-card:last-child');
-  const card   = document.createElement('div');
-  card.className = 'class-card';
-  card.setAttribute('onclick', `showClassStudents(${classId}, '${className.replace(/'/g, "\'")}')` );
-  card.innerHTML = `
-    <div class="class-circle">${className.toUpperCase()}</div>
-    <div class="class-label">show class</div>`;
-  grid.insertBefore(card, addBtn);
 }
 
 // DELETE CLASS
@@ -1931,14 +1933,12 @@ async function deleteClass(classId, className) {
 let assessmentCount = 1;
 let examCount = 1;
 let quizCount = 1;
-let prototypeCount = 1;
 
 function addQuestion(type) {
   const container = document.getElementById(type + 'Questions');
   let count;
   if(type === 'assessment') count = ++assessmentCount;
   else if(type === 'exam') count = ++examCount;
-  else if(type === 'prototype') count = ++prototypeCount;
   else count = ++quizCount;
   document.getElementById(type + 'Count').textContent = count;
   const block = document.createElement('div');
@@ -1971,7 +1971,6 @@ function removeQuestion(btn, type) {
   let count;
   if(type === 'assessment') count = --assessmentCount;
   else if(type === 'exam') count = --examCount;
-  else if(type === 'prototype') count = --prototypeCount;
   else count = --quizCount;
   document.getElementById(type + 'Count').textContent = count;
   document.querySelectorAll('#' + type + 'Questions .q-number').forEach((el, i) => {
@@ -1979,18 +1978,78 @@ function removeQuestion(btn, type) {
   });
 }
 
-async function submitQuestions(type) {
-  let subject = 'prototype';
-  let quarter = 1;
-  let sequence_number = 1;
-  let class_id = null;
+function downloadQuestionCsvTemplate() {
+  const csv = [
+    'question,choice_a,choice_b,choice_c,choice_d,answer',
+    '"What is 2 + 2?","3","4","5","6","B"',
+  ].join('\r\n');
+  const url = URL.createObjectURL(new Blob(['\uFEFF', csv], { type: 'text/csv;charset=utf-8;' }));
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = 'questions-template.csv';
+  link.click();
+  URL.revokeObjectURL(url);
+}
 
-  if (type !== 'prototype') {
-    subject = document.getElementById(type + 'Subject').value;
-    quarter = parseInt(document.getElementById(type + 'Quarter').value);
-    sequence_number = parseInt(document.getElementById(type + 'Number').value);
-    class_id = document.getElementById(type + 'Class') ? parseInt(document.getElementById(type + 'Class').value) : null;
+async function uploadQuestionCsv(type, fileInput) {
+  const file = fileInput.files[0];
+  if (!file) return;
+
+  const statusEl = document.getElementById(type + 'Items');
+  const uploadButton = fileInput.nextElementSibling;
+  const classId = document.getElementById(type + 'Class').value;
+  if (!classId) {
+    statusEl.textContent = '⚠ Please select a class before uploading.';
+    statusEl.style.color = 'var(--red)';
+    fileInput.value = '';
+    return;
   }
+
+  const formData = new FormData();
+  formData.append('class_id', classId);
+  formData.append('subject', document.getElementById(type + 'Subject').value);
+  formData.append('type', type);
+  formData.append('quarter', document.getElementById(type + 'Quarter').value);
+  formData.append('sequence_number', document.getElementById(type + 'Number').value);
+  formData.append('questions_file', file);
+
+  uploadButton.disabled = true;
+  statusEl.textContent = '⏳ Validating and uploading CSV...';
+  statusEl.style.color = 'var(--gold)';
+  try {
+    const response = await fetch('/backend/bulk_upload_questions.php', {
+      method: 'POST',
+      headers: {
+        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+        'Accept': 'application/json',
+      },
+      body: formData,
+    });
+    const result = await response.json();
+    if (!response.ok || !result.success) {
+      const validationMessage = result.errors
+        ? Object.values(result.errors).flat()[0]
+        : null;
+      throw new Error(validationMessage || result.message || 'CSV upload failed.');
+    }
+
+    statusEl.textContent = `✔ ${result.inserted} question(s) added to the selected set.`;
+    statusEl.style.color = 'var(--green)';
+  } catch (error) {
+    statusEl.textContent = `✕ ${error.message || 'Network error while uploading CSV.'}`;
+    statusEl.style.color = 'var(--red)';
+    console.error('Bulk question upload failed:', error);
+  } finally {
+    uploadButton.disabled = false;
+    fileInput.value = '';
+  }
+}
+
+async function submitQuestions(type) {
+  const subject = document.getElementById(type + 'Subject').value;
+  const quarter = parseInt(document.getElementById(type + 'Quarter').value);
+  const sequence_number = parseInt(document.getElementById(type + 'Number').value);
+  const class_id = parseInt(document.getElementById(type + 'Class').value);
 
   const container = document.getElementById(type + 'Questions');
   const blocks    = container.querySelectorAll('.question-block');
@@ -2028,7 +2087,7 @@ async function submitQuestions(type) {
   statusEl.textContent = '⏳ Saving...';
   statusEl.style.color = 'var(--gold)';
   try {
-    if (type !== 'prototype' && (!class_id || isNaN(class_id))) {
+    if (!class_id || isNaN(class_id)) {
       statusEl.textContent = '⚠ Please select a class.';
       statusEl.style.color = 'var(--red)';
       if (submitBtn) submitBtn.disabled = false;
@@ -2048,7 +2107,6 @@ async function submitQuestions(type) {
         container.innerHTML = '';
         if (type === 'assessment') { assessmentCount = 0; }
         else if (type === 'exam') { examCount = 0; }
-        else if (type === 'prototype') { prototypeCount = 0; }
         else { quizCount = 0; }
         addQuestion(type);
         document.getElementById(type + 'Count').textContent = 1;
@@ -2111,11 +2169,11 @@ function renderSubmissionsTable(analyticsData) {
   
   tbody.innerHTML = analyticsData.map(s => {
     const pct = s.total > 0 ? Math.round((s.correct / s.total) * 100) : 0;
-    const badgeCls = pct >= 90 ? 'badge-gold' : pct >= 75 ? 'badge-green' : pct >= 50 ? 'badge-blue' : 'badge-red';
+    const badgeCls = pct >= 86 ? 'badge-green' : pct >= 75 ? 'badge-yellow' : 'badge-red';
     const scoreDisp = s.total > 0 ? `${s.correct}/${s.total} (${pct}%)` : 'No data';
     const subjDisp = s.subject && s.subject !== '—' ? s.subject.charAt(0).toUpperCase() + s.subject.slice(1) : '—';
     const typeDisp = s.type && s.type !== '—' ? s.type.charAt(0).toUpperCase() + s.type.slice(1) : '—';
-    const typeColor = s.type === 'quiz' ? 'badge-blue' : s.type === 'exam' ? 'badge-gold' : 'badge-green';
+    const typeColor = s.type === 'quiz' ? 'badge-blue' : s.type === 'exam' || s.type === 'grade' ? 'badge-gold' : 'badge-green';
     const dateDisp = s.created_at ? new Date(s.created_at).toLocaleDateString() : '—';
     
     return `
@@ -2166,7 +2224,7 @@ function renderChart(analyticsData) {
   document.getElementById('analyticsSummary').style.display = 'flex';
 
   const ctx = cvs.getContext('2d');
-  Chart.defaults.color = 'rgba(180,200,255,0.85)';
+  Chart.defaults.color = '#fff';
   Chart.defaults.font.family = '"Outfit", sans-serif';
   Chart.defaults.font.size = 12;
 

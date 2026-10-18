@@ -500,6 +500,31 @@
             color: var(--gold);
         }
 
+        .rotate-btn {
+            margin-top: 20px;
+            background: var(--gold);
+            color: #090d1e;
+            border: 2px solid var(--gold-light);
+            border-radius: 6px;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 9px;
+            padding: 12px 20px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: bold;
+            box-shadow: 0 0 15px rgba(240, 192, 0, 0.5);
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+
+        .rotate-btn:hover, .rotate-btn:active {
+            background: var(--gold-light);
+            transform: scale(1.04);
+            box-shadow: 0 0 25px rgba(240, 192, 0, 0.8);
+        }
+
         /* Custom pixel cursor */
         * {
             cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16'%3E%3Crect x='0' y='0' width='4' height='4' fill='%23f0a000'/%3E%3Crect x='0' y='4' width='4' height='4' fill='%23f0a000'/%3E%3Crect x='0' y='8' width='4' height='4' fill='%23f0a000'/%3E%3Crect x='4' y='4' width='4' height='4' fill='%23f0a000'/%3E%3Crect x='8' y='8' width='4' height='4' fill='%23f0a000'/%3E%3C/svg%3E") 0 0, default;
@@ -970,6 +995,24 @@
             <div id="unity-warning"></div>
         </div>
     </div>
+    <!-- PORTRAIT ORIENTATION ROTATE OVERLAY FOR MOBILE PHONES -->
+    <div id="portrait-rotate-overlay" role="dialog" aria-modal="true" aria-label="Rotate device to landscape">
+        <div class="rotate-box">
+            <div class="corner tl"></div>
+            <div class="corner tr"></div>
+            <div class="corner bl"></div>
+            <div class="corner br"></div>
+            <div class="rotate-icon" aria-hidden="true">📱</div>
+            <div class="rotate-title">⚔ ROTATE DEVICE ⚔</div>
+            <div class="rotate-text">
+                Please turn your phone to <b>LANDSCAPE</b> mode for the battle arena!
+            </div>
+            <button type="button" class="rotate-btn" onclick="forceLandscapeFullscreen()">
+                <i class="fas fa-sync-alt" aria-hidden="true"></i> ROTATE &amp; PLAY
+            </button>
+        </div>
+    </div>
+
     <button
         id="mobile-fullscreen-btn"
         class="mobile-fullscreen-btn"
@@ -1100,13 +1143,45 @@
         fitGameToViewport();
 
         /* ============================================================
-           FULLSCREEN LAUNCH CONTROLLER
+           ORIENTATION LOCK & FULLSCREEN CONTROLLER
            ============================================================ */
         let globalUnityInstance = null;
 
+        async function autoLockLandscape() {
+            try {
+                if (screen.orientation && typeof screen.orientation.lock === 'function') {
+                    await screen.orientation.lock('landscape');
+                    return;
+                }
+            } catch (e) {
+                // screen.orientation.lock might fail without fullscreen or user gesture
+            }
+
+            try {
+                const docEl = document.documentElement;
+                const requestFS = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.mozRequestFullScreen || docEl.msRequestFullscreen;
+                if (!document.fullscreenElement && !document.webkitFullscreenElement && requestFS) {
+                    await requestFS.call(docEl);
+                }
+                if (screen.orientation && typeof screen.orientation.lock === 'function') {
+                    await screen.orientation.lock('landscape');
+                }
+            } catch (err) {
+                console.warn('Orientation lock notice:', err);
+            }
+        }
+
+        async function forceLandscapeFullscreen() {
+            await autoLockLandscape();
+            setTimeout(fitGameToViewport, 150);
+            setTimeout(fitGameToViewport, 400);
+        }
+
         function toggleFullscreen() {
+            autoLockLandscape();
+
             if (globalUnityInstance) {
-                globalUnityInstance.SetFullscreen(1);
+                try { globalUnityInstance.SetFullscreen(1); } catch(e) {}
                 return;
             }
 
@@ -1116,7 +1191,11 @@
 
             if (!document.fullscreenElement && !document.webkitFullscreenElement) {
                 if (requestFS) {
-                    Promise.resolve(requestFS.call(docEl)).catch(err => console.warn('Fullscreen unavailable:', err));
+                    Promise.resolve(requestFS.call(docEl)).then(() => {
+                        if (screen.orientation && typeof screen.orientation.lock === 'function') {
+                            screen.orientation.lock('landscape').catch(() => {});
+                        }
+                    }).catch(err => console.warn('Fullscreen unavailable:', err));
                 }
             } else {
                 if (exitFS) {
@@ -1124,6 +1203,36 @@
                 }
             }
         }
+
+        function isMobilePhoneOrTablet() {
+            return (window.innerWidth <= 1024 && window.innerHeight <= 1024) ||
+                   /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+                   (('ontouchstart' in window) || navigator.maxTouchPoints > 0);
+        }
+
+        function setupAutoRotateOnLaunch() {
+            if (!isMobilePhoneOrTablet()) return;
+
+            // Attempt direct lock if browser allows without user interaction
+            if (screen.orientation && typeof screen.orientation.lock === 'function') {
+                screen.orientation.lock('landscape').catch(() => {});
+            }
+
+            // Bind first touch/click anywhere on page to trigger orientation lock
+            const onFirstUserAction = async () => {
+                await autoLockLandscape();
+                window.removeEventListener('touchstart', onFirstUserAction);
+                window.removeEventListener('click', onFirstUserAction);
+                window.removeEventListener('pointerdown', onFirstUserAction);
+            };
+
+            window.addEventListener('touchstart', onFirstUserAction, { once: true, passive: true });
+            window.addEventListener('click', onFirstUserAction, { once: true });
+            window.addEventListener('pointerdown', onFirstUserAction, { once: true });
+        }
+
+        document.addEventListener('DOMContentLoaded', setupAutoRotateOnLaunch);
+        setupAutoRotateOnLaunch();
 
         /* ============================================================
            HUD VISIBILITY TOGGLE
@@ -1205,7 +1314,9 @@
             }).then((unityInstance) => {
                 globalUnityInstance = unityInstance;
                 document.querySelector("#unity-loading-bar").style.display = "none";
-
+                autoLockLandscape();
+                setTimeout(fitGameToViewport, 100);
+                setTimeout(fitGameToViewport, 300);
             }).catch((err) => {
                 console.warn("Unity error:", err);
                 const loadingDiv = document.querySelector("#unity-loading-bar");
