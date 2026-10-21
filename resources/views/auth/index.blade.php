@@ -7,6 +7,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Clash of Subject</title>
+<meta name="theme-color" content="#0e1530">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Clash of Subject">
+<link rel="manifest" href="{{ asset('manifest.webmanifest') }}">
+<link rel="icon" type="image/png" sizes="64x64" href="{{ asset('icons/favicon-64.png') }}">
+<link rel="apple-touch-icon" href="{{ asset('icons/apple-touch-icon.png') }}">
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@550;700;800&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 <style>
@@ -279,7 +285,7 @@ body {
 }
 </style>
 </head>
-<body>
+<body data-redirect-form="{{ $redirect_form }}">
 
 <canvas id="bgCanvas"></canvas>
 <div class="scanlines"></div>
@@ -536,11 +542,12 @@ body {
         $isError = 'true';
     }
 @endphp
-<script>
-  window.addEventListener('DOMContentLoaded', () => {
-    showToast(@json('> ' . strtoupper($message)), {{ $isError }});
-  });
-</script>
+<div
+  id="flash-toast"
+  data-message="{{ '> ' . strtoupper($message) }}"
+  data-is-error="{{ $isError }}"
+  hidden
+></div>
 @endif
 
 <script>
@@ -677,7 +684,7 @@ function checkStrength(val) {
   if (/[A-Z]/.test(val)) score++;
   if (/[0-9]/.test(val)) score++;
   if (/[^A-Za-z0-9]/.test(val)) score++;
-  const lbls = ['','> FRAIL ENCHANTMENT','> APPRENTICE WARD','> KNIGHT SEAL','> ARCANE FORTRESS'];
+  const lbls = ['', 'Weak Password', 'Weak Password', 'Moderate Password', 'Secure Password'];
   const cls  = ['','s1','s2','s3','s4'];
   const colors = ['','#c01020','#d04000','#a08000','#20a030'];
   for (let i = 0; i < score; i++) segs[i].classList.add(cls[score]);
@@ -693,6 +700,13 @@ function showToast(msg, isError = false) {
   setTimeout(() => t.classList.remove('show'), 3500);
 }
 
+window.addEventListener('DOMContentLoaded', () => {
+  const flashToast = document.getElementById('flash-toast');
+  if (flashToast) {
+    showToast(flashToast.dataset.message, flashToast.dataset.isError === 'true');
+  }
+});
+
 // Handle hash routing from PHP backends that redirect with #hash
 window.addEventListener('load', () => {
   const hash = window.location.hash.replace('#','');
@@ -704,15 +718,14 @@ window.addEventListener('load', () => {
     showSubForm('resetForm');
   } else {
     // If not using hash routing, fallback to session variable driven UI state
-    @if($redirect_form === 'registerForm')
-        showPanel('registerPanel', document.querySelectorAll('.tab-btn')[1]);
-    @elseif($redirect_form === 'forgotForm')
-        showSubForm('forgotForm');
-    @elseif($redirect_form === 'resetForm')
-        showSubForm('resetForm');
-    @else
-        showSubForm('loginForm');
-    @endif
+    const redirectForm = document.body.dataset.redirectForm;
+    if (redirectForm === 'registerForm') {
+      showPanel('registerPanel', document.querySelectorAll('.tab-btn')[1]);
+    } else if (redirectForm === 'forgotForm' || redirectForm === 'resetForm') {
+      showSubForm(redirectForm);
+    } else {
+      showSubForm('loginForm');
+    }
   }
 });
 </script>

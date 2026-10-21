@@ -5,6 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>Clash of Subject – Student Dashboard</title>
+  <meta name="theme-color" content="#0e1530">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Clash of Subject">
+  <link rel="manifest" href="{{ asset('manifest.webmanifest') }}">
+  <link rel="icon" type="image/png" sizes="64x64" href="{{ asset('icons/favicon-64.png') }}">
+  <link rel="apple-touch-icon" href="{{ asset('icons/apple-touch-icon.png') }}">
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@550;700;800&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
@@ -851,33 +857,52 @@
 
       .wrapper { overflow: hidden; }
 
-      .topbar { padding: 12px 16px; flex-wrap: wrap; gap: 8px; }
-      .topbar-title { font-size: 13px; }
+      .topbar { padding: 8px 10px; flex-wrap: nowrap; gap: 6px; }
+      .topbar-brand { flex: 1 1 auto; min-width: 0; gap: 8px; }
+      .topbar-brand > div { min-width: 0; }
+      .hamburger { width: 40px; height: 40px; flex-basis: 40px; margin-right: 0; }
+      .topbar-title { overflow: hidden; font-size: 12px; letter-spacing: 0.04em; text-overflow: ellipsis; white-space: nowrap; }
       .topbar-subtitle { font-size: 11px; display: none; }
 
       .topbar > div:last-child {
         display: flex;
-        gap: 6px;
-        flex-wrap: wrap;
+        flex: 0 0 auto;
+        gap: 2px;
+        flex-wrap: nowrap;
       }
-      .topbar-actions { gap: 4px !important; }
-      .header-icon-btn { width: 44px; height: 44px; }
-      .profile-toggle { min-height: 44px; }
+      .topbar-actions { gap: 2px !important; }
+      .header-icon-btn { width: 40px; height: 40px; }
+      .profile-toggle { min-height: 40px; padding: 2px; }
       .profile-label { display: none; }
+      .topbar .header-popover {
+        position: fixed;
+        top: calc(env(safe-area-inset-top, 0px) + 62px);
+        right: 12px;
+        left: 12px;
+        width: auto;
+        max-width: none;
+        max-height: min(65dvh, 420px);
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+      }
       .logout-btn {
         font-size: 10px;
         padding: 7px 10px;
         margin-right: 0;
       }
 
-      .main { padding: 14px; }
-      .game-modes-panel { padding: 18px 14px; }
-      .game-mode-grid { gap: 14px; }
-      .game-mode-card { min-height: 140px; font-size: 13px; }
-      .game-mode-card i { font-size: 36px; }
+      .main { padding: 10px; }
+      .panel { padding: 16px 14px; margin-bottom: 16px; }
+      .panel-title { margin-bottom: 14px; padding-bottom: 10px; }
+      .game-modes-panel { padding: 14px 12px; }
+      .game-mode-grid { grid-template-columns: 1fr; gap: 10px; max-width: none; margin-bottom: 2px; }
+      .game-mode-card { min-height: 72px; flex-direction: row; justify-content: space-between; gap: 12px; padding: 12px 16px; font-size: 13px; text-align: left; }
+      .game-mode-card i { font-size: 26px; }
 
       .pixel-table { font-size: 13px; }
       .pixel-table th, .pixel-table td { padding: 7px 10px; white-space: nowrap; }
+      #section-grades > .panel:nth-of-type(2) > p { font-size: 15px !important; padding: 12px 6px !important; }
 
       .reward-card { align-items: flex-start; gap: 16px; }
       .reward-emblem { width: 80px; height: 80px; flex-basis: 80px; }
@@ -886,14 +911,14 @@
     }
 
     @media (max-width: 480px) {
-      .topbar-title { font-size: 11px; }
+      .topbar-title { font-size: clamp(9px, 3vw, 11px); }
       .logout-btn span { display: none; }
-      .panel { padding: 14px 12px; }
-      .panel-title { font-size: 14px; }
+      .panel { padding: 14px 11px; }
+      .panel-title { font-size: 13px; }
       .logout-btn { font-size: 9px; padding: 6px 8px; }
-      .game-mode-grid { grid-template-columns: 1fr; max-width: 300px; }
-      .game-modes-panel { padding: 14px 12px; }
-      .game-mode-card { min-height: 120px; }
+      .game-modes-panel { padding: 12px 10px; }
+      .game-mode-card { min-height: 64px; padding: 10px 13px; }
+      .game-mode-card i { font-size: 23px; }
       .quizbee-dialog-content { padding: 20px; }
       .reward-card { gap: 12px; }
       .reward-emblem { width: 64px; height: 64px; flex-basis: 64px; }

@@ -1,0 +1,30 @@
+{
+  "name": "Clash of Subject",
+  "short_name": "Clash of Subject",
+  "description": "Learn, play, and grow with Clash of Subject.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#fffaf0",
+  "theme_color": "#0e1530",
+  "icons": [
+    {
+      "src": "/icons/clash-of-subject-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/clash-of-subject-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/clash-of-subject-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

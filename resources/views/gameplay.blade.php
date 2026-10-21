@@ -5,7 +5,12 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0, viewport-fit=cover">
     <title>Clash of Subjects | The Arena</title>
-    <link rel="shortcut icon" href="{{ asset($unityBuildDirectory . '/TemplateData/favicon.ico') }}">
+    <meta name="theme-color" content="#0e1530">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Clash of Subject">
+    <link rel="manifest" href="{{ asset('manifest.webmanifest') }}">
+    <link rel="icon" type="image/png" sizes="64x64" href="{{ asset('icons/favicon-64.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('icons/apple-touch-icon.png') }}">
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
@@ -981,7 +986,15 @@
 
     <!-- MAIN GAME STAGE (FULLSCREEN ERA) -->
     <div id="game-stage">
-        <div id="unity-container" class="unity-frame">
+        <div
+            id="unity-container"
+            class="unity-frame"
+            data-loader-url="{{ asset($unityBuildDirectory . '/Build/' . $unityBuildName . '.loader.js') }}?v={{ filemtime(public_path($unityBuildDirectory . '/Build/' . $unityBuildName . '.loader.js')) }}"
+            data-data-url="{{ asset($unityBuildDirectory . '/Build/' . $unityBuildName . '.data') }}?v={{ filemtime(public_path($unityBuildDirectory . '/Build/' . $unityBuildName . '.data')) }}"
+            data-framework-url="{{ asset($unityBuildDirectory . '/Build/' . $unityBuildName . '.framework.js') }}?v={{ filemtime(public_path($unityBuildDirectory . '/Build/' . $unityBuildName . '.framework.js')) }}"
+            data-code-url="{{ asset($unityBuildDirectory . '/Build/' . $unityBuildName . '.wasm') }}?v={{ filemtime(public_path($unityBuildDirectory . '/Build/' . $unityBuildName . '.wasm')) }}"
+            data-streaming-assets-url="{{ asset($unityBuildDirectory . '/StreamingAssets') }}"
+        >
             <canvas id="unity-canvas" width="960" height="600" tabindex="0"></canvas>
             
             <div id="unity-loading-bar">
@@ -1279,50 +1292,74 @@
             updateVisibility();
         }
         
-        const cacheVer = "{{ time() }}";
-        const loaderUrl = @json(asset($unityBuildDirectory . '/Build/' . $unityBuildName . '.loader.js')) + "?v=" + cacheVer;
+        const unityAssets = document.querySelector("#unity-container").dataset;
+        const loaderUrl = unityAssets.loaderUrl;
         const config = {
             arguments: [],
-            dataUrl: @json(asset($unityBuildDirectory . '/Build/' . $unityBuildName . '.data')) + "?v=" + cacheVer,
-            frameworkUrl: @json(asset($unityBuildDirectory . '/Build/' . $unityBuildName . '.framework.js')) + "?v=" + cacheVer,
-            codeUrl: @json(asset($unityBuildDirectory . '/Build/' . $unityBuildName . '.wasm')) + "?v=" + cacheVer,
-            streamingAssetsUrl: @json(asset($unityBuildDirectory . '/StreamingAssets')),
+            dataUrl: unityAssets.dataUrl,
+            frameworkUrl: unityAssets.frameworkUrl,
+            codeUrl: unityAssets.codeUrl,
+            streamingAssetsUrl: unityAssets.streamingAssetsUrl,
             companyName: "ClashStudio",
             productName: "ClashOfSubjects",
             productVersion: "1.0",
             showBanner: unityShowBanner,
         };
         
-        document.querySelector("#unity-loading-bar").style.display = "flex";
-        
+        const loadingBar = document.querySelector("#unity-loading-bar");
+        loadingBar.style.display = "flex";
+
+        function showUnityLoadError(message) {
+            const errorPanel = document.createElement("div");
+            errorPanel.style.cssText = "color:#ff5566;font-family:monospace;text-align:center;padding:20px;max-width:80%;font-size:12px;";
+
+            const title = document.createElement("div");
+            title.textContent = "⚠ REALM FAILED TO LOAD";
+            errorPanel.appendChild(title);
+
+            const detail = document.createElement("div");
+            detail.style.cssText = "color:#f0c030;font-size:10px;margin-top:10px;";
+            detail.textContent = message;
+            errorPanel.appendChild(detail);
+
+            const retryButton = document.createElement("button");
+            retryButton.type = "button";
+            retryButton.textContent = "RETRY";
+            retryButton.style.cssText = "background:#f0c030;border:none;padding:6px 14px;cursor:pointer;font-family:inherit;font-weight:bold;margin-top:10px;";
+            retryButton.addEventListener("click", () => location.reload());
+            errorPanel.appendChild(retryButton);
+
+            loadingBar.replaceChildren(errorPanel);
+            loadingBar.style.display = "flex";
+        }
+
         window.addEventListener('error', function(e) {
             console.error("Window error during Unity initialization:", e);
-            if (!globalUnityInstance) {
-                const loadingDiv = document.querySelector("#unity-loading-bar");
-                if (loadingDiv && loadingDiv.style.display !== "none") {
-                    loadingDiv.innerHTML = '<div style="color:#ff5566;font-family:monospace;text-align:center;padding:20px;max-width:80%;font-size:12px;">⚠ REALM FAILED TO LOAD<br><span style="color:#f0c030;font-size:10px;">' + (e.message || 'WebAssembly compilation failed') + '</span><br><br><button onclick="location.reload()" style="background:#f0c030;border:none;padding:6px 14px;cursor:pointer;font-family:inherit;font-weight:bold;margin-top:10px;">RETRY</button></div>';
-                }
+            if (!globalUnityInstance && loadingBar.style.display !== "none") {
+                showUnityLoadError(e.message || "WebAssembly compilation failed.");
             }
         });
 
         const script = document.createElement("script");
         script.src = loaderUrl;
+        script.onerror = () => {
+            const message = "Could not download the game loader. Check your connection and try again.";
+            console.error(message, loaderUrl);
+            showUnityLoadError(message);
+        };
         script.onload = () => {
             createUnityInstance(unityCanvas, config, (progress) => {
                 const progressBar = document.querySelector("#unity-progress-bar-full");
                 if (progressBar) progressBar.style.width = (progress * 100) + "%";
             }).then((unityInstance) => {
                 globalUnityInstance = unityInstance;
-                document.querySelector("#unity-loading-bar").style.display = "none";
+                loadingBar.style.display = "none";
                 autoLockLandscape();
                 setTimeout(fitGameToViewport, 100);
                 setTimeout(fitGameToViewport, 300);
             }).catch((err) => {
                 console.warn("Unity error:", err);
-                const loadingDiv = document.querySelector("#unity-loading-bar");
-                if (loadingDiv) {
-                    loadingDiv.innerHTML = '<div style="color:#c01020;font-family:monospace;text-align:center;">⚠ REALM UNREACHABLE<br>' + (err && err.message ? err.message : 'RETRY LATER') + '</div>';
-                }
+                showUnityLoadError(err && err.message ? err.message : "The game could not be initialized. Try again.");
             });
         };
         document.body.appendChild(script);
