@@ -2,12 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\QuestionAnswer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\LowGradeAlert;
 use App\Mail\ParentLowGradeAlert;
 use App\Models\Section;
+use App\Models\User;
+use App\Services\QuizbeeHistory;
 
 class TeacherController extends Controller
 {
@@ -19,6 +23,7 @@ class TeacherController extends Controller
         }
 
         $teacherId = session('user_id');
+        $teacher = User::findOrFail($teacherId);
 
         $teacherClassIds = DB::table('classes')
             ->where('teacher_id', $teacherId)
@@ -42,7 +47,7 @@ class TeacherController extends Controller
 
         $sections = Section::orderBy('name')->get();
 
-        return view('teacher.dashboard', compact('classes', 'sections'));
+        return view('teacher.dashboard', compact('classes', 'sections', 'teacher'));
     }
 
     // ─── SAVE / UPDATE CLASS ──────────────────────────────────────
@@ -158,7 +163,7 @@ class TeacherController extends Controller
     //   { class_id, subject, type, quarter, questions: [{question, choice_a, …, answer}, …] }
     public function saveQuestions(Request $request)
     {
-        \Log::info('saveQuestions hit. Session role: ' . session('user_role'));
+        Log::info('saveQuestions hit. Session role: ' . session('user_role'));
         
         if (session('user_role') !== 'teacher') {
             return response()->json(['success' => false, 'message' => 'Session expired. Please refresh the page and log in.'], 403);
@@ -167,7 +172,7 @@ class TeacherController extends Controller
         $request->validate([
             'class_id'             => 'required|integer|exists:classes,id',
             'subject'              => 'required|string|max:100',
-            'type'                 => 'required|in:quiz,exam,assessment',
+            'type'                 => 'required|in:quiz,exam,assessment,quizbee',
             'quarter'              => 'required|integer|between:1,4',
             'sequence_number'      => 'required|integer|min:1',
             'questions'            => 'required|array|min:1',
@@ -190,10 +195,12 @@ class TeacherController extends Controller
             return response()->json(['success' => false, 'message' => 'Class not found or not yours']);
         }
 
+        $type = $request->input('type') === 'assessment' ? 'quizbee' : $request->input('type');
+
         DB::table('questions')
             ->where('class_id', $request->class_id)
             ->where('subject',  $request->subject)
-            ->where('type',     $request->type)
+            ->where('type',     $type)
             ->where('quarter',  $request->quarter)
             ->where('sequence_number', $request->sequence_number)
             ->delete();
@@ -204,7 +211,7 @@ class TeacherController extends Controller
             $rows[] = [
                 'class_id'        => $request->class_id,
                 'subject'         => strtolower(trim($request->subject)),
-                'type'            => $request->type,
+                'type'            => $type,
                 'quarter'         => $request->quarter,
                 'sequence_number' => $request->sequence_number,
                 'question'        => $q['question'],
@@ -237,7 +244,7 @@ class TeacherController extends Controller
         $validated = $request->validate([
             'class_id' => 'required|integer|exists:classes,id',
             'subject' => 'required|in:english,math,science',
-            'type' => 'required|in:quiz,exam,assessment',
+            'type' => 'required|in:quiz,exam,assessment,quizbee',
             'quarter' => 'required|integer|between:1,4',
             'sequence_number' => 'required|integer|min:1',
             'questions_file' => 'required|file|extensions:csv|max:5120',
@@ -252,9 +259,11 @@ class TeacherController extends Controller
             return response()->json(['success' => false, 'message' => 'Class not found or not yours.'], 404);
         }
 
+        $validated['type'] = $validated['type'] === 'assessment' ? 'quizbee' : $validated['type'];
+
         $handle = fopen($validated['questions_file']->getRealPath(), 'rb');
         if ($handle === false) {
-            \Log::error('Could not open uploaded question CSV.');
+            Log::error('Could not open uploaded question CSV.');
             return response()->json(['success' => false, 'message' => 'Could not read the uploaded CSV file.'], 500);
         }
 
@@ -386,59 +395,169 @@ class TeacherController extends Controller
     // ─── GET QUESTION FOR UNITY GAME ─────────────────────────────
     // Called by Unity via GET /api/get_question
     // Params: class_id, subject, type, quarter, student_id (optional, to avoid repeats)
+    public function getQuizNumbers(Request $request)
+    {
+        $request->merge([
+            'subject' => strtolower(trim((string) $request->input('subject', ''))),
+        ]);
+        $validated = $request->validate([
+            'class_id' => 'required|integer|min:1',
+            'subject' => 'required|in:english,math,science',
+            'type' => 'required|in:quiz,exam,assessment,quizbee',
+            'quarter' => 'required|integer|between:1,4',
+        ]);
+
+        $classId = (int) $validated['class_id'];
+        $classIds = [$classId];
+        if (session('user_role') === 'student' && session('user_id')) {
+            $classIds = DB::table('class_students')
+                ->where('student_id', session('user_id'))
+                ->pluck('class_id')
+                ->all();
+
+            $studentSection = DB::table('users')
+                ->where('id', session('user_id'))
+                ->where('role', 'student')
+                ->value('section');
+
+            if ($studentSection) {
+                $sectionClassIds = DB::table('classes')
+                    ->where('section', $studentSection)
+                    ->pluck('id')
+                    ->all();
+                $classIds = array_merge($classIds, $sectionClassIds);
+            }
+
+            $classIds = array_values(array_unique(array_map('intval', $classIds)));
+            if (!in_array($classId, $classIds, true)) {
+                Log::info('Ignoring a quiz-number request class ID that is not linked to the student.', [
+                    'student_id' => session('user_id'),
+                    'requested_class_id' => $classId,
+                    'resolved_class_ids' => $classIds,
+                ]);
+            }
+        }
+
+        $type = $validated['type'] === 'assessment' ? 'quizbee' : $validated['type'];
+        $query = DB::table('questions')
+            ->where('subject', $validated['subject'])
+            ->where('type', $type)
+            ->where('quarter', $validated['quarter'])
+            ->where('sequence_number', '>=', 1);
+
+        if ($classIds !== []) {
+            $query->where(function ($classQuery) use ($classIds) {
+                $classQuery->whereIn('class_id', $classIds)
+                    ->orWhereNull('class_id');
+            });
+        } elseif (session('user_role') === 'student') {
+            $query->whereNull('class_id');
+        }
+
+        $quizNumbers = $query->distinct()
+            ->orderBy('sequence_number')
+            ->pluck('sequence_number')
+            ->map(static fn ($number) => (int) $number)
+            ->values();
+
+        return response()->json(['quiz_numbers' => $quizNumbers]);
+    }
+
     public function getQuestion(Request $request)
     {
-        \Log::info('getQuestion hit: ', $request->all());
+        Log::info('getQuestion hit: ', $request->all());
+        $request->merge([
+            'subject' => strtolower(trim((string) $request->input('subject', ''))),
+        ]);
         $request->validate([
             'class_id'        => 'nullable|integer',
-            'subject'         => 'required|string',
-            'type'            => 'nullable|in:quiz,exam,assessment',
+            'subject'         => 'required|in:english,math,science,mixed,all',
+            'type'            => 'nullable|in:quiz,exam,assessment,quizbee',
             'quarter'         => 'nullable|integer|between:1,4',
             'sequence_number' => 'nullable|integer|min:1',
+            'quiz_number'     => 'nullable|integer|min:1',
         ]);
 
         $query = DB::table('questions');
 
+        $classIds = [];
         $classId = $request->query('class_id');
-        if (empty($classId) && session('user_id')) {
-            $classStudent = DB::table('class_students')
+        $isStudent = session('user_role') === 'student' && session('user_id');
+        if ($isStudent) {
+            $classIds = DB::table('class_students')
                 ->where('student_id', session('user_id'))
-                ->first();
-            if ($classStudent) {
-                $classId = $classStudent->class_id;
+                ->pluck('class_id')
+                ->all();
+
+            $studentSection = DB::table('users')
+                ->where('id', session('user_id'))
+                ->where('role', 'student')
+                ->value('section');
+
+            if ($studentSection) {
+                $sectionClassIds = DB::table('classes')
+                    ->where('section', $studentSection)
+                    ->pluck('id')
+                    ->all();
+                $classIds = array_values(array_unique(array_merge($classIds, $sectionClassIds)));
             }
+
+            if ($classId && !in_array((int) $classId, array_map('intval', $classIds), true)) {
+                Log::info('Ignoring a question request class ID that is not linked to the student.', [
+                    'student_id' => session('user_id'),
+                    'requested_class_id' => (int) $classId,
+                    'resolved_class_ids' => $classIds,
+                ]);
+            }
+        } elseif (!empty($classId)) {
+            $classIds = [(int) $classId];
+        } elseif (session('user_id')) {
+            $classIds = DB::table('class_students')
+                ->where('student_id', session('user_id'))
+                ->pluck('class_id')
+                ->all();
         }
 
+        $classIds = array_values(array_unique(array_map('intval', $classIds)));
+
         $subject = strtolower(trim($request->subject));
+        $type = $request->input('type', 'quiz');
+        if ($type === 'assessment') {
+            $type = 'quizbee';
+        }
+        $quizbeeHistory = app(QuizbeeHistory::class);
+        $quizbeeAttemptId = $quizbeeHistory->activeAttemptId($type);
         $isMixed = ($subject === 'mixed' || $subject === 'all');
 
-        $buildQuery = function ($withClass) use ($request, $classId, $subject, $isMixed) {
+        $sequenceNumber = $request->input('quiz_number', $request->input('sequence_number'));
+        $buildQuery = function () use ($request, $classIds, $isStudent, $subject, $isMixed, $type, $sequenceNumber) {
             $q = DB::table('questions');
-            if ($withClass && $classId) {
-                $q->where('class_id', $classId);
+            if ($isStudent || $classIds !== []) {
+                $q->where(function ($classQuery) use ($classIds) {
+                    if ($classIds !== []) {
+                        $classQuery->whereIn('class_id', $classIds)
+                            ->orWhereNull('class_id');
+                    } else {
+                        $classQuery->whereNull('class_id');
+                    }
+                });
             }
             if ($isMixed) {
                 $q->whereIn('subject', ['english', 'math', 'science']);
             } else {
                 $q->where('subject', $subject);
             }
-            $q->whereIn('type', ['quiz', 'exam', 'assessment']);
-            if ($request->filled('type')) {
-                $q->where('type', $request->type);
-            }
+            $q->where('type', $type);
             if ($request->filled('quarter')) {
                 $q->where('quarter', $request->quarter);
             }
-            if ($request->filled('sequence_number')) {
-                $q->where('sequence_number', $request->sequence_number);
+            if ($sequenceNumber !== null && $sequenceNumber !== '') {
+                $q->where('sequence_number', $sequenceNumber);
             }
             return $q;
         };
 
-        $query = $buildQuery(true);
-        if ($classId && (clone $query)->count() === 0) {
-            $query = $buildQuery(false);
-        }
+        $query = $buildQuery();
 
         // Count total matching questions before filtering answered
         $totalQuestionsInPool = (clone $query)->count();
@@ -454,28 +573,27 @@ class TeacherController extends Controller
             }
         }
 
+        if ($quizbeeAttemptId && !empty($answeredIds)) {
+            $quizbeeHistory->recordAnsweredQuestions($quizbeeAttemptId, $answeredIds);
+        }
+
         $remainingCount = (clone $query)->count();
         $question = $query->inRandomOrder()->first();
 
-        // If no matching question is found, try another regular question.
         if (!$question) {
-            $fallbackQuery = DB::table('questions');
-            $fallbackQuery->whereIn('type', ['quiz', 'exam', 'assessment']);
-            if ($isMixed) {
-                $fallbackQuery->whereIn('subject', ['english', 'math', 'science']);
+            if ($quizbeeAttemptId && $totalQuestionsInPool > 0 && $remainingCount === 0) {
+                $quizbeeHistory->completeAttempt($quizbeeAttemptId, (int) session('user_id'));
             }
-            if ($request->filled('answered') && !empty($answeredIds)) {
-                $fallbackQuery->whereNotIn('id', $answeredIds);
-            }
-            $question = $fallbackQuery->inRandomOrder()->first();
-        }
 
-        if (!$question) {
             return response()->json([
                 'completed'      => true,
                 'cycle_finished' => true,
                 'error'          => 'No questions found for this class/subject/quarter. Ask your teacher to add questions.',
-            ], 404);
+            ]);
+        }
+
+        if ($quizbeeAttemptId) {
+            $quizbeeHistory->recordServedQuestion($quizbeeAttemptId, $question);
         }
 
         $remainingAfterThis = max(0, $remainingCount - 1);
@@ -488,7 +606,12 @@ class TeacherController extends Controller
             'B'               => $question->choice_b,
             'C'               => $question->choice_c,
             'D'               => $question->choice_d,
-            'answer'          => $question->answer,
+            'answer'          => QuestionAnswer::normalizeKey($question->answer, [
+                'A' => $question->choice_a,
+                'B' => $question->choice_b,
+                'C' => $question->choice_c,
+                'D' => $question->choice_d,
+            ]),
             'explanation'     => $question->explanation ?? '',
             'definition'      => $question->explanation ?? '',
             'is_last'         => $isLast,
@@ -536,7 +659,7 @@ class TeacherController extends Controller
         $validated = $request->validate([
             'class_id' => 'required|integer',
             'subject' => 'nullable|in:all,english,math,science',
-            'type' => 'nullable|in:all,quiz,exam,assessment,grade',
+            'type' => 'nullable|in:all,quiz,exam,assessment,quizbee,grade',
             'quarter' => 'nullable|in:all,1,2,3,4',
         ]);
 
@@ -572,6 +695,9 @@ class TeacherController extends Controller
 
         $subjectFilter = $validated['subject'] ?? 'all';
         $typeFilter    = $validated['type'] ?? 'all';
+        if ($typeFilter === 'assessment') {
+            $typeFilter = 'quizbee';
+        }
         $quarterFilter = $validated['quarter'] ?? 'all';
 
         foreach ($students as $student) {
@@ -636,7 +762,7 @@ class TeacherController extends Controller
             'class_id' => 'required|integer',
             'student_id' => 'required|integer',
             'subject' => 'required|in:all,english,math,science',
-            'type' => 'required|in:all,quiz,exam,assessment,grade',
+            'type' => 'required|in:all,quiz,exam,assessment,quizbee,grade',
             'quarter' => 'required|in:all,1,2,3,4',
         ]);
 
@@ -672,8 +798,9 @@ class TeacherController extends Controller
         if ($validated['subject'] !== 'all') {
             $scoresQuery->where('subject', $validated['subject']);
         }
-        if ($validated['type'] !== 'all') {
-            $scoresQuery->where('type', $validated['type']);
+        $type = $validated['type'] === 'assessment' ? 'quizbee' : $validated['type'];
+        if ($type !== 'all') {
+            $scoresQuery->where('type', $type);
         }
         if ($validated['quarter'] !== 'all') {
             $scoresQuery->where('quarter', $validated['quarter']);
@@ -709,7 +836,7 @@ class TeacherController extends Controller
                 (float) $total,
             ));
         } catch (\Throwable $exception) {
-            \Log::error('Parent low-grade alert email failed.', [
+            Log::error('Parent low-grade alert email failed.', [
                 'teacher_id' => session('user_id'),
                 'student_id' => $student->id,
                 'message' => $exception->getMessage(),
@@ -944,7 +1071,7 @@ class TeacherController extends Controller
 
         $appKey = (string) config('app.key');
         if ($appKey === '') {
-            \Log::error('QuizBee code issuance is unavailable because the application key is not configured.');
+            Log::error('QuizBee code issuance is unavailable because the application key is not configured.');
             return response()->json(['success' => false, 'message' => 'QuizBee access is temporarily unavailable. Please try again later.'], 500);
         }
 
@@ -1009,7 +1136,7 @@ class TeacherController extends Controller
                 new LowGradeAlert($studentName, $student->email, $subject, $type, $grade)
             );
         } catch (\Exception $e) {
-            \Log::warning('LowGradeAlert email failed for student ' . $studentId . ': ' . $e->getMessage());
+            Log::warning('LowGradeAlert email failed for student ' . $studentId . ': ' . $e->getMessage());
         }
     }
 }

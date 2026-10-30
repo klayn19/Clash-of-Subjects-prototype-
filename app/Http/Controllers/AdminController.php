@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\TeacherWelcome;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use App\Models\User;
 use App\Models\Section;
@@ -118,11 +120,58 @@ class AdminController extends Controller
         $user->lrn = $cleanedLrn;
         $user->section = $request->section ? trim($request->section) : null;
         $user->parent_email = $request->filled('parent_email') ? trim($request->parent_email) : null;
+
+        $rosterEntry = $cleanedLrn
+            ? DB::table('student_rosters')
+                ->join('sections', 'student_rosters.section_id', '=', 'sections.id')
+                ->where('student_rosters.lrn', $cleanedLrn)
+                ->first(['sections.name as section'])
+            : null;
+
+        $user->is_verified = $rosterEntry !== null;
+        if ($rosterEntry) {
+            $user->section = $rosterEntry->section;
+        }
         $user->save();
 
         Section::syncStudentRoster((int) $user->id);
 
         return response()->json(['success' => true, 'message' => 'Student updated successfully']);
+    }
+
+    public function deleteStudent(Request $request)
+    {
+        if (session('user_role') !== 'admin') {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+        }
+
+        $validated = $request->validate([
+            'student_id' => 'required|integer|exists:users,id',
+        ]);
+
+        $student = User::where('id', $validated['student_id'])
+            ->where('role', 'student')
+            ->first();
+
+        if (!$student) {
+            return response()->json(['success' => false, 'message' => 'Student not found.'], 404);
+        }
+
+        DB::transaction(function () use ($student): void {
+            foreach (['class_students', 'student_scores', 'student_notes', 'quizbee_access_codes'] as $table) {
+                if (DB::getSchemaBuilder()->hasTable($table)) {
+                    DB::table($table)->where('student_id', $student->id)->delete();
+                }
+            }
+
+            if (DB::getSchemaBuilder()->hasTable('resetpassword')) {
+                DB::table('resetpassword')->where('email', $student->email)->delete();
+            }
+
+            $student->delete();
+        });
+
+        return response()->json(['success' => true, 'message' => 'Student account and related records were removed.']);
     }
 
     public function registerTeacher(Request $request)
@@ -135,18 +184,25 @@ class AdminController extends Controller
             'first_name'       => 'required|string',
             'last_name'        => 'required|string',
             'email'            => 'required|email|unique:users,email',
+            'subject'          => 'required|in:english,math,science',
             'password'         => 'required|min:6',
             'confirm_password' => 'required|same:password',
         ]);
 
-        User::create([
+        $teacher = User::create([
             'first_name' => $request->first_name,
             'last_name'  => $request->last_name,
             'age'        => 0, // Teachers might not have age inputted
             'email'      => $request->email,
+            'subject'    => $request->subject,
             'password'   => Hash::make($request->password),
             'role'       => 'teacher',
         ]);
+
+        Mail::to($teacher->email)->send(new TeacherWelcome(
+            trim($teacher->first_name . ' ' . $teacher->last_name),
+            ucfirst($teacher->subject),
+        ));
 
         return back()->with('success', 'Teacher account created successfully!');
     }

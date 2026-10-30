@@ -138,6 +138,31 @@
     }
     .logout-btn:active { transform: translate(2px,2px); box-shadow: 1px 1px 0 var(--gold-dim); }
 
+    .topbar-actions { display: flex; align-items: center; gap: 14px; }
+    .teacher-profile {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      min-height: 42px;
+      padding: 4px 12px 4px 5px;
+      background: var(--blue-ui);
+      border: 1px solid var(--blue-mid);
+    }
+    .teacher-profile-avatar {
+      display: grid;
+      place-items: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      color: var(--blue-deep);
+      background: #16a8dc;
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .teacher-profile-copy { display: flex; flex-direction: column; gap: 2px; }
+    .teacher-profile-name { color: #fff; font-size: 12px; font-weight: 600; }
+    .teacher-profile-role { color: var(--text-muted); font-size: 9px; letter-spacing: 0.1em; }
+
     /* ===== WRAPPER ===== */
     .wrapper {
       display: flex;
@@ -368,6 +393,15 @@
     .sort-indicator { display: inline-block; min-width: 12px; margin-left: 4px; }
     .pixel-table tr:nth-child(even) td { background: rgba(14,21,48,0.5); }
     .pixel-table tr:hover td { background: rgba(30,42,80,0.6); }
+    .leaderboard-rank-gold td { border-top: 2px solid #ffd700; border-bottom: 2px solid #ffd700; }
+    .leaderboard-rank-gold td:first-child { border-left: 2px solid #ffd700; }
+    .leaderboard-rank-gold td:last-child { border-right: 2px solid #ffd700; }
+    .leaderboard-rank-silver td { border-top: 2px solid #c0c0c0; border-bottom: 2px solid #c0c0c0; }
+    .leaderboard-rank-silver td:first-child { border-left: 2px solid #c0c0c0; }
+    .leaderboard-rank-silver td:last-child { border-right: 2px solid #c0c0c0; }
+    .leaderboard-rank-bronze td { border-top: 2px solid #cd7f32; border-bottom: 2px solid #cd7f32; }
+    .leaderboard-rank-bronze td:first-child { border-left: 2px solid #cd7f32; }
+    .leaderboard-rank-bronze td:last-child { border-right: 2px solid #cd7f32; }
     .student-action-buttons {
       display: flex;
       flex-wrap: wrap;
@@ -467,6 +501,66 @@
       background: linear-gradient(90deg, var(--gold), transparent);
       opacity: 0.5;
     }
+    .question-preview {
+      margin: 22px 0;
+      padding: 18px;
+      background: rgba(9,13,30,0.82);
+      border: 2px solid var(--blue-mid);
+    }
+    .question-preview-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--blue-mid);
+    }
+    .question-preview-title {
+      color: var(--gold);
+      font-family: 'Cinzel', serif;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+    }
+    .question-preview-hint { margin-top: 5px; color: var(--text-muted); font-size: 12px; }
+    .question-preview-count {
+      flex-shrink: 0;
+      padding: 6px 9px;
+      color: var(--gold-light);
+      background: var(--blue-ui);
+      border: 1px solid var(--gold-dim);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+    }
+    .question-preview-meta { display: flex; flex-wrap: wrap; gap: 7px; margin: 12px 0; }
+    .question-preview-meta span {
+      padding: 5px 8px;
+      color: var(--text-muted);
+      background: var(--blue-ui);
+      border: 1px solid var(--blue-mid);
+      font-size: 11px;
+    }
+    .question-preview-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+    .question-preview-empty { grid-column: 1 / -1; padding: 16px; color: var(--text-muted); font-size: 13px; }
+    .question-preview-item { padding: 14px; background: var(--blue-ui); border: 1px solid var(--blue-mid); }
+    .question-preview-item-title { margin-bottom: 10px; color: var(--gold); font-size: 11px; font-weight: 700; letter-spacing: 0.08em; }
+    .question-preview-question { margin-bottom: 12px; color: #fff; font-size: 14px; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .question-preview-choices { display: grid; gap: 7px; }
+    .question-preview-choice {
+      display: flex;
+      gap: 8px;
+      padding: 7px 9px;
+      color: var(--text-muted);
+      background: var(--blue-deep);
+      border: 1px solid var(--blue-mid);
+      font-size: 12px;
+      overflow-wrap: anywhere;
+    }
+    .question-preview-choice-letter { flex: 0 0 18px; color: var(--gold); font-weight: 700; }
+    .question-preview-choice.is-correct { border-color: var(--green); color: #fff; }
+    .question-preview-choice.is-correct .question-preview-choice-letter { color: #5dde90; }
+    .question-preview-answer { margin-top: 10px; color: #5dde90; font-size: 11px; font-weight: 700; }
 
     .q-number {
       font-family: 'Cinzel', serif;
@@ -502,6 +596,19 @@
     .pixel-textarea { resize: vertical; min-height: 80px; }
     .pixel-select { appearance: none; -webkit-appearance: none; cursor: pointer; }
     .pixel-select option { background: var(--blue-deep); color: #fff; }
+    .pixel-select {
+      padding-right: 38px;
+      background-image:
+        linear-gradient(45deg, transparent 50%, var(--gold) 50%),
+        linear-gradient(135deg, var(--gold) 50%, transparent 50%);
+      background-position:
+        calc(100% - 17px) 50%,
+        calc(100% - 12px) 50%;
+      background-size: 5px 5px, 5px 5px;
+      background-repeat: no-repeat;
+      border-radius: 0;
+      color-scheme: dark;
+    }
 
     .choices-grid {
       display: grid;
@@ -794,6 +901,9 @@
       .topbar-title { font-size: 13px; }
       .topbar-subtitle { display: none; }
       .topbar-gems { display: none; }
+      .topbar-actions { gap: 8px; }
+      .teacher-profile { min-height: 38px; padding-right: 8px; }
+      .teacher-profile-avatar { width: 28px; height: 28px; }
       .logout-btn { font-size: 11px; padding: 7px 12px; }
       .main { padding: 14px; }
       .choices-grid { grid-template-columns: 1fr; }
@@ -813,11 +923,49 @@
       .logout-btn { font-size: 10px; padding: 6px 10px; }
       .class-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
       .class-circle { width: 72px; height: 72px; font-size: 11px; }
+      .teacher-profile-copy { display: none; }
+      .teacher-profile { padding: 3px; }
+      .question-preview { padding: 13px 10px; }
+      .question-preview-header { flex-direction: column; }
+      .question-preview-list { grid-template-columns: 1fr; }
     }
     *, *::before, *::after {
       box-shadow: none !important;
       text-shadow: none !important;
     }
+    #leaderboardSubject:focus-visible,
+    #analyticsClass:focus-visible {
+      border-color: var(--gold);
+      outline: 2px solid rgba(240,192,48,0.3);
+      outline-offset: 2px;
+    }
+    .leaderboard-load-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 44px;
+      padding: 10px 16px;
+      color: var(--gold);
+      background: var(--blue-mid);
+      border: 2px solid var(--gold);
+      border-radius: 0;
+      box-shadow: 3px 3px 0 var(--gold-dim);
+      font: 700 11px 'Outfit', sans-serif;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease;
+    }
+    .leaderboard-load-button:hover,
+    .leaderboard-load-button:focus-visible {
+      color: var(--blue-deep);
+      background: var(--gold);
+      outline: 2px solid rgba(240,192,48,0.3);
+      outline-offset: 2px;
+    }
+    .leaderboard-load-button:active { transform: translateY(1px); }
+    .leaderboard-load-button:disabled { opacity: 0.65; cursor: wait; }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -843,10 +991,19 @@
     </div>
     <div>
       <div class="topbar-title">⚔ CLASH OF SUBJECT</div>
-      <div class="topbar-subtitle">TEACHER COMMAND — {{ strtoupper(session('user_name', 'Teacher')) }}</div>
+    <div class="topbar-subtitle">TEACHER PORTAL · SUBJECT: {{ $teacher->subject ? strtoupper($teacher->subject) : 'NOT ASSIGNED' }}</div>
     </div>
   </div>
-  <a href="{{ route('logout') }}" class="logout-btn"><i class="fas fa-sign-out-alt"></i> LOGOUT</a>
+  <div class="topbar-actions">
+    <div class="teacher-profile" aria-label="Signed in as {{ session('user_full_name', session('user_name', 'Teacher')) }}">
+      <span class="teacher-profile-avatar" aria-hidden="true">{{ strtoupper(substr(session('user_full_name', session('user_name', 'Teacher')), 0, 1)) }}</span>
+      <span class="teacher-profile-copy">
+        <span class="teacher-profile-name">{{ session('user_full_name', session('user_name', 'Teacher')) }}</span>
+        <span class="teacher-profile-role">TEACHER</span>
+      </span>
+    </div>
+    <a href="{{ route('logout') }}" class="logout-btn"><i class="fas fa-sign-out-alt" aria-hidden="true"></i> LOGOUT</a>
+  </div>
 </div>
 
 <div class="wrapper">
@@ -862,7 +1019,7 @@
     </button>
     <div class="nav-divider"></div>
     <button class="nav-btn" onclick="showSection('assessment', this)">
-      <i class="fas fa-shield-alt"></i>ASSESSMENT
+      <i class="fas fa-bolt"></i>QUIZBEE
     </button>
     <button class="nav-btn" onclick="showSection('exam', this)">
       <i class="fas fa-scroll"></i>EXAM
@@ -876,7 +1033,7 @@
     </button>
     <div class="nav-divider"></div>
     <button class="nav-btn" onclick="showSection('submissions', this)">
-      <i class="fas fa-inbox"></i>SUBMISSIONS
+      <i class="fas fa-inbox"></i>SUBMISSIONS &amp; LEADERBOARD
     </button>
     <div class="nav-divider"></div>
     <button class="nav-btn" onclick="showSection('notes', this)">
@@ -964,7 +1121,7 @@
             <option value="all">All Types</option>
             <option value="quiz">⚡ Quiz</option>
             <option value="exam">📜 Exam</option>
-            <option value="assessment">🛡️ Assessment</option>
+            <option value="quizbee">⚡ Quizbee</option>
             <option value="grade">💯 Grade</option>
           </select>
           <span class="filter-label">QUARTER:</span>
@@ -1011,11 +1168,11 @@
       </div>
     </section>
 
-        <!-- ===== ASSESSMENT SECTION ===== -->
+        <!-- ===== QUIZBEE SECTION ===== -->
     <section id="section-assessment" class="section">
       <div class="panel">
         <div class="corner-bl"></div><div class="corner-br"></div>
-        <div class="panel-title">🛡️ ASSESSMENT — ADD QUESTIONS</div>
+        <div class="panel-title">⚡ QUIZBEE — ADD QUESTIONS</div>
 
         <div class="filter-row">
           <span class="filter-label">CLASS:</span>
@@ -1056,6 +1213,20 @@
                 <option>A</option><option>B</option><option>C</option><option>D</option>
               </select>
             </div>
+          </div>
+        </div>
+
+        <div class="question-preview" id="assessmentPreview" aria-label="QuizBee question preview">
+          <div class="question-preview-header">
+            <div>
+              <div class="question-preview-title">LIVE QUESTION PREVIEW</div>
+              <p class="question-preview-hint">Review the question set and correct answers before saving.</p>
+            </div>
+            <span class="question-preview-count" id="assessmentPreviewCount">0 QUESTIONS</span>
+          </div>
+          <div class="question-preview-meta" id="assessmentPreviewMeta"></div>
+          <div class="question-preview-list" id="assessmentPreviewList">
+            <p class="question-preview-empty">Start entering a question to preview it here.</p>
           </div>
         </div>
 
@@ -1119,6 +1290,20 @@
           </div>
         </div>
 
+        <div class="question-preview" id="examPreview" aria-label="Exam question preview">
+          <div class="question-preview-header">
+            <div>
+              <div class="question-preview-title">LIVE QUESTION PREVIEW</div>
+              <p class="question-preview-hint">Review the question set and correct answers before saving.</p>
+            </div>
+            <span class="question-preview-count" id="examPreviewCount">0 QUESTIONS</span>
+          </div>
+          <div class="question-preview-meta" id="examPreviewMeta"></div>
+          <div class="question-preview-list" id="examPreviewList">
+            <p class="question-preview-empty">Start entering a question to preview it here.</p>
+          </div>
+        </div>
+
         <div class="btn-row">
           <button class="pixel-btn" onclick="addQuestion('exam')">+ ADD QUESTION</button>
           <button class="pixel-btn pixel-btn-outline" onclick="submitQuestions('exam')">▶ SUBMIT</button>
@@ -1179,6 +1364,20 @@
           </div>
         </div>
 
+        <div class="question-preview" id="quizPreview" aria-label="Quiz question preview">
+          <div class="question-preview-header">
+            <div>
+              <div class="question-preview-title">LIVE QUESTION PREVIEW</div>
+              <p class="question-preview-hint">Review the question set and correct answers before saving.</p>
+            </div>
+            <span class="question-preview-count" id="quizPreviewCount">0 QUESTIONS</span>
+          </div>
+          <div class="question-preview-meta" id="quizPreviewMeta"></div>
+          <div class="question-preview-list" id="quizPreviewList">
+            <p class="question-preview-empty">Start entering a question to preview it here.</p>
+          </div>
+        </div>
+
         <div class="btn-row">
           <button class="pixel-btn" onclick="addQuestion('quiz')">+ ADD QUESTION</button>
           <button class="pixel-btn pixel-btn-outline" onclick="submitQuestions('quiz')">▶ SUBMIT</button>
@@ -1236,7 +1435,7 @@
     <section id="section-submissions" class="section">
       <div class="panel">
         <div class="corner-bl"></div><div class="corner-br"></div>
-        <div class="panel-title">📥 SUBMISSIONS & ANALYTICS</div>
+        <div class="panel-title">📥 SUBMISSIONS &amp; LEADERBOARD</div>
 
         <div class="filter-row" style="margin-bottom:20px;">
           <span class="filter-label">CLASS:</span>
@@ -1246,7 +1445,7 @@
             <option value="{{ $c->id }}">{{ $c->name }} {{ $c->section ? ' - '.$c->section : '' }}</option>
           @endforeach
           </select>
-          <button class="pixel-btn pixel-btn-outline" onclick="loadAnalytics()">LOAD DATA</button>
+          <button class="pixel-btn pixel-btn-outline" type="button" onclick="loadAnalytics()">LOAD DATA</button>
         </div>
 
         <!-- Submissions Table -->
@@ -1288,6 +1487,31 @@
             <div style="margin-top:10px;padding:12px 16px;background:var(--blue-ui);border:2px solid var(--blue-mid);">
               <div style="font-family:'Outfit',sans-serif;font-size:11px;color:var(--text-muted);margin-bottom:6px;">PASS RATE</div>
               <div id="passRate" style="font-family:'Outfit',sans-serif;font-size:22px;font-weight:700;color:var(--gold);">—</div>
+            </div>
+          </div>
+
+          <div style="margin-top:24px;padding-top:20px;border-top:2px solid var(--blue-mid);">
+            <h3 style="font-family:'Cinzel',serif;color:var(--gold);font-size:15px;margin-bottom:14px;">🏆 CLASS LEADERBOARD</h3>
+            <p style="color:var(--text-muted);font-size:13px;margin-bottom:16px;">Ranked by average score for the selected subject. Multiplayer wins break score ties.</p>
+            <div class="filter-row" style="margin-bottom:16px;">
+              <label class="filter-label" for="leaderboardSubject">SUBJECT:</label>
+              <select class="pixel-select" style="width:auto;margin:0;" id="leaderboardSubject">
+                <option value="english">English</option>
+                <option value="math">Math</option>
+                <option value="science">Science</option>
+              </select>
+              <button class="leaderboard-load-button" type="button" id="loadLeaderboardButton" onclick="loadLeaderboard()">
+                <i class="fas fa-trophy" aria-hidden="true"></i> LOAD LEADERBOARD
+              </button>
+            </div>
+            <div class="table-scroll" style="overflow:auto;">
+              <table class="pixel-table" id="leaderboardTable" style="display:none;">
+                <thead><tr><th>RANK</th><th>STUDENT</th><th>SCORE AVG.</th><th>MULTIPLAYER WINS</th></tr></thead>
+                <tbody id="leaderboardTableBody"></tbody>
+              </table>
+            </div>
+            <div id="leaderboardStatus" role="status" aria-live="polite" style="color:var(--text-muted);font-size:15px;text-align:center;padding:16px;">
+              Select a class, subject, and load the leaderboard.
             </div>
           </div>
         </div>
@@ -1940,6 +2164,108 @@ let assessmentCount = 1;
 let examCount = 1;
 let quizCount = 1;
 
+function updateQuestionPreview(type) {
+  const section = document.getElementById('section-' + type);
+  const previewList = document.getElementById(type + 'PreviewList');
+  const previewMeta = document.getElementById(type + 'PreviewMeta');
+  const previewCount = document.getElementById(type + 'PreviewCount');
+  if (!section || !previewList || !previewMeta || !previewCount) return;
+
+  const blocks = [...document.querySelectorAll('#' + type + 'Questions .question-block')];
+  const questions = blocks.map(block => {
+    const inputs = block.querySelectorAll('input.pixel-input');
+    const textarea = block.querySelector('textarea.pixel-textarea');
+    const answer = block.querySelector('select.pixel-select');
+    return {
+      question: textarea ? textarea.value.trim() : '',
+      choices: [...inputs].map(input => input.value.trim()),
+      answer: answer ? answer.value : 'A'
+    };
+  }).filter(item => item.question || item.choices.some(Boolean));
+
+  const classSelect = document.getElementById(type + 'Class');
+  const subjectSelect = document.getElementById(type + 'Subject');
+  const quarterSelect = document.getElementById(type + 'Quarter');
+  const numberInput = document.getElementById(type + 'Number');
+  const selectedClass = classSelect && classSelect.selectedIndex >= 0
+    ? classSelect.options[classSelect.selectedIndex].text.trim()
+    : 'No class selected';
+  const selectedSubject = subjectSelect && subjectSelect.selectedIndex >= 0
+    ? subjectSelect.options[subjectSelect.selectedIndex].text.trim()
+    : 'No subject selected';
+  const metadata = [
+    selectedClass && classSelect.value ? 'CLASS: ' + selectedClass : 'CLASS: No class selected',
+    'SUBJECT: ' + selectedSubject,
+    'QUARTER: ' + (quarterSelect ? quarterSelect.value : '—'),
+    'SET NO.: ' + (numberInput && numberInput.value ? numberInput.value : '—')
+  ];
+
+  previewMeta.textContent = '';
+  metadata.forEach(value => {
+    const item = document.createElement('span');
+    item.textContent = value;
+    previewMeta.appendChild(item);
+  });
+
+  previewCount.textContent = questions.length + (questions.length === 1 ? ' QUESTION' : ' QUESTIONS');
+  previewList.textContent = '';
+  if (questions.length === 0) {
+    const emptyMessage = document.createElement('p');
+    emptyMessage.className = 'question-preview-empty';
+    emptyMessage.textContent = 'Start entering a question to preview it here.';
+    previewList.appendChild(emptyMessage);
+    return;
+  }
+
+  questions.forEach((question, index) => {
+    const card = document.createElement('article');
+    card.className = 'question-preview-item';
+
+    const title = document.createElement('div');
+    title.className = 'question-preview-item-title';
+    title.textContent = 'QUESTION ' + (index + 1);
+    card.appendChild(title);
+
+    const questionText = document.createElement('p');
+    questionText.className = 'question-preview-question';
+    questionText.textContent = question.question || 'Question text not entered yet.';
+    card.appendChild(questionText);
+
+    const choices = document.createElement('div');
+    choices.className = 'question-preview-choices';
+    ['A', 'B', 'C', 'D'].forEach((letter, choiceIndex) => {
+      const choice = document.createElement('div');
+      const isCorrect = question.answer === letter;
+      choice.className = 'question-preview-choice' + (isCorrect ? ' is-correct' : '');
+
+      const choiceLetter = document.createElement('span');
+      choiceLetter.className = 'question-preview-choice-letter';
+      choiceLetter.textContent = letter + '.';
+      choice.appendChild(choiceLetter);
+
+      const choiceText = document.createElement('span');
+      choiceText.textContent = question.choices[choiceIndex] || 'Choice not entered yet.';
+      choice.appendChild(choiceText);
+      choices.appendChild(choice);
+    });
+    card.appendChild(choices);
+
+    const answer = document.createElement('p');
+    answer.className = 'question-preview-answer';
+    answer.textContent = 'CORRECT ANSWER: ' + question.answer;
+    card.appendChild(answer);
+    previewList.appendChild(card);
+  });
+}
+
+['assessment', 'exam', 'quiz'].forEach(type => {
+  const section = document.getElementById('section-' + type);
+  if (!section) return;
+  section.addEventListener('input', () => updateQuestionPreview(type));
+  section.addEventListener('change', () => updateQuestionPreview(type));
+  updateQuestionPreview(type);
+});
+
 function addQuestion(type) {
   const container = document.getElementById(type + 'Questions');
   let count;
@@ -1969,6 +2295,7 @@ function addQuestion(type) {
       <button class="pixel-btn pixel-btn-red" style="padding:7px 12px;font-size:7px;" onclick="removeQuestion(this, '${type}')">✕ REMOVE</button>
     </div>`;
   container.appendChild(block);
+  updateQuestionPreview(type);
   block.scrollIntoView({ behavior:'smooth' });
 }
 
@@ -1982,6 +2309,7 @@ function removeQuestion(btn, type) {
   document.querySelectorAll('#' + type + 'Questions .q-number').forEach((el, i) => {
     el.textContent = 'QUESTION ' + (i + 1);
   });
+  updateQuestionPreview(type);
 }
 
 function downloadQuestionCsvTemplate() {
@@ -2014,7 +2342,7 @@ async function uploadQuestionCsv(type, fileInput) {
   const formData = new FormData();
   formData.append('class_id', classId);
   formData.append('subject', document.getElementById(type + 'Subject').value);
-  formData.append('type', type);
+  formData.append('type', type === 'assessment' ? 'quizbee' : type);
   formData.append('quarter', document.getElementById(type + 'Quarter').value);
   formData.append('sequence_number', document.getElementById(type + 'Number').value);
   formData.append('questions_file', file);
@@ -2099,7 +2427,7 @@ async function submitQuestions(type) {
       if (submitBtn) submitBtn.disabled = false;
       return;
     }
-    const payload = { type, subject, quarter, sequence_number, class_id, questions };
+    const payload = { type: type === 'assessment' ? 'quizbee' : type, subject, quarter, sequence_number, class_id, questions };
     const res  = await fetch('/backend/save_questions.php', {
       method:  'POST',
       headers: fetchConfig.headers,
@@ -2153,12 +2481,69 @@ async function loadAnalytics() {
       document.getElementById('submissionsLoading').textContent = 'Error: ' + data.message;
       return;
     }
+
     renderChart(data.analytics);
     renderSubmissionsTable(data.analytics);
   } catch(err) {
     console.error(err);
     document.getElementById('analyticsLoading').textContent = 'Error loading data.';
     document.getElementById('submissionsLoading').textContent = 'Error loading data.';
+  }
+}
+
+async function loadLeaderboard() {
+  const classId = document.getElementById('analyticsClass').value;
+  const subject = document.getElementById('leaderboardSubject').value;
+  const status = document.getElementById('leaderboardStatus');
+  const table = document.getElementById('leaderboardTable');
+  const tbody = document.getElementById('leaderboardTableBody');
+  const button = document.getElementById('loadLeaderboardButton');
+
+  if (!classId) {
+    status.textContent = 'Select a class before loading the leaderboard.';
+    status.style.display = 'block';
+    table.style.display = 'none';
+    return;
+  }
+
+  status.textContent = 'Loading leaderboard...';
+  status.style.display = 'block';
+  table.style.display = 'none';
+  button.disabled = true;
+  try {
+    const response = await fetch(`/leaderboard?class_id=${encodeURIComponent(classId)}&subject=${encodeURIComponent(subject)}`, {
+      headers: { 'Accept': 'application/json' }
+    });
+    const data = await response.json();
+    if (!response.ok || !data.success) {
+      throw new Error(data.message || 'Could not load the leaderboard.');
+    }
+
+    tbody.replaceChildren();
+    data.students.forEach(student => {
+      const row = document.createElement('tr');
+      if (student.rank <= 3) row.classList.add(['', 'leaderboard-rank-gold', 'leaderboard-rank-silver', 'leaderboard-rank-bronze'][student.rank]);
+      [
+        student.rank,
+        student.name,
+        student.average_percent === null ? 'No score' : `${Number(student.average_percent).toFixed(2)}%`,
+        student.multiplayer_wins
+      ].forEach(value => {
+        const cell = document.createElement('td');
+        cell.textContent = value;
+        row.appendChild(cell);
+      });
+      tbody.appendChild(row);
+    });
+    table.style.display = 'table';
+    status.textContent = data.students.length ? '' : 'No students are currently assigned to this class.';
+    status.style.display = data.students.length ? 'none' : 'block';
+  } catch (error) {
+    console.error('Teacher leaderboard loading failed:', error);
+    status.textContent = error.message || 'Could not load the leaderboard.';
+    status.style.display = 'block';
+  } finally {
+    button.disabled = false;
   }
 }
 

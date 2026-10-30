@@ -4,7 +4,9 @@ namespace Tests\Feature;
 
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Schema;
+use App\Mail\TeacherWelcome;
 use Tests\TestCase;
 
 class TeacherSectionClassTest extends TestCase
@@ -24,6 +26,8 @@ class TeacherSectionClassTest extends TestCase
             $table->string('password');
             $table->string('role');
             $table->string('section')->nullable();
+            $table->string('subject')->nullable();
+            $table->boolean('is_verified')->default(false);
             $table->timestamps();
         });
 
@@ -47,12 +51,20 @@ class TeacherSectionClassTest extends TestCase
             $table->unsignedBigInteger('student_id');
             $table->timestamps();
         });
+
+        Schema::create('student_rosters', function (Blueprint $table) {
+            $table->id();
+            $table->string('lrn', 12)->unique();
+            $table->unsignedBigInteger('section_id');
+            $table->timestamps();
+        });
     }
 
     protected function tearDown(): void
     {
         Schema::dropIfExists('class_students');
         Schema::dropIfExists('classes');
+        Schema::dropIfExists('student_rosters');
         Schema::dropIfExists('sections');
         Schema::dropIfExists('users');
 
@@ -136,8 +148,8 @@ class TeacherSectionClassTest extends TestCase
             'age' => 13,
             'email' => 'new.student@example.test',
             'parent_email' => 'guardian@example.test',
-            'password' => 'secret123',
-            'confirm_password' => 'secret123',
+            'password' => 'CosPass1!',
+            'confirm_password' => 'CosPass1!',
         ])->assertRedirect('/');
 
         $studentId = DB::table('users')->where('email', 'new.student@example.test')->value('id');
@@ -211,6 +223,44 @@ class TeacherSectionClassTest extends TestCase
             ->assertUnprocessable();
 
         $this->assertDatabaseCount('classes', 0);
+    }
+
+    public function test_admin_registers_teacher_with_subject_and_teacher_dashboard_displays_it(): void
+    {
+        Mail::fake();
+
+        $this->withSession(['user_role' => 'admin'])
+            ->post('/backend/admin/register_teacher', [
+                'first_name' => 'Sam',
+                'last_name' => 'Teacher',
+                'email' => 'sam.teacher@example.test',
+                'subject' => 'science',
+                'password' => 'secret123',
+                'confirm_password' => 'secret123',
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('success', 'Teacher account created successfully!');
+
+        $teacherId = (int) DB::table('users')
+            ->where('email', 'sam.teacher@example.test')
+            ->value('id');
+        $this->assertDatabaseHas('users', [
+            'id' => $teacherId,
+            'subject' => 'science',
+        ]);
+        Mail::assertSent(TeacherWelcome::class, function (TeacherWelcome $mail): bool {
+            return $mail->hasTo('sam.teacher@example.test')
+                && $mail->teacherName === 'Sam Teacher'
+                && $mail->subjectName === 'Science';
+        });
+
+        $this->withSession([
+            'user_id' => $teacherId,
+            'user_role' => 'teacher',
+            'user_name' => 'Sam',
+        ])->get('/teacher/dashboard')
+            ->assertOk()
+            ->assertSee('SUBJECT: SCIENCE');
     }
 
     private function createUser(string $role, ?string $section, string $email): int

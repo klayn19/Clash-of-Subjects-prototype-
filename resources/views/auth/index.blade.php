@@ -36,8 +36,15 @@ body {
   justify-content: center;
   background: #050308;
   overflow-x: hidden;
-  overflow-y: auto;
+  overflow-y: hidden;
   position: relative;
+}
+
+body[data-active-form="registerForm"],
+body[data-active-form="forgotForm"],
+body[data-active-form="resetForm"] {
+  align-items: flex-start;
+  overflow-y: auto;
 }
 
 /* ── BACKGROUND ── */
@@ -79,23 +86,23 @@ body {
 .card-wrap {
   position: relative;
   z-index: 10;
-  width: 480px;
+  width: 420px;
   max-width: 96vw;
   max-height: 100vh;
-  overflow-y: auto;
-  padding: 40px 10px; /* Space for corners and top/bottom edges */
+  overflow: visible;
+  padding: 8px 10px;
 }
 
-/* Custom Scrollbar for card-wrap */
-.card-wrap::-webkit-scrollbar { width: 6px; }
-.card-wrap::-webkit-scrollbar-track { background: transparent; }
-.card-wrap::-webkit-scrollbar-thumb { background: var(--gold-dim); }
-.card-wrap::-webkit-scrollbar-thumb:hover { background: var(--gold); }
+body[data-active-form="registerForm"] .card-wrap,
+body[data-active-form="forgotForm"] .card-wrap,
+body[data-active-form="resetForm"] .card-wrap {
+  max-height: none;
+}
 
 .card {
   background: var(--blue-dark);
   position: relative;
-  padding: 36px 40px 38px;
+  padding: 22px 30px 24px;
   border: 3px solid var(--blue-mid);
   box-shadow: 0 0 0 1px var(--gold), 0 0 40px rgba(240,160,0,0.18), inset 0 0 80px rgba(0,0,30,0.6);
 }
@@ -114,25 +121,25 @@ body {
 .crest-title {
   font-family: 'Cinzel', serif;
   font-size: 24px; color: var(--gold); text-align: center;
-  letter-spacing: 0.12em; line-height: 1.5; margin-bottom: 8px;
+  letter-spacing: 0.12em; line-height: 1.35; margin-bottom: 4px;
   text-shadow: 3px 3px 0 #7a5000, 0 0 20px rgba(240,192,0,0.5);
   font-weight: 700;
 }
 .crest-sub {
   font-family: 'Outfit', sans-serif;
   font-size: 14px; color: rgba(180,200,255,0.55);
-  text-align: center; letter-spacing: 0.25em; margin-bottom: 24px;
+  text-align: center; letter-spacing: 0.25em; margin-bottom: 12px;
   font-weight: 400;
   text-transform: uppercase;
 }
-.divider { display: flex; align-items: center; gap: 10px; margin-bottom: 24px; }
+.divider { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
 .divider-line { flex: 1; height: 2px; background: linear-gradient(90deg, transparent, #2a3860, var(--gold), #2a3860, transparent); }
 .divider-gem { width: 10px; height: 10px; background: var(--gold); transform: rotate(45deg); box-shadow: 0 0 8px rgba(240,192,0,0.6); }
 
 /* ── TABS ── */
-.tabs { display: flex; gap: 0; margin-bottom: 24px; border: 2px solid var(--blue-mid); }
+.tabs { display: flex; gap: 0; margin-bottom: 12px; border: 2px solid var(--blue-mid); }
 .tab-btn {
-  flex: 1; padding: 13px 6px; border: none;
+  flex: 1; padding: 8px 6px; border: none;
   background: #0b1228; color: rgba(180,200,255,0.45);
   font-family: 'Outfit', sans-serif; font-size: 12px; font-weight: 600;
   letter-spacing: 0.1em; cursor: pointer; transition: all 0.1s steps(1); line-height: 1.6;
@@ -144,17 +151,19 @@ body {
 /* ── PANELS ── */
 .panel { display: none; }
 .panel.active { display: block; }
+.login-subform { display: none; }
+.login-subform.active { display: block; }
 
 /* ── FIELDS ── */
-.field { margin-bottom: 18px; }
+.field { margin-bottom: 10px; }
 .field label {
   display: flex; align-items: center; gap: 8px;
   font-family: 'Outfit', sans-serif; font-size: 11px; font-weight: 600;
-  letter-spacing: 0.1em; color: var(--text-dim); margin-bottom: 8px; text-transform: uppercase;
+  letter-spacing: 0.1em; color: var(--text-dim); margin-bottom: 5px; text-transform: uppercase;
 }
 .field input, .field select {
   width: 100%; background: var(--blue-deep);
-  border: 2px solid var(--blue-mid); padding: 13px 14px 13px 42px;
+  border: 2px solid var(--blue-mid); padding: 10px 14px 10px 42px;
   color: rgba(180,200,255,0.75); font-family: 'Outfit', sans-serif;
   font-size: 15px; outline: none; letter-spacing: 0.08em;
   transition: border-color 0.1s steps(1), background 0.1s steps(1);
@@ -192,18 +201,19 @@ body {
 .s-seg.s3 { background: #a08000; }
 .s-seg.s4 { background: #20a030; }
 .s-label { font-size: 14px; color: rgba(180,200,255,0.4); text-align: right; margin-top: 3px; }
+.password-hint { font-size: 12px; color: var(--text-muted); margin-top: 5px; }
 
-.forgot-row { display: flex; justify-content: flex-end; margin: -4px 0 18px; }
+.forgot-row { display: flex; justify-content: flex-end; margin: -3px 0 12px; }
 .forgot-link { font-size: 16px; color: var(--text-muted); cursor: pointer; text-decoration: none; letter-spacing: 0.06em; }
 .forgot-link:hover { color: var(--gold); }
 
 /* ── BUTTON ── */
 .btn-submit {
-  width: 100%; padding: 15px; border: none;
+  width: 100%; padding: 9px 12px; border: none;
   background: var(--gold); color: #0a0e1a;
   font-family: 'Cinzel', serif; font-size: 15px;
   font-weight: 700; letter-spacing: 0.12em; cursor: pointer;
-  text-transform: uppercase; line-height: 1.8;
+  text-transform: uppercase; line-height: 1.5;
   box-shadow: 4px 4px 0 var(--gold-dim), 0 0 20px rgba(240,192,0,0.25);
   transition: all 0.05s steps(1);
 }
@@ -215,7 +225,7 @@ body {
 .btn-submit:active { transform: translate(3px,3px); box-shadow: 1px 1px 0 var(--gold-dim); }
 
 .card-footer {
-  text-align: center; margin-top: 18px; font-size: 17px;
+  text-align: center; margin-top: 12px; font-size: 17px;
   color: var(--text-muted); letter-spacing: 0.06em;
 }
 .card-footer a { color: var(--gold); cursor: pointer; text-decoration: none; font-weight: bold; }
@@ -243,37 +253,53 @@ body {
 /* ===== TABLET RESPONSIVE (481px – 768px) ===== */
 @media (min-width: 481px) and (max-width: 768px) {
   .card-wrap {
-    width: 94vw;
-    max-width: 520px;
+    width: 92vw;
+    max-width: 460px;
     padding: 30px 10px;
   }
-  .card { padding: 30px 30px 34px; }
+  .card { padding: 22px 28px 24px; }
   .crest-title { font-size: 22px; }
   .tab-btn { font-size: 11px; padding: 12px 6px; }
 }
 
 /* ===== MOBILE RESPONSIVE (≤480px) ===== */
 @media (max-width: 480px) {
-  body { align-items: flex-start; padding: 12px 0; }
+  body {
+    align-items: center;
+    min-height: 100vh;
+    min-height: 100svh;
+    overflow-y: auto;
+    padding: 8px 0;
+  }
+  body[data-active-form="registerForm"],
+  body[data-active-form="forgotForm"],
+  body[data-active-form="resetForm"] {
+    align-items: flex-start;
+  }
   .card-wrap {
     width: 100%;
     max-width: 100%;
-    padding: 16px 6px;
+    max-height: none;
+    padding: 8px 6px;
   }
   .card {
-    padding: 22px 18px 26px;
+    padding: 18px 14px 20px;
     border-left: none;
     border-right: none;
   }
   .crest-title { font-size: 18px; }
   .crest-sub { font-size: 12px; letter-spacing: 0.12em; }
   .tab-btn { font-size: 10px; padding: 11px 4px; }
-  .field input, .field select { font-size: 14px; padding: 11px 12px 11px 38px; }
+  .field input, .field select { font-size: 14px; padding: 9px 12px 9px 38px; }
   .input-icon { font-size: 13px; left: 10px; }
   .name-row { flex-direction: column; gap: 0; }
-  .btn-submit { font-size: 12px; padding: 13px; }
+  .btn-submit { font-size: 12px; padding: 9px 12px; }
   .card-footer { font-size: 15px; }
   .strength-row { gap: 2px; }
+}
+
+@media (max-width: 480px) and (max-height: 600px) {
+  body { align-items: flex-start; }
 }
 
 @media (max-width: 360px) {
@@ -285,7 +311,7 @@ body {
 }
 </style>
 </head>
-<body data-redirect-form="{{ $redirect_form }}">
+<body data-redirect-form="{{ $redirect_form }}" data-active-form="{{ $redirect_form }}">
 
 <canvas id="bgCanvas"></canvas>
 <div class="scanlines"></div>
@@ -324,7 +350,7 @@ body {
     <div class="panel {{ in_array($redirect_form, ['loginForm','forgotForm','resetForm']) ? 'active' : '' }}" id="loginPanel">
 
       <!-- LOGIN FORM -->
-      <div id="loginForm" class="{{ $redirect_form === 'loginForm' ? '' : 'panel' }}">
+      <div id="loginForm" class="login-subform {{ $redirect_form === 'loginForm' ? 'active' : '' }}">
         <form action="{{ route('login') }}" method="POST">
           @csrf
           <div class="field">
@@ -356,7 +382,7 @@ body {
       </div>
 
       <!-- FORGOT PASSWORD FORM -->
-      <div id="forgotForm" class="panel {{ $redirect_form === 'forgotForm' ? 'active' : '' }}">
+      <div id="forgotForm" class="login-subform {{ $redirect_form === 'forgotForm' ? 'active' : '' }}">
         <form action="{{ route('forgotPassword') }}" method="POST">
           @csrf
           <div class="field">
@@ -373,7 +399,7 @@ body {
       </div>
 
       <!-- RESET PASSWORD FORM -->
-      <div id="resetForm" class="panel {{ $redirect_form === 'resetForm' ? 'active' : '' }}">
+      <div id="resetForm" class="login-subform {{ $redirect_form === 'resetForm' ? 'active' : '' }}">
         <form action="{{ route('resetPassword') }}" method="POST">
           @csrf
           <div class="field">
@@ -396,16 +422,16 @@ body {
             <label>New Password</label>
             <div class="input-wrap pw-wrap">
               <span class="input-icon">🛡️</span>
-              <input type="password" name="new_password" id="r-npw" placeholder="New password" required oninput="checkStrength(this.value)">
+              <input type="password" name="new_password" id="r-npw" placeholder="New password" required oninput="checkStrength(this)">
               <button type="button" class="pw-toggle" onclick="togglePw('r-npw',this)">
                 <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
               </button>
             </div>
             <div class="strength-row">
-              <div class="s-seg" id="sg1"></div><div class="s-seg" id="sg2"></div>
-              <div class="s-seg" id="sg3"></div><div class="s-seg" id="sg4"></div>
+              <div class="s-seg"></div><div class="s-seg"></div>
+              <div class="s-seg"></div><div class="s-seg"></div>
             </div>
-            <div class="s-label" id="s-lbl"></div>
+            <div class="s-label"></div>
           </div>
 
           <div class="field">
@@ -451,7 +477,7 @@ body {
           <label>Age</label>
           <div class="input-wrap">
             <span class="input-icon">🎂</span>
-            <input type="number" name="age" placeholder="Age" min="1" max="100" value="{{ old('age') }}" required>
+            <input type="number" name="age" placeholder="Age" min="12" max="99" value="{{ old('age') }}" required>
           </div>
         </div>
 
@@ -496,16 +522,17 @@ body {
           <label>Password</label>
           <div class="input-wrap pw-wrap">
             <span class="input-icon">🛡️</span>
-            <input type="password" name="password" id="reg-pw" placeholder="Create a password" required oninput="checkStrength(this.value)">
+            <input type="password" name="password" id="reg-pw" placeholder="Create a password" minlength="6" pattern="(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9]).{6,}" title="Use at least 6 characters, including a number, an uppercase letter, and a special character." required oninput="checkStrength(this)">
             <button type="button" class="pw-toggle" onclick="togglePw('reg-pw',this)">
               <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
             </button>
           </div>
+          <div class="password-hint">At least 6 characters, with a number, uppercase letter, and special character.</div>
           <div class="strength-row">
-            <div class="s-seg" id="sg1"></div><div class="s-seg" id="sg2"></div>
-            <div class="s-seg" id="sg3"></div><div class="s-seg" id="sg4"></div>
+            <div class="s-seg"></div><div class="s-seg"></div>
+            <div class="s-seg"></div><div class="s-seg"></div>
           </div>
-          <div class="s-label" id="s-lbl"></div>
+          <div class="s-label"></div>
         </div>
 
         <div class="field">
@@ -647,8 +674,9 @@ const loginSubForms = ['loginForm', 'forgotForm', 'resetForm'];
 function showSubForm(id) {
   loginSubForms.forEach(f => {
     const el = document.getElementById(f);
-    if (el) el.classList.toggle('panel', f !== id);
+    if (el) el.classList.toggle('active', f === id);
   });
+  document.body.dataset.activeForm = id;
   // Make sure loginPanel is active
   document.getElementById('loginPanel').classList.add('active');
   document.getElementById('registerPanel').classList.remove('active');
@@ -663,7 +691,11 @@ function showPanel(panelId, btn) {
   });
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  if (panelId === 'loginPanel') showSubForm('loginForm');
+  if (panelId === 'loginPanel') {
+    showSubForm('loginForm');
+  } else {
+    document.body.dataset.activeForm = 'registerForm';
+  }
 }
 
 function togglePw(id, btn) {
@@ -673,20 +705,23 @@ function togglePw(id, btn) {
   btn.style.color = hide ? 'rgba(240,160,0,0.4)' : 'rgba(240,160,0,0.9)';
 }
 
-function checkStrength(val) {
-  const segs = ['sg1','sg2','sg3','sg4'].map(id => document.getElementById(id));
-  const lbl = document.getElementById('s-lbl');
-  if (!segs[0] || !lbl) return;
+function checkStrength(input) {
+  const field = input.closest('.field');
+  if (!field) return;
+  const segs = field.querySelectorAll('.s-seg');
+  const lbl = field.querySelector('.s-label');
+  if (!segs.length || !lbl) return;
   segs.forEach(s => s.className = 's-seg');
+  const val = input.value;
   if (!val) { lbl.textContent = ''; return; }
   let score = 0;
   if (val.length >= 8) score++;
   if (/[A-Z]/.test(val)) score++;
   if (/[0-9]/.test(val)) score++;
   if (/[^A-Za-z0-9]/.test(val)) score++;
-  const lbls = ['', 'Weak Password', 'Weak Password', 'Moderate Password', 'Secure Password'];
+  const lbls = ['Weak Password', 'Weak Password', 'Weak Password', 'Moderate Password', 'Secure Password'];
   const cls  = ['','s1','s2','s3','s4'];
-  const colors = ['','#c01020','#d04000','#a08000','#20a030'];
+  const colors = ['#c01020','#c01020','#d04000','#a08000','#20a030'];
   for (let i = 0; i < score; i++) segs[i].classList.add(cls[score]);
   lbl.textContent = lbls[score];
   lbl.style.color = colors[score];

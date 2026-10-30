@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Validator;
 use App\Models\User;
 use App\Models\Section;
@@ -19,11 +21,11 @@ class AuthController extends Controller
         $sections = [];
 
         try {
-            if (\Schema::hasTable('sections')) {
-                $sections = \App\Models\Section::orderBy('name')->get();
+            if (Schema::hasTable('sections')) {
+                $sections = Section::orderBy('name')->get();
             }
         } catch (\Throwable $e) {
-            \Log::warning('Unable to load sections for auth page.', [
+            Log::warning('Unable to load sections for auth page.', [
                 'message' => $e->getMessage(),
             ]);
         }
@@ -84,16 +86,17 @@ class AuthController extends Controller
             'section'          => 'required|string|max:100|exists:sections,name',
             'first_name'       => 'required|string|max:100',
             'last_name'        => 'required|string|max:100',
-            'age'              => 'required|integer|min:1|max:120',
+            'age'              => 'required|integer|min:12|max:99',
             'email'            => 'required|email|max:150|unique:users,email',
             'parent_email'     => 'nullable|email|max:150',
-            'password'         => 'required|min:6',
+            'password'         => ['required', 'min:6', 'regex:/^(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9]).{6,}$/'],
             'confirm_password' => 'required|same:password',
         ], [
             'lrn.required'     => 'LRN is required.',
             'lrn.regex'        => 'LRN must be exactly 12 numeric digits.',
             'lrn.unique'       => 'An account with this LRN already exists. Only one account per LRN is allowed.',
             'email.unique'     => 'An account with this email already exists.',
+            'password.regex'  => 'Password must include a number, an uppercase letter, and a special character.',
             'confirm_password.same' => 'Passwords do not match.',
         ]);
 
@@ -104,9 +107,15 @@ class AuthController extends Controller
                 ->with('form', 'registerForm');
         }
 
+        $lrn = trim($request->lrn);
+        $rosterEntry = DB::table('student_rosters')
+            ->join('sections', 'student_rosters.section_id', '=', 'sections.id')
+            ->where('student_rosters.lrn', $lrn)
+            ->first(['sections.name as section']);
+
         $student = User::create([
-            'lrn'        => trim($request->lrn),
-            'section'    => $request->section,
+            'lrn'        => $lrn,
+            'section'    => $rosterEntry->section ?? $request->section,
             'first_name' => $request->first_name,
             'last_name'  => $request->last_name,
             'age'        => $request->age,
@@ -114,11 +123,16 @@ class AuthController extends Controller
             'parent_email' => $request->parent_email,
             'password'   => Hash::make($request->password),
             'role'       => 'student',
+            'is_verified' => $rosterEntry !== null,
         ]);
 
         Section::syncStudentRoster((int) $student->id);
 
-        return redirect('/')->with('success', 'Registration successful! Please login.')
+        $message = $rosterEntry
+            ? 'Registration successful! Your student record has been verified.'
+            : 'Registration successful! Your account is not verified against the student roster yet.';
+
+        return redirect('/')->with('success', $message)
                              ->with('form', 'loginForm');
     }
 

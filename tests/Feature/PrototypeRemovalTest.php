@@ -154,7 +154,7 @@ class PrototypeRemovalTest extends TestCase
         ]);
 
         $this->getJson('/api/get_question?subject=english')
-            ->assertNotFound()
+            ->assertOk()
             ->assertJsonPath('completed', true);
     }
 
@@ -167,7 +167,13 @@ class PrototypeRemovalTest extends TestCase
             'user_role' => 'teacher',
         ])->get('/teacher/dashboard')
             ->assertOk()
-            ->assertDontSee('PROTOTYPE');
+            ->assertDontSee('PROTOTYPE')
+            ->assertSee('teacher-profile')
+            ->assertSee('TEACHER PORTAL')
+            ->assertSee('id="assessmentPreview"', false)
+            ->assertSee('id="examPreview"', false)
+            ->assertSee('id="quizPreview"', false)
+            ->assertSee('LIVE QUESTION PREVIEW');
     }
 
     private function createUser(string $role, string $email): int

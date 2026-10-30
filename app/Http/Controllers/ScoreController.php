@@ -4,9 +4,43 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Services\QuizbeeHistory;
 
 class ScoreController extends Controller
 {
+    public function recordMultiplayerWin(Request $request)
+    {
+        if (session('user_role') !== 'student' || !session('user_id')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Please log in as a student to record a multiplayer win.',
+            ], 403);
+        }
+
+        $studentId = (int) session('user_id');
+        $updated = DB::table('users')
+            ->where('id', $studentId)
+            ->where('role', 'student')
+            ->increment('multiplayer_wins');
+
+        if (!$updated) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Student account was not found.',
+            ], 404);
+        }
+
+        $wins = (int) DB::table('users')
+            ->where('id', $studentId)
+            ->value('multiplayer_wins');
+
+        return response()->json([
+            'success' => true,
+            'wins' => $wins,
+            'tier' => $wins >= 20 ? 'gold' : ($wins >= 15 ? 'silver' : ($wins >= 10 ? 'bronze' : null)),
+        ]);
+    }
+
     /**
      * Called by Unity after a quiz/exam session.
      * POST /api/save_score
@@ -14,29 +48,55 @@ class ScoreController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'student_id'      => 'required|integer|exists:users,id',
+        $sessionStudentId = session('user_role') === 'student' ? session('user_id') : null;
+
+        $rules = [
             'class_id'        => 'nullable|integer',
             'subject'         => 'required|string|max:100',
-            'type'            => 'required|in:quiz,exam,assessment',
-            'quarter'         => 'required|integer|between:1,4',
-            'sequence_number' => 'required|integer|min:1',
+            'type'            => 'required|in:quiz,exam,assessment,quizbee',
+            'quarter'         => 'sometimes|integer|between:1,4',
+            'sequence_number' => 'sometimes|integer|min:1',
             'correct'         => 'required|integer|min:0',
             'total'           => 'required|integer|min:1',
-        ]);
+        ];
 
-        $studentId = (int) $request->student_id;
-        $subject   = strtolower(trim($request->subject));
-        $correct   = (int) $request->correct;
-        $total     = (int) $request->total;
+        if (!$sessionStudentId) {
+            $rules['student_id'] = 'required|integer|exists:users,id';
+        }
+
+        $validated = $request->validate($rules);
+
+        $studentId = (int) ($sessionStudentId ?? $validated['student_id']);
+        $subject   = strtolower(trim($validated['subject']));
+        $type      = $validated['type'] === 'assessment' ? 'quizbee' : $validated['type'];
+        $correct   = (int) $validated['correct'];
+        $total     = (int) $validated['total'];
+        $quarter   = (int) ($validated['quarter'] ?? 1);
+        $sequenceNumber = (int) ($validated['sequence_number'] ?? 1);
         $mistakes  = max(0, $total - $correct);
         $percent   = $total > 0 ? round(($correct / $total) * 100, 2) : 0;
+
+        if ($type === 'quizbee') {
+            app(QuizbeeHistory::class)->completeActiveAttempt();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Quizbee history is saved separately from grades.',
+                'correct' => $correct,
+                'total' => $total,
+                'mistakes' => $mistakes,
+                'percent' => $percent,
+                'highest_correct' => $correct,
+                'highest_percent' => $percent,
+                'is_new_high_score' => false,
+            ]);
+        }
 
         // Fetch student's previous highest score for this subject/type (or overall)
         $prevHighest = DB::table('student_scores')
             ->where('student_id', $studentId)
             ->where('subject', $subject)
-            ->where('type', $request->type)
+            ->where('type', $type)
             ->select(
                 DB::raw('MAX(correct) as max_correct'),
                 DB::raw('MAX(percent) as max_percent')
@@ -52,11 +112,11 @@ class ScoreController extends Controller
 
         DB::table('student_scores')->insert([
             'student_id'      => $studentId,
-            'class_id'        => $request->class_id ?: null,
+            'class_id'        => $validated['class_id'] ?? null,
             'subject'         => $subject,
-            'type'            => $request->type,
-            'quarter'         => $request->quarter,
-            'sequence_number' => $request->sequence_number,
+            'type'            => $type,
+            'quarter'         => $quarter,
+            'sequence_number' => $sequenceNumber,
             'correct'         => $correct,
             'total'           => $total,
             'percent'         => $percent,

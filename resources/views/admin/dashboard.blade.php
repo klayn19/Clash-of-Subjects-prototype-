@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>Clash of Subject – Admin Dashboard</title>
   <meta name="theme-color" content="#0e1530">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -75,6 +76,12 @@
     .student-action-btn--edit { background: var(--gold); color: #090d1e; }
     .student-action-btn--grades { background: #218838; color: #fff; box-shadow: 4px 4px 0 #145523; }
     .student-action-btn--grades:hover { background: #2fb34b; }
+    .student-verification-badge { display: inline-block; min-width: 96px; padding: 6px 8px; border: 2px solid; font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-align: center; }
+    .student-verification-badge--verified { color: #5dde90; border-color: var(--green); background: rgba(39,174,96,0.16); }
+    .student-verification-badge--unverified { color: #ffb4a8; border-color: var(--red); background: rgba(192,57,43,0.16); }
+    .student-action-btn--remove { background: var(--red); color: #fff; box-shadow: 3px 3px 0 #600010; }
+    .student-action-btn--remove:hover { background: #e04b3b; }
+    .student-action-btn--remove:disabled { opacity: 0.6; cursor: wait; }
     .section-action-buttons { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
     .section-action-btn { min-height: 34px; padding: 7px 10px; font-size: 10px; line-height: 1.2; white-space: nowrap; }
     .section-action-btn:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
@@ -139,6 +146,9 @@
 
     /* ===== TEACHERS LIST ===== */
     .teacher-card { display: flex; align-items: center; gap: 14px; background: var(--blue-ui); border: 2px solid var(--blue-mid); padding: 14px 18px; margin-bottom: 10px; }
+    .teacher-card-details { min-width: 0; overflow-wrap: anywhere; }
+    .teacher-delete-btn { margin-left: auto; flex-shrink: 0; padding: 8px 12px; background: var(--red); box-shadow: 3px 3px 0 #600010; color: #fff; }
+    .teacher-delete-btn:hover { background: #e04b3b; }
     .teacher-avatar { width: 40px; height: 40px; background: var(--blue-mid); border: 2px solid var(--gold-dim); display: flex; align-items: center; justify-content: center; font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 600; color: var(--gold); flex-shrink: 0; }
     .teacher-name { font-size: 18px; color: rgba(220,235,255,0.9); }
     .teacher-email { font-size: 14px; color: var(--text-muted); }
@@ -376,6 +386,7 @@
                   <th>LRN</th>
                   <th>NAME</th>
                   <th>SECTION</th>
+                  <th>VERIFICATION</th>
                   <th>GRADE</th>
                   <th aria-sort="none" id="adminScoreSortHeader">
                     <button type="button" class="sort-header" onclick="sortAdminStudentsByScore()" aria-label="Sort students by overall percentage">
@@ -408,6 +419,11 @@
                     <td>{{ $s->first_name }} {{ $s->last_name }}</td>
                     <td>{{ $s->section ?: '—' }}</td>
                     <td>
+                      <span class="student-verification-badge {{ $s->is_verified ? 'student-verification-badge--verified' : 'student-verification-badge--unverified' }}">
+                        {{ $s->is_verified ? 'VERIFIED' : 'NOT VERIFIED' }}
+                      </span>
+                    </td>
+                    <td>
                       <span class="grade-badge {{ $gradeClass }}">{{ $pct !== null ? $pct.'%' : 'N/A' }}</span>
                     </td>
                     <td>
@@ -430,11 +446,14 @@
                         onclick="openGrades({{ $s->id }}, '{{ addslashes($s->first_name.' '.$s->last_name) }}')">
                         <i class="fas fa-chart-bar"></i> GRADES
                       </button>
+                      <button type="button" class="pixel-btn btn-sm student-action-btn student-action-btn--remove" onclick="removeStudent({{ $s->id }}, this)">
+                        <i class="fas fa-trash"></i> REMOVE
+                      </button>
                       </div>
                     </td>
                   </tr>
                 @empty
-                  <tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:20px;">No students registered yet.</td></tr>
+                  <tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:20px;">No students registered yet.</td></tr>
                 @endforelse
               </tbody>
             </table>
@@ -458,17 +477,24 @@
             <p style="color:var(--text-muted);font-size:18px;">No teachers registered yet. Use the REGISTER tab to add one.</p>
           @else
             <div style="margin-bottom:14px;font-size:16px;color:var(--text-dim);">
-              Total teachers: <strong style="color:var(--gold);">{{ $teachers->count() }}</strong>
+              Total teachers: <strong id="teacherCount" style="color:var(--gold);">{{ $teachers->count() }}</strong>
             </div>
+            <div id="teacherList">
             @foreach($teachers as $t)
-              <div class="teacher-card">
+              <div class="teacher-card" data-teacher-card="{{ $t->id }}">
                 <div class="teacher-avatar">{{ strtoupper(substr($t->first_name,0,1)) }}</div>
-                <div>
+                <div class="teacher-card-details">
                   <div class="teacher-name">{{ $t->first_name }} {{ $t->last_name }}</div>
                   <div class="teacher-email">{{ $t->email }}</div>
+                  <div class="teacher-email">Subject: {{ $t->subject ? ucfirst($t->subject) : 'Not assigned' }}</div>
                 </div>
+                <button type="button" class="pixel-btn teacher-delete-btn" onclick="removeTeacher({{ $t->id }}, this)" aria-label="Delete teacher {{ $t->first_name }} {{ $t->last_name }}">
+                  <i class="fas fa-trash" aria-hidden="true"></i> DELETE
+                </button>
               </div>
             @endforeach
+            </div>
+            <p id="noTeachersMessage" style="display:none;color:var(--text-muted);font-size:16px;">No teachers registered yet. Use the REGISTER tab to add one.</p>
           @endif
           <div class="btn-row" style="margin-top:16px;">
             <button class="pixel-btn" onclick="showSection('teacher', document.getElementById('nav-teacher'))">
@@ -497,6 +523,15 @@
               <div class="form-group col-span-2">
                 <label class="form-label" for="t_email">EMAIL ADDRESS (LOGIN ID)</label>
                 <input type="email" id="t_email" name="email" class="pixel-input" required placeholder="teacher@school.edu">
+              </div>
+              <div class="form-group col-span-2">
+                <label class="form-label" for="t_subject">SUBJECT</label>
+                <select id="t_subject" name="subject" class="pixel-input" required>
+                  <option value="" disabled selected>Select a subject</option>
+                  <option value="english">English</option>
+                  <option value="math">Math</option>
+                  <option value="science">Science</option>
+                </select>
               </div>
               <div class="form-group">
                 <label class="form-label" for="t_password">PASSWORD</label>
@@ -741,7 +776,7 @@
     if (!noResults && rows.length) {
       noResults = document.createElement('tr');
       noResults.id = 'studentNoResults';
-      noResults.innerHTML = '<td colspan="7" style="text-align:center;color:var(--text-muted);padding:20px;">No students match your filters.</td>';
+      noResults.innerHTML = '<td colspan="8" style="text-align:center;color:var(--text-muted);padding:20px;">No students match your filters.</td>';
       document.getElementById('studentsTableBody').appendChild(noResults);
     }
     if (noResults) noResults.style.display = filteredRows.length ? 'none' : 'table-row';
@@ -819,6 +854,71 @@
 
   function closeModal(id) {
     document.getElementById(id).classList.remove('open');
+  }
+
+  async function removeStudent(id, button) {
+    const row = button.closest('.student-row');
+    const studentName = row?.cells[2]?.textContent.trim() || 'this student';
+    if (!confirm(`Permanently remove ${studentName} and their saved scores and class links? This cannot be undone.`)) return;
+
+    button.disabled = true;
+    try {
+      const response = await fetch('/backend/admin/delete_student', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+        },
+        body: JSON.stringify({ student_id: id })
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || 'Could not remove the student.');
+      }
+
+      async function removeTeacher(id, button) {
+        const card = button.closest('[data-teacher-card]');
+        const teacherName = card?.querySelector('.teacher-name')?.textContent.trim() || 'this teacher';
+        if (!confirm(`Permanently remove ${teacherName}, their classes, questions, and class scores? Student accounts will remain. This cannot be undone.`)) return;
+
+        button.disabled = true;
+        try {
+          const response = await fetch('/backend/admin/delete_teacher', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+              'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: JSON.stringify({ teacher_id: id })
+          });
+          const data = await response.json();
+          if (!response.ok || !data.success) {
+            throw new Error(data.message || 'Could not remove the teacher.');
+          }
+
+          card.remove();
+          const remainingTeachers = document.querySelectorAll('[data-teacher-card]').length;
+          const count = document.getElementById('teacherCount');
+          if (count) count.textContent = String(remainingTeachers);
+          if (remainingTeachers === 0) {
+            document.getElementById('noTeachersMessage').style.display = 'block';
+          }
+        } catch (error) {
+          console.error('Teacher removal failed:', error);
+          alert(error.message || 'Could not remove the teacher. Please try again.');
+          button.disabled = false;
+        }
+      }
+
+      row.remove();
+      filterStudents();
+    } catch (error) {
+      console.error('Student removal failed:', error);
+      alert(error.message || 'Could not remove the student. Please try again.');
+      button.disabled = false;
+    }
   }
 
   async function saveStudent() {

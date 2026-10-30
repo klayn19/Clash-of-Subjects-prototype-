@@ -5,11 +5,9 @@ use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\ScoreController;
 use App\Http\Controllers\GeneralKnowledgeController;
 
-// Unity: fetch a question
-Route::get('/get_question', [TeacherController::class, 'getQuestion']);
-
 // Unity: save a score
-Route::post('/save_score', [ScoreController::class, 'store']);
+Route::post('/save_score', [ScoreController::class, 'store'])->middleware('web');
+Route::post('/multiplayer/victory', [ScoreController::class, 'recordMultiplayerWin'])->middleware('web');
 
 // Get student high score
 Route::get('/student_high_score', [ScoreController::class, 'getHighScore']);

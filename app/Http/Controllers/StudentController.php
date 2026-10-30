@@ -4,6 +4,10 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
+use App\Models\Section;
 
 class StudentController extends Controller
 {
@@ -14,10 +18,22 @@ class StudentController extends Controller
         }
 
         $studentId = session('user_id');
+        Section::syncStudentRoster((int) $studentId);
+        $multiplayerWins = (int) DB::table('users')
+            ->where('id', $studentId)
+            ->value('multiplayer_wins');
+        $leaderboardClasses = DB::table('class_students')
+            ->join('classes', 'class_students.class_id', '=', 'classes.id')
+            ->where('class_students.student_id', $studentId)
+            ->select('classes.id', 'classes.name', 'classes.section')
+            ->orderBy('classes.section')
+            ->orderBy('classes.name')
+            ->get();
 
         // Fetch grades (scores)
         $scores = DB::table('student_scores')
             ->where('student_id', $studentId)
+            ->whereNotIn('type', ['quizbee', 'assessment'])
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -38,7 +54,29 @@ class StudentController extends Controller
             ->get();
         $unreadNotes = $notes->whereNull('read_at')->count();
 
-        return view('student.dashboard', compact('scores', 'notes', 'unreadNotes', 'bestSubjectScores'));
+        $quizbeeHistoryAvailable = Schema::hasTable('quizbee_attempts')
+            && Schema::hasTable('quizbee_attempt_questions');
+        $quizbeeAttempts = collect();
+        if ($quizbeeHistoryAvailable) {
+            $quizbeeAttempts = DB::table('quizbee_attempts')
+                ->join('quizbee_attempt_questions', 'quizbee_attempts.id', '=', 'quizbee_attempt_questions.attempt_id')
+                ->where('quizbee_attempts.student_id', $studentId)
+                ->whereNotNull('quizbee_attempt_questions.answered_at')
+                ->orderByDesc('quizbee_attempts.started_at')
+                ->orderBy('quizbee_attempt_questions.id')
+                ->select(
+                    'quizbee_attempts.id',
+                    'quizbee_attempts.started_at',
+                    'quizbee_attempt_questions.subject',
+                    'quizbee_attempt_questions.question',
+                    'quizbee_attempt_questions.correct_answer_key',
+                    'quizbee_attempt_questions.correct_answer_text'
+                )
+                ->get()
+                ->groupBy('id');
+        }
+
+        return view('student.dashboard', compact('scores', 'notes', 'unreadNotes', 'bestSubjectScores', 'multiplayerWins', 'leaderboardClasses', 'quizbeeAttempts', 'quizbeeHistoryAvailable'));
     }
 
     public function markNoteRead(int $noteId)
@@ -92,13 +130,21 @@ class StudentController extends Controller
             return response()->json(['success' => false, 'message' => 'Please log in as a student to use QuizBee.'], 403);
         }
 
+        if (!Schema::hasTable('quizbee_attempts') || !Schema::hasTable('quizbee_attempt_questions')) {
+            Log::error('QuizBee access is unavailable because its history tables have not been migrated.');
+            return response()->json([
+                'success' => false,
+                'message' => 'QuizBee is temporarily unavailable while the site is being updated. Please try again later.',
+            ], 503);
+        }
+
         $validated = $request->validate([
             'code' => 'required|string|regex:/^\d{6}$/',
         ]);
 
         $appKey = (string) config('app.key');
         if ($appKey === '') {
-            \Log::error('QuizBee code validation is unavailable because the application key is not configured.');
+            Log::error('QuizBee code validation is unavailable because the application key is not configured.');
             return response()->json(['success' => false, 'message' => 'QuizBee access is temporarily unavailable. Please contact your teacher.'], 500);
         }
 
@@ -140,9 +186,19 @@ class StudentController extends Controller
             return response()->json(['success' => false, 'message' => 'Your student account could not be verified. Please log in again.'], 403);
         }
 
+        $attemptId = (string) Str::uuid();
+        DB::table('quizbee_attempts')->insert([
+            'id' => $attemptId,
+            'student_id' => $student->id,
+            'started_at' => $now,
+            'created_at' => $now,
+            'updated_at' => $now,
+        ]);
+
         session([
             'quizbee_access_until' => $accessCode->expires_at,
             'quizbee_access_student_id' => $student->id,
+            'quizbee_attempt_id' => $attemptId,
         ]);
 
         return response()->json([

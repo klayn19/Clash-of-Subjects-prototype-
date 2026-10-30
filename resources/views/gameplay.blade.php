@@ -1,3 +1,14 @@
+@php
+    $unityBuildPath = public_path($unityBuildDirectory . '/Build');
+    $unityBuildVersion = hash('sha256', implode('|', array_map(
+        static function ($extension) use ($unityBuildPath, $unityBuildName) {
+            $path = $unityBuildPath . DIRECTORY_SEPARATOR . $unityBuildName . '.' . $extension;
+
+            return filemtime($path) . ':' . filesize($path);
+        },
+        ['loader.js', 'data', 'framework.js', 'wasm']
+    )));
+@endphp
 <!DOCTYPE html>
 <html lang="en-us">
 <head>
@@ -871,43 +882,205 @@
             background: rgba(180, 30, 30, 0.9);
             transform: translateY(-2px);
         }
+
+        @media (max-width: 767px) {
+            .results-modal-backdrop {
+                align-items: flex-start;
+                overflow-y: auto;
+                padding: max(8px, env(safe-area-inset-top)) 10px max(8px, env(safe-area-inset-bottom));
+            }
+
+            .results-modal-card {
+                width: 100%;
+                max-height: calc(100vh - 16px);
+                max-height: calc(100dvh - 16px);
+                margin: 0 auto;
+                padding: 22px 16px;
+                overflow-y: auto;
+                overscroll-behavior: contain;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .results-modal-header h2 {
+                font-size: clamp(9px, 3vw, 13px);
+                line-height: 1.6;
+                padding: 0 12px;
+            }
+
+            .congrats-title {
+                font-size: clamp(8px, 2.5vw, 10px);
+            }
+
+            .congrats-message {
+                line-height: 1.25;
+            }
+
+            .results-btn {
+                min-height: 44px;
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 991px) and (orientation: landscape) and (max-height: 500px) {
+            .results-modal-backdrop {
+                align-items: flex-start;
+                overflow-y: auto;
+                padding: 4px max(8px, env(safe-area-inset-left)) 4px max(8px, env(safe-area-inset-right));
+            }
+
+            .results-modal-card {
+                width: 100%;
+                max-width: 900px;
+                max-height: calc(100vh - 8px);
+                max-height: calc(100dvh - 8px);
+                margin: 0 auto;
+                padding: 10px 14px;
+                overflow-y: auto;
+                overscroll-behavior: contain;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .results-modal-header .header-icon {
+                display: none;
+            }
+
+            .results-modal-header h2 {
+                font-size: 10px;
+                margin-bottom: 2px;
+            }
+
+            .results-modal-header .header-subtitle {
+                font-size: 13px;
+                margin-bottom: 8px;
+            }
+
+            .congrats-banner {
+                padding: 6px 10px;
+                margin-bottom: 8px;
+            }
+
+            .congrats-sparkles {
+                display: none;
+            }
+
+            .congrats-title {
+                font-size: 8px;
+            }
+
+            .congrats-message {
+                font-size: 14px;
+            }
+
+            .results-stats-grid {
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+                gap: 6px;
+                margin-bottom: 8px;
+            }
+
+            .stat-card {
+                padding: 6px 4px;
+            }
+
+            .stat-card .stat-label {
+                font-size: 6px;
+                gap: 3px;
+            }
+
+            .stat-card .stat-value {
+                font-size: 22px;
+                overflow-wrap: anywhere;
+            }
+
+            .results-actions {
+                gap: 6px;
+            }
+
+            .results-btn {
+                min-height: 36px;
+                padding: 8px 10px;
+                font-size: 7px;
+            }
+
+            .modal-close-x {
+                top: 6px;
+                right: 8px;
+            }
+        }
     </style>
 </head>
-<body>
+<body
+    data-student-id="{{ session('user_role') === 'student' ? session('user_id') : '' }}"
+    data-get-question-url="{{ url('/api/get_question') }}"
+    data-save-score-url="{{ url('/api/save_score') }}"
+    data-generate-ai-question-url="{{ url('/api/generate_ai_question') }}"
+    data-student-high-score-url="{{ url('/api/student_high_score') }}"
+>
 
     <!-- NETWORK REQUEST INTERCEPTOR & CYCLE END DETECTOR -->
     <script>
         let isLastQuestionReached = false;
         let isCycleModalShown = false;
+        const gameplayStudentId = document.body.dataset.studentId || null;
+        const gameplayApiEndpoints = {
+            getQuestion: document.body.dataset.getQuestionUrl,
+            saveScore: document.body.dataset.saveScoreUrl,
+            generateAiQuestion: document.body.dataset.generateAiQuestionUrl,
+            studentHighScore: document.body.dataset.studentHighScoreUrl,
+        };
 
         function redirectGameApiUrl(urlStr) {
             if (typeof urlStr === 'string') {
                 if (urlStr.includes('get_question')) {
                     const qIndex = urlStr.indexOf('?');
                     const queryStr = qIndex !== -1 ? urlStr.substring(qIndex) : '';
-                    return window.location.origin + '/api/get_question' + queryStr;
+                    return gameplayApiEndpoints.getQuestion + queryStr;
                 }
                 if (urlStr.includes('save_score')) {
                     const qIndex = urlStr.indexOf('?');
-                    const queryStr = qIndex !== -1 ? urlStr.substring(qIndex) : '';
-                    return window.location.origin + '/api/save_score' + queryStr;
+                    const path = gameplayApiEndpoints.saveScore;
+                    const params = new URLSearchParams(qIndex !== -1 ? urlStr.substring(qIndex + 1) : '');
+                    if (gameplayStudentId && !params.has('student_id')) {
+                        params.set('student_id', gameplayStudentId);
+                    }
+                    const queryString = params.toString();
+                    return path + (queryString ? '?' + queryString : '');
                 }
                 if (urlStr.includes('generate_ai_question')) {
                     const qIndex = urlStr.indexOf('?');
                     const queryStr = qIndex !== -1 ? urlStr.substring(qIndex) : '';
-                    return window.location.origin + '/api/generate_ai_question' + queryStr;
+                    return gameplayApiEndpoints.generateAiQuestion + queryStr;
                 }
             }
             return urlStr;
+        }
+
+        function addGameplayStudentIdToScoreBody(url, body) {
+            if (!gameplayStudentId || typeof url !== 'string' || !url.includes('save_score') || typeof body !== 'string') {
+                return body;
+            }
+
+            try {
+                const payload = JSON.parse(body);
+                if (payload && typeof payload === 'object' && !Array.isArray(payload) && !payload.student_id) {
+                    payload.student_id = gameplayStudentId;
+                    return JSON.stringify(payload);
+                }
+            } catch (error) {
+                // Leave non-JSON payloads unchanged; student_id is also attached to the request URL.
+            }
+
+            return body;
         }
 
         async function handleCycleCompletedEvent(data) {
             if (isCycleModalShown) return;
 
             // Try to fetch student's overall high score if missing
-            if (!data || data.highest_percent === undefined) {
+            if ((!data || data.highest_percent === undefined) && gameplayStudentId) {
                 try {
-                    const res = await originalFetch(window.location.origin + '/api/student_high_score');
+                    const highScoreUrl = new URL(gameplayApiEndpoints.studentHighScore, window.location.origin);
+                    highScoreUrl.searchParams.set('student_id', gameplayStudentId);
+                    const res = await originalFetch(highScoreUrl.toString());
                     const hsData = await res.json();
                     if (hsData && hsData.success) {
                         data = data || {};
@@ -925,6 +1098,8 @@
             if (urlStr.includes('save_score')) {
                 if (data && (data.success || data.correct !== undefined)) {
                     handleCycleCompletedEvent(data);
+                } else {
+                    console.error('Score recording failed:', status, data || 'The server returned an unreadable response.');
                 }
             } else if (urlStr.includes('get_question')) {
                 if (status === 404 || (data && (data.completed || data.cycle_finished))) {
@@ -941,6 +1116,12 @@
         window.fetch = async function(...args) {
             if (args[0]) {
                 args[0] = redirectGameApiUrl(args[0]);
+            }
+            if (args[1] && args[1].body !== undefined) {
+                args[1] = {
+                    ...args[1],
+                    body: addGameplayStudentIdToScoreBody(args[0], args[1].body),
+                };
             }
             const response = await originalFetch.apply(this, args);
             try {
@@ -971,6 +1152,9 @@
         };
 
         window.XMLHttpRequest.prototype.send = function(...args) {
+            if (args.length > 0) {
+                args[0] = addGameplayStudentIdToScoreBody(this._reqUrl, args[0]);
+            }
             this.addEventListener('load', function() {
                 try {
                     if (this._reqUrl && (this._reqUrl.includes('save_score') || this._reqUrl.includes('get_question'))) {
@@ -989,10 +1173,10 @@
         <div
             id="unity-container"
             class="unity-frame"
-            data-loader-url="{{ asset($unityBuildDirectory . '/Build/' . $unityBuildName . '.loader.js') }}?v={{ filemtime(public_path($unityBuildDirectory . '/Build/' . $unityBuildName . '.loader.js')) }}"
-            data-data-url="{{ asset($unityBuildDirectory . '/Build/' . $unityBuildName . '.data') }}?v={{ filemtime(public_path($unityBuildDirectory . '/Build/' . $unityBuildName . '.data')) }}"
-            data-framework-url="{{ asset($unityBuildDirectory . '/Build/' . $unityBuildName . '.framework.js') }}?v={{ filemtime(public_path($unityBuildDirectory . '/Build/' . $unityBuildName . '.framework.js')) }}"
-            data-code-url="{{ asset($unityBuildDirectory . '/Build/' . $unityBuildName . '.wasm') }}?v={{ filemtime(public_path($unityBuildDirectory . '/Build/' . $unityBuildName . '.wasm')) }}"
+            data-loader-url="{{ asset($unityBuildDirectory . '/Build/' . $unityBuildName . '.loader.js') }}?v={{ $unityBuildVersion }}"
+            data-data-url="{{ asset($unityBuildDirectory . '/Build/' . $unityBuildName . '.data') }}?v={{ $unityBuildVersion }}"
+            data-framework-url="{{ asset($unityBuildDirectory . '/Build/' . $unityBuildName . '.framework.js') }}?v={{ $unityBuildVersion }}"
+            data-code-url="{{ asset($unityBuildDirectory . '/Build/' . $unityBuildName . '.wasm') }}?v={{ $unityBuildVersion }}"
             data-streaming-assets-url="{{ asset($unityBuildDirectory . '/StreamingAssets') }}"
         >
             <canvas id="unity-canvas" width="960" height="600" tabindex="0"></canvas>
@@ -1009,7 +1193,7 @@
         </div>
     </div>
     <!-- PORTRAIT ORIENTATION ROTATE OVERLAY FOR MOBILE PHONES -->
-    <div id="portrait-rotate-overlay" role="dialog" aria-modal="true" aria-label="Rotate device to landscape">
+    <div id="portrait-rotate-overlay" role="dialog" aria-modal="true" aria-label="Rotate device to landscape" style="display: none;">
         <div class="rotate-box">
             <div class="corner tl"></div>
             <div class="corner tr"></div>
@@ -1099,6 +1283,8 @@
         /* ============================================================
            AUTO-FIT GAMEPLAY CANVAS
            ============================================================ */
+        window.fitMode = window.fitMode || 'CONTAIN';
+
         function fitGameToViewport() {
             const container = document.getElementById('unity-container');
             const gameStage = document.getElementById('game-stage');
@@ -1117,8 +1303,9 @@
 
             // On mobile phones & tablets, adapt to fill 100% of the screen (eliminating black side bars)
             const isMobile = window.innerWidth <= 1024 || (('ontouchstart' in window) || navigator.maxTouchPoints > 0);
+            const currentFitMode = (typeof window.fitMode === 'string' && window.fitMode) ? window.fitMode : 'CONTAIN';
 
-            if (isMobile || fitMode === 'STRETCH') {
+            if (isMobile || currentFitMode === 'STRETCH') {
                 container.style.width  = Math.floor(availW) + 'px';
                 container.style.height = Math.floor(availH) + 'px';
                 return;
@@ -1160,41 +1347,58 @@
            ============================================================ */
         let globalUnityInstance = null;
 
-        async function autoLockLandscape() {
-            try {
-                if (screen.orientation && typeof screen.orientation.lock === 'function') {
-                    await screen.orientation.lock('landscape');
-                    return;
-                }
-            } catch (e) {
-                // screen.orientation.lock might fail without fullscreen or user gesture
+        function lockLandscape() {
+            if (screen.orientation && typeof screen.orientation.lock === 'function') {
+                return screen.orientation.lock('landscape').catch((err) => {
+                    console.warn('Landscape orientation lock unavailable:', err);
+                });
+            }
+            return Promise.resolve();
+        }
+
+        function requestLandscapeFromUserGesture() {
+            const docEl = document.documentElement;
+            const requestFS = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.mozRequestFullScreen || docEl.msRequestFullscreen;
+            const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement;
+
+            if (isFullscreen) {
+                lockLandscape();
+                return;
             }
 
-            try {
-                const docEl = document.documentElement;
-                const requestFS = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.mozRequestFullScreen || docEl.msRequestFullscreen;
-                if (!document.fullscreenElement && !document.webkitFullscreenElement && requestFS) {
-                    await requestFS.call(docEl);
+            if (requestFS) {
+                // Start the fullscreen request before yielding so the browser sees the user gesture.
+                try {
+                    Promise.resolve(requestFS.call(docEl))
+                        .then(lockLandscape)
+                        .catch((err) => {
+                            console.warn('Fullscreen unavailable:', err);
+                            lockLandscape();
+                        });
+                } catch (err) {
+                    console.warn('Fullscreen unavailable:', err);
+                    lockLandscape();
                 }
-                if (screen.orientation && typeof screen.orientation.lock === 'function') {
-                    await screen.orientation.lock('landscape');
-                }
-            } catch (err) {
-                console.warn('Orientation lock notice:', err);
+                return;
             }
+
+            lockLandscape();
         }
 
         async function forceLandscapeFullscreen() {
-            await autoLockLandscape();
+            requestLandscapeFromUserGesture();
             setTimeout(fitGameToViewport, 150);
             setTimeout(fitGameToViewport, 400);
         }
 
         function toggleFullscreen() {
-            autoLockLandscape();
-
             if (globalUnityInstance) {
-                try { globalUnityInstance.SetFullscreen(1); } catch(e) {}
+                try {
+                    globalUnityInstance.SetFullscreen(1);
+                    lockLandscape();
+                } catch (err) {
+                    console.warn('Unity fullscreen unavailable:', err);
+                }
                 return;
             }
 
@@ -1205,10 +1409,10 @@
             if (!document.fullscreenElement && !document.webkitFullscreenElement) {
                 if (requestFS) {
                     Promise.resolve(requestFS.call(docEl)).then(() => {
-                        if (screen.orientation && typeof screen.orientation.lock === 'function') {
-                            screen.orientation.lock('landscape').catch(() => {});
-                        }
-                    }).catch(err => console.warn('Fullscreen unavailable:', err));
+                        lockLandscape();
+                    }).catch((err) => {
+                        console.warn('Fullscreen unavailable:', err);
+                    });
                 }
             } else {
                 if (exitFS) {
@@ -1223,25 +1427,35 @@
                    (('ontouchstart' in window) || navigator.maxTouchPoints > 0);
         }
 
-        function setupAutoRotateOnLaunch() {
-            if (!isMobilePhoneOrTablet()) return;
+        function updatePortraitOverlay() {
+            const overlay = document.getElementById('portrait-rotate-overlay');
+            if (!overlay) return;
 
-            // Attempt direct lock if browser allows without user interaction
-            if (screen.orientation && typeof screen.orientation.lock === 'function') {
-                screen.orientation.lock('landscape').catch(() => {});
+            const isPortraitMobile = isMobilePhoneOrTablet() && window.matchMedia('(max-width: 991px) and (orientation: portrait)').matches;
+            overlay.style.display = isPortraitMobile ? 'flex' : 'none';
+        }
+
+        function setupAutoRotateOnLaunch() {
+            if (!isMobilePhoneOrTablet()) {
+                updatePortraitOverlay();
+                return;
             }
 
-            // Bind first touch/click anywhere on page to trigger orientation lock
-            const onFirstUserAction = async () => {
-                await autoLockLandscape();
-                window.removeEventListener('touchstart', onFirstUserAction);
-                window.removeEventListener('click', onFirstUserAction);
-                window.removeEventListener('pointerdown', onFirstUserAction);
+            const onFirstUserAction = (event) => {
+                if (!event.target.closest('#unity-canvas, .rotate-btn')) return;
+
+                requestLandscapeFromUserGesture();
+                window.removeEventListener('pointerdown', onFirstUserAction, true);
+                window.removeEventListener('touchstart', onFirstUserAction, true);
+                window.removeEventListener('click', onFirstUserAction, true);
             };
 
-            window.addEventListener('touchstart', onFirstUserAction, { once: true, passive: true });
-            window.addEventListener('click', onFirstUserAction, { once: true });
-            window.addEventListener('pointerdown', onFirstUserAction, { once: true });
+            window.addEventListener('pointerdown', onFirstUserAction, true);
+            window.addEventListener('touchstart', onFirstUserAction, { once: true, passive: true, capture: true });
+            window.addEventListener('click', onFirstUserAction, true);
+            window.addEventListener('resize', updatePortraitOverlay);
+            window.addEventListener('orientationchange', updatePortraitOverlay);
+            setTimeout(updatePortraitOverlay, 700);
         }
 
         document.addEventListener('DOMContentLoaded', setupAutoRotateOnLaunch);
@@ -1354,7 +1568,7 @@
             }).then((unityInstance) => {
                 globalUnityInstance = unityInstance;
                 loadingBar.style.display = "none";
-                autoLockLandscape();
+                lockLandscape();
                 setTimeout(fitGameToViewport, 100);
                 setTimeout(fitGameToViewport, 300);
             }).catch((err) => {

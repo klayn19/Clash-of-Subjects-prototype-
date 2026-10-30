@@ -42,11 +42,21 @@ class QuizBeeAccessTest extends TestCase
             $table->timestamp('redeemed_at')->nullable();
             $table->timestamps();
         });
+
+        Schema::create('quizbee_attempts', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->unsignedBigInteger('student_id');
+            $table->timestamp('started_at');
+            $table->timestamp('completed_at')->nullable();
+            $table->timestamp('email_sent_at')->nullable();
+            $table->timestamps();
+        });
     }
 
     protected function tearDown(): void
     {
         Schema::dropIfExists('quizbee_access_codes');
+        Schema::dropIfExists('quizbee_attempts');
         Schema::dropIfExists('student_notes');
         Schema::dropIfExists('users');
 
@@ -81,6 +91,9 @@ class QuizBeeAccessTest extends TestCase
 
         $accessCode = DB::table('quizbee_access_codes')->first();
         $this->assertNotNull($accessCode->redeemed_at);
+        $this->assertDatabaseHas('quizbee_attempts', [
+            'student_id' => $studentId,
+        ]);
 
         $quizbeeGameplay = $this->withSession([
             'user_id' => $studentId,
@@ -90,6 +103,7 @@ class QuizBeeAccessTest extends TestCase
         ])->get('/gameplay?mode=quizbee&uid=' . $studentId);
         $quizbeeGameplay->assertOk()
             ->assertSee('unitygameQuizbee\\/Build\\/unitygameQuizbee.loader.js', false);
+        $this->assertUnityAssetsShareVersion($quizbeeGameplay->getContent());
 
         $regularGameplay = $this->withSession([
             'user_id' => $studentId,
@@ -97,6 +111,7 @@ class QuizBeeAccessTest extends TestCase
         ])->get('/gameplay');
         $regularGameplay->assertOk()
             ->assertSee('unitygame\\/Build\\/unityFinal.loader.js', false);
+        $this->assertUnityAssetsShareVersion($regularGameplay->getContent());
 
         $this->withSession([
             'user_id' => $studentId,
@@ -162,5 +177,13 @@ class QuizBeeAccessTest extends TestCase
             'created_at' => now(),
             'updated_at' => now(),
         ]);
+    }
+
+    private function assertUnityAssetsShareVersion(string $html): void
+    {
+        preg_match_all('/data-(?:loader|data|framework|code)-url="[^"]*\?v=([^"]+)"/', $html, $matches);
+
+        $this->assertCount(4, $matches[1]);
+        $this->assertCount(1, array_unique($matches[1]));
     }
 }

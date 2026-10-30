@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\QuestionAnswer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -20,21 +21,24 @@ class GeneralKnowledgeController extends Controller
     }
 
     /**
-     * Fetch 15 random general knowledge questions for the chosen subject.
+     * Fetch 15 random general knowledge questions for the chosen subject and quarter.
      */
     public function getQuestions(Request $request)
     {
         $request->validate([
             'subject' => 'required|string|in:math,science,english',
+            'quarter' => 'required|integer|between:1,4',
         ]);
 
         $subject = strtolower(trim($request->subject));
+        $quarter = (int) $request->quarter;
 
-        // Retrieve 15 random general knowledge questions for the subject
+        // Retrieve 15 random general knowledge questions for the selected subject and quarter.
         $questions = DB::table('questions')
             ->whereNull('class_id')
             ->where('subject', $subject)
             ->where('type', 'quiz')
+            ->where('quarter', $quarter)
             ->inRandomOrder()
             ->limit(15)
             ->get();
@@ -43,7 +47,7 @@ class GeneralKnowledgeController extends Controller
         if ($questions->isEmpty()) {
             return response()->json([
                 'success' => false,
-                'message' => 'No questions found for this subject.',
+                'message' => 'No questions found for this subject and quarter.',
             ], 404);
         }
 
@@ -51,6 +55,7 @@ class GeneralKnowledgeController extends Controller
         return response()->json([
             'success' => true,
             'subject' => $subject,
+            'quarter' => $quarter,
             'questions' => $questions->map(function ($q) {
                 return [
                     'id' => $q->id,
@@ -59,7 +64,12 @@ class GeneralKnowledgeController extends Controller
                     'B' => $q->choice_b,
                     'C' => $q->choice_c,
                     'D' => $q->choice_d,
-                    'answer' => $q->answer,
+                    'answer' => QuestionAnswer::normalizeKey($q->answer, [
+                        'A' => $q->choice_a,
+                        'B' => $q->choice_b,
+                        'C' => $q->choice_c,
+                        'D' => $q->choice_d,
+                    ]),
                     'explanation' => $q->explanation,
                 ];
             }),
@@ -68,7 +78,7 @@ class GeneralKnowledgeController extends Controller
 
     /**
      * Unity GK Arena AI endpoint — called by the GK Arena scene in Unity.
-     * GET /backend/generate_ai_question.php?grade_level=Grade+8&difficulty=5&subject=math&answered=1,2,3
+     * GET /backend/generate_ai_question.php?grade_level=Grade+8&difficulty=5&subject=math&quarter=2&answered=1,2,3
      *
      * Returns ONE random question from the questions table that the student
      * has not yet answered in this session.
@@ -80,21 +90,31 @@ class GeneralKnowledgeController extends Controller
         $grade      = $request->input('grade_level', '');   // e.g. "Grade 8"
         $answered   = $request->input('answered', '');      // comma-separated IDs already answered
         $difficulty = $request->input('difficulty', '');    // numeric 1-5 or Easy/Average/Difficult
+        $request->validate([
+            'quarter' => 'sometimes|nullable|integer|between:1,4',
+        ]);
+        $quarter = $request->filled('quarter') ? (int) $request->input('quarter') : null;
 
         // Parse already-answered IDs so we don't repeat them.
         $answeredIds = array_filter(array_map('intval', explode(',', $answered)));
 
-        $query = DB::table('questions')->whereNull('class_id');
+        $baseQuery = DB::table('questions')->whereNull('class_id');
 
         // Filter by subject when provided and valid.
         if (in_array($subject, ['math', 'science', 'english'])) {
-            $query->where('subject', $subject);
+            $baseQuery->where('subject', $subject);
+        }
+
+        if ($quarter !== null) {
+            $baseQuery->where('quarter', $quarter);
         }
 
         // Exclude already-answered questions.
         if (!empty($answeredIds)) {
-            $query->whereNotIn('id', $answeredIds);
+            $baseQuery->whereNotIn('id', $answeredIds);
         }
+
+        $query = clone $baseQuery;
 
         // Map numeric difficulty (1-5) to label if needed.
         if ($difficulty !== '') {
@@ -108,12 +128,8 @@ class GeneralKnowledgeController extends Controller
         $question = $query->inRandomOrder()->first();
 
         if (!$question) {
-            // Fallback: try without difficulty filter before giving up.
-            $fallback = DB::table('questions')
-                ->whereNull('class_id')
-                ->when(!empty($answeredIds), fn($q) => $q->whereNotIn('id', $answeredIds))
-                ->inRandomOrder()
-                ->first();
+            // Retry without difficulty, but keep the subject and quarter filters.
+            $fallback = $baseQuery->inRandomOrder()->first();
 
             if (!$fallback) {
                 return response()->json([
@@ -133,7 +149,12 @@ class GeneralKnowledgeController extends Controller
             'B'           => $question->choice_b,
             'C'           => $question->choice_c,
             'D'           => $question->choice_d,
-            'answer'      => $question->answer,
+            'answer'      => QuestionAnswer::normalizeKey($question->answer, [
+                'A' => $question->choice_a,
+                'B' => $question->choice_b,
+                'C' => $question->choice_c,
+                'D' => $question->choice_d,
+            ]),
             'explanation' => $question->explanation ?? '',
             'definition'  => $question->explanation ?? '',
             'subject'     => $question->subject,

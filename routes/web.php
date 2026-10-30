@@ -3,7 +3,9 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\TeacherController;
+use App\Http\Controllers\AdminTeacherController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\LeaderboardController;
 
 // ─── AUTH ──────────────────────────────────────────────────────────
 Route::get('/',      [AuthController::class, 'index'])->name('home');
@@ -57,6 +59,8 @@ Route::get('/admin/dashboard', [AdminController::class, 'index'])->name('admin.d
 // ─── ADMIN AJAX ENDPOINTS ──────────────────────────────────────────
 Route::get('/backend/admin/get_student_grades/{id}', [AdminController::class, 'getStudentGrades']);
 Route::post('/backend/admin/update_student',         [AdminController::class, 'updateStudent']);
+Route::post('/backend/admin/delete_student',         [AdminController::class, 'deleteStudent'])->name('admin.delete_student');
+Route::post('/backend/admin/delete_teacher',         [AdminTeacherController::class, 'delete'])->name('admin.delete_teacher');
 Route::post('/backend/admin/register_teacher',       [AdminController::class, 'registerTeacher'])->name('admin.register_teacher');
 Route::post('/backend/admin/add_section',            [AdminController::class, 'addSection'])->name('admin.add_section');
 Route::post('/backend/admin/update_section',         [AdminController::class, 'updateSection'])->name('admin.update_section');
@@ -64,6 +68,7 @@ Route::post('/backend/admin/delete_section',         [AdminController::class, 'd
 
 // ─── TEACHER DASHBOARD ─────────────────────────────────────────────
 Route::get('/teacher/dashboard', [TeacherController::class, 'index'])->name('teacher.dashboard');
+Route::get('/leaderboard', [LeaderboardController::class, 'index'])->name('leaderboard.index');
 
 // ─── TEACHER AJAX ENDPOINTS ────────────────────────────────────────
 Route::post('/backend/save_class.php',         [TeacherController::class, 'saveClass']);
@@ -88,6 +93,8 @@ Route::post('/backend/email_parent_low_grade.php', [TeacherController::class, 'e
 // GET /api/get_question?class_id=3&subject=english&type=quiz&quarter=1&answered=1,2,5
 Route::any('/api/get_question', [TeacherController::class, 'getQuestion'])->name('api.getQuestion');
 Route::any('/backend/get_question.php', [TeacherController::class, 'getQuestion']);
+Route::get('/backend/get_quiz_numbers.php', [TeacherController::class, 'getQuizNumbers'])
+    ->name('api.getQuizNumbers');
 
 // Called by Unity's GK Arena (AI Mode) to fetch one AI-style question.
 // GET /backend/generate_ai_question.php?subject=math&grade_level=Grade+8&difficulty=5&answered=1,2,3

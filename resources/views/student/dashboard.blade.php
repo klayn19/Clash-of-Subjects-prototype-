@@ -598,6 +598,94 @@
     }
     .pixel-table tr:nth-child(even) td { background: rgba(14,21,48,0.5); }
     .pixel-table tr:hover td { background: rgba(30,42,80,0.6); }
+    .leaderboard-rank-gold td { border-top: 2px solid #ffd700; border-bottom: 2px solid #ffd700; }
+    .leaderboard-rank-gold td:first-child { border-left: 2px solid #ffd700; }
+    .leaderboard-rank-gold td:last-child { border-right: 2px solid #ffd700; }
+    .leaderboard-rank-silver td { border-top: 2px solid #c0c0c0; border-bottom: 2px solid #c0c0c0; }
+    .leaderboard-rank-silver td:first-child { border-left: 2px solid #c0c0c0; }
+    .leaderboard-rank-silver td:last-child { border-right: 2px solid #c0c0c0; }
+    .leaderboard-rank-bronze td { border-top: 2px solid #cd7f32; border-bottom: 2px solid #cd7f32; }
+    .leaderboard-rank-bronze td:first-child { border-left: 2px solid #cd7f32; }
+    .leaderboard-rank-bronze td:last-child { border-right: 2px solid #cd7f32; }
+    .leaderboard-filter-row {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 0 0 20px;
+      padding: 14px;
+      background: rgba(9,13,30,0.72);
+      border: 2px solid var(--blue-mid);
+    }
+    .leaderboard-filter-label {
+      color: var(--gold);
+      font-family: 'Cinzel', serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+    }
+    .leaderboard-filter-select {
+      width: auto;
+      min-width: 150px;
+      min-height: 44px;
+      margin: 0;
+      padding: 9px 38px 9px 12px;
+      color: #fff;
+      background-color: var(--blue-deep);
+      background-image:
+        linear-gradient(45deg, transparent 50%, var(--gold) 50%),
+        linear-gradient(135deg, var(--gold) 50%, transparent 50%);
+      background-position:
+        calc(100% - 17px) 50%,
+        calc(100% - 12px) 50%;
+      background-size: 5px 5px, 5px 5px;
+      background-repeat: no-repeat;
+      border: 2px solid var(--blue-mid);
+      border-radius: 0;
+      color-scheme: dark;
+      font: 600 14px 'Outfit', sans-serif;
+      appearance: none;
+      -webkit-appearance: none;
+      cursor: pointer;
+    }
+    .leaderboard-filter-select:focus-visible {
+      border-color: var(--gold);
+      outline: 2px solid rgba(240,192,48,0.3);
+      outline-offset: 2px;
+    }
+    .leaderboard-filter-select:disabled { opacity: 0.55; cursor: not-allowed; }
+    .leaderboard-filter-select option { color: #fff; background: var(--blue-deep); }
+    .leaderboard-load-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 44px;
+      padding: 10px 16px;
+      color: var(--gold);
+      background: var(--blue-mid);
+      border: 2px solid var(--gold);
+      border-radius: 0;
+      font: 700 11px 'Outfit', sans-serif;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease;
+    }
+    .leaderboard-load-button:hover,
+    .leaderboard-load-button:focus-visible {
+      color: var(--blue-deep);
+      background: var(--gold);
+      outline: 2px solid rgba(240,192,48,0.3);
+      outline-offset: 2px;
+    }
+    .leaderboard-load-button:active { transform: translateY(1px); }
+    .leaderboard-load-button:disabled { opacity: 0.65; cursor: wait; }
+    @media (max-width: 768px) {
+      .leaderboard-filter-row { align-items: stretch; flex-direction: column; }
+      .leaderboard-filter-label { margin-top: 4px; }
+      .leaderboard-filter-select, #studentLeaderboardLoad { width: 100%; max-width: none; }
+    }
 
     .badge {
       display: inline-block;
@@ -615,7 +703,7 @@
     .badge-blue   { background: var(--blue-mid); color: var(--gold); border-color: var(--gold-dim); }
     .badge-red    { background: var(--red);    color: #fff; }
 
-    /* ===== MULTIPLAYER REWARD PREVIEW ===== */
+    /* ===== MULTIPLAYER REWARD ===== */
     .reward-card {
       display: flex;
       align-items: center;
@@ -633,11 +721,35 @@
     }
     .reward-emblem-icon {
       font-size: 58px;
-      background: linear-gradient(to top, var(--gold) var(--win-progress), #37415c var(--win-progress));
-      background-clip: text;
-      -webkit-background-clip: text;
-      color: transparent;
+      color: #667085;
+      transition: color 0.25s ease;
     }
+    .reward-card.tier-bronze .reward-emblem-icon,
+    .reward-card.tier-bronze .reward-progress-fill { color: #cd7f32; background-color: #cd7f32; }
+    .reward-card.tier-silver .reward-emblem-icon,
+    .reward-card.tier-silver .reward-progress-fill { color: #c0c7d1; background-color: #c0c7d1; }
+    .reward-card.tier-gold .reward-emblem-icon,
+    .reward-card.tier-gold .reward-progress-fill { color: #f0c030; background-color: #f0c030; }
+    .reward-card.tier-unranked .reward-progress-fill { background-color: #667085; }
+    .reward-tier {
+      display: inline-block;
+      margin: 0 0 10px;
+      padding: 4px 8px;
+      border: 1px solid currentColor;
+      color: var(--text-dim);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+    }
+    .reward-card.tier-bronze .reward-tier { color: #cd7f32; }
+    .reward-card.tier-silver .reward-tier { color: #c0c7d1; }
+    .reward-card.tier-gold .reward-tier { color: #f0c030; }
+    .reward-milestone.tier-bronze.is-unlocked { color: #cd7f32; border-color: #cd7f32; }
+    .reward-milestone.tier-silver.is-unlocked { color: #c0c7d1; border-color: #c0c7d1; }
+    .reward-milestone.tier-gold.is-unlocked { color: #f0c030; border-color: #f0c030; }
+    .reward-emblem.tier-bronze { border-color: #cd7f32; }
+    .reward-emblem.tier-silver { border-color: #c0c7d1; }
+    .reward-emblem.tier-gold { border-color: #f0c030; }
     .reward-details { flex: 1; min-width: 0; }
     .reward-name {
       color: var(--gold);
@@ -966,6 +1078,26 @@
       margin-top: 12px;
     }
     .notes-feedback { margin: 0 0 10px; color: #ff9999; font-size: 12px; }
+    .quizbee-attempt {
+      margin-bottom: 16px;
+      padding: 14px;
+      background: var(--blue-ui);
+      border: 2px solid var(--blue-mid);
+    }
+    .quizbee-attempt summary {
+      color: var(--gold);
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .quizbee-history-question {
+      margin-top: 12px;
+      padding: 12px;
+      background: var(--blue-deep);
+      border-left: 3px solid var(--gold);
+      line-height: 1.5;
+    }
+    .quizbee-history-answer { margin-top: 6px; color: #8ee6a0; }
 
     *, *::before, *::after {
       box-shadow: none !important;
@@ -999,7 +1131,7 @@
             <span class="notification-count" id="notificationCount" aria-hidden="true">{{ $unreadNotes > 99 ? '99+' : $unreadNotes }}</span>
           @endif
         </button>
-        <div class="header-popover" id="notificationPopover" role="region" aria-label="Teacher note notifications" hidden>
+        <div class="header-popover" id="notificationPopover" role="region" aria-label="Teacher note notifications" data-note-read-url="{{ url('/student/notes') }}" data-read-all-url="{{ route('student.notes.read-all') }}" hidden>
           <div class="popover-heading">NOTIFICATIONS</div>
           <div class="notification-summary">
             <span id="notificationSummary">{{ $unreadNotes }} unread {{ \Illuminate\Support\Str::plural('message', $unreadNotes) }}</span>
@@ -1014,7 +1146,7 @@
               <div class="notification-meta">
                 <span class="notification-state" data-note-state>{{ $note->read_at ? 'Read' : 'Unread' }}</span>
                 @if(!$note->read_at)
-                  <button type="button" class="note-action" data-note-read-button onclick="markTeacherNoteRead({{ (int) $note->id }}, this)">Mark read</button>
+                  <button type="button" class="note-action" data-note-read-button onclick="markTeacherNoteRead(this)">Mark read</button>
                 @endif
               </div>
             </div>
@@ -1055,6 +1187,14 @@
         <i class="fas fa-gamepad"></i>GAME &amp; GRADES
       </button>
       <div class="nav-divider"></div>
+      <button class="nav-btn" onclick="showSection('quizbee-history', this)">
+        <i class="fas fa-clipboard-list"></i>QUIZBEE HISTORY
+      </button>
+      <div class="nav-divider"></div>
+      <button class="nav-btn" onclick="showSection('leaderboard', this)">
+        <i class="fas fa-trophy"></i>LEADERBOARD
+      </button>
+      <div class="nav-divider"></div>
       <button class="nav-btn" id="teacherNotesNav" onclick="showSection('notes', this)">
         <i class="fas fa-envelope"></i>TEACHER NOTES
       </button>
@@ -1075,7 +1215,7 @@
               <span>QUIZBEE</span>
               <i class="fas fa-key" aria-hidden="true"></i>
             </button>
-            <a href="{{ route('gameplay') }}" class="game-mode-card">
+            <a href="{{ route('gameplay', ['uid' => session('user_id')]) }}" class="game-mode-card">
               <span>GAMEPLAY</span>
               <i class="fas fa-gamepad" aria-hidden="true"></i>
             </a>
@@ -1119,35 +1259,36 @@
         </div>
 
         @php
-          // Dashboard-only concept preview; multiplayer win tracking is not connected yet.
-          $multiplayerWins = 0;
+          $multiplayerWins = (int) ($multiplayerWins ?? 0);
           $winProgress = min(100, ($multiplayerWins / 20) * 100);
+          $badgeTier = $multiplayerWins >= 20 ? 'gold' : ($multiplayerWins >= 15 ? 'silver' : ($multiplayerWins >= 10 ? 'bronze' : 'unranked'));
         @endphp
         <div class="panel">
           <div class="corner-bl"></div><div class="corner-br"></div>
           <div class="panel-title">⚔ MULTIPLAYER REWARD</div>
-          <div class="reward-card" style="--win-progress: {{ $winProgress }}%;">
-            <div class="reward-emblem" role="img" aria-label="Multiplayer trophy badge, {{ $winProgress }} percent complete">
+          <div class="reward-card tier-{{ $badgeTier }}" style="--win-progress: {{ $winProgress }}%;">
+            <div class="reward-emblem tier-{{ $badgeTier }}" role="img" aria-label="{{ $badgeTier === 'unranked' ? 'Unranked' : ucfirst($badgeTier) }} multiplayer trophy badge">
               <i class="fas fa-trophy reward-emblem-icon" aria-hidden="true"></i>
             </div>
             <div class="reward-details">
               <div class="reward-name">VICTORY BADGE</div>
-              <p class="reward-caption">Dashboard preview — multiplayer win tracking is not connected yet.</p>
+              <p class="reward-caption">Win multiplayer matches to earn a bronze, silver, and gold trophy.</p>
+              <span class="reward-tier">{{ $badgeTier === 'unranked' ? 'NO TIER YET' : strtoupper($badgeTier) . ' TROPHY' }}</span>
               <div
                 class="reward-progress-track"
                 role="progressbar"
                 aria-label="Progress toward the multiplayer victory badge"
                 aria-valuemin="0"
                 aria-valuemax="20"
-                aria-valuenow="{{ $multiplayerWins }}"
+                aria-valuenow="{{ min(20, $multiplayerWins) }}"
               >
                 <div class="reward-progress-fill"></div>
               </div>
               <div class="reward-progress-label">{{ $multiplayerWins }} / 20 MULTIPLAYER WINS · {{ $winProgress }}%</div>
               <div class="reward-milestones" aria-label="Badge milestones">
-                @foreach ([10, 15, 20] as $milestone)
-                  <span class="reward-milestone {{ $multiplayerWins >= $milestone ? 'is-unlocked' : '' }}">
-                    {{ $milestone }} WINS{{ $multiplayerWins >= $milestone ? ' · UNLOCKED' : '' }}
+                @foreach ([10 => 'bronze', 15 => 'silver', 20 => 'gold'] as $milestone => $tier)
+                  <span class="reward-milestone tier-{{ $tier }} {{ $multiplayerWins >= $milestone ? 'is-unlocked' : '' }}">
+                    {{ $milestone }} WINS{{ $multiplayerWins >= $milestone ? ' · ' . strtoupper($tier) : '' }}
                   </span>
                 @endforeach
               </div>
@@ -1187,6 +1328,70 @@
         </div>
       </section>
 
+      <section id="section-quizbee-history" class="section">
+        <div class="panel">
+          <div class="corner-bl"></div><div class="corner-br"></div>
+          <div class="panel-title">🐝 QUIZBEE HISTORY</div>
+          <p style="color:var(--text-muted);font-size:14px;margin-bottom:18px;">Review the questions you answered and their correct answers.</p>
+          @unless($quizbeeHistoryAvailable)
+            <p style="color:var(--text-muted);font-size:16px;text-align:center;padding:20px;">Quizbee history is temporarily unavailable while the site is being updated. Please try again later.</p>
+          @else
+          @forelse($quizbeeAttempts as $attemptQuestions)
+            @php($firstAnswer = $attemptQuestions->first())
+            <details class="quizbee-attempt">
+              <summary>SESSION · {{ \Carbon\Carbon::parse($firstAnswer->started_at)->format('M d, Y H:i') }} · {{ $attemptQuestions->count() }} QUESTION(S)</summary>
+              @foreach($attemptQuestions as $index => $answer)
+                <article class="quizbee-history-question">
+                  <strong>{{ $index + 1 }}. {{ strtoupper($answer->subject) }}</strong>
+                  <p style="margin-top:6px;">{{ $answer->question }}</p>
+                  <p class="quizbee-history-answer"><strong>Correct answer ({{ $answer->correct_answer_key }}):</strong> {{ $answer->correct_answer_text }}</p>
+                </article>
+              @endforeach
+            </details>
+          @empty
+            <p style="color:var(--text-muted);font-size:16px;text-align:center;padding:20px;">Your answered Quizbee questions will appear here after a session.</p>
+          @endforelse
+          @endunless
+        </div>
+      </section>
+
+      <!-- ===== CLASS LEADERBOARD SECTION ===== -->
+      <section id="section-leaderboard" class="section">
+        <div class="panel">
+          <div class="corner-bl"></div><div class="corner-br"></div>
+          <div class="panel-title">🏆 CLASS LEADERBOARD</div>
+          <p style="color:var(--text-muted);font-size:14px;margin-bottom:18px;">Ranked by average score for the selected subject. Multiplayer wins break score ties.</p>
+          <div class="leaderboard-filter-row">
+            @php($leaderboardClasses = $leaderboardClasses ?? collect())
+            <label class="leaderboard-filter-label" for="studentLeaderboardClass">SECTION</label>
+            <select class="leaderboard-filter-select" id="studentLeaderboardClass" {{ $leaderboardClasses->isEmpty() ? 'disabled' : '' }}>
+              <option value="">-- Select Section --</option>
+              @foreach($leaderboardClasses as $leaderboardClass)
+                <option value="{{ $leaderboardClass->id }}">{{ $leaderboardClass->section ?: $leaderboardClass->name }}</option>
+              @endforeach
+            </select>
+            <label class="leaderboard-filter-label" for="studentLeaderboardSubject">SUBJECT</label>
+            <select class="leaderboard-filter-select" id="studentLeaderboardSubject">
+              <option value="english">English</option>
+              <option value="math">Math</option>
+              <option value="science">Science</option>
+            </select>
+            <button type="button" class="leaderboard-load-button" id="studentLeaderboardLoad">
+              <i class="fas fa-trophy" aria-hidden="true"></i> LOAD LEADERBOARD
+            </button>
+          </div>
+          <div class="table-scroll">
+            <table class="pixel-table" id="studentLeaderboardTable" style="display:none;">
+              <thead><tr><th>RANK</th><th>STUDENT</th><th>SCORE AVG.</th><th>MULTIPLAYER WINS</th></tr></thead>
+              <tbody id="studentLeaderboardBody"></tbody>
+            </table>
+          </div>
+          <p id="studentLeaderboardStatus" role="status" aria-live="polite" style="color:var(--text-muted);font-size:16px;text-align:center;padding:20px;">
+            {{ $leaderboardClasses->isEmpty() ? 'No class section is linked to your account yet.' : 'Select a section and subject, then load the leaderboard.' }}
+          </p>
+        </div>
+      </section>
+
       <!-- ===== NOTES SECTION ===== -->
       <section id="section-notes" class="section">
         <div class="panel">
@@ -1204,7 +1409,7 @@
                 <div class="note-footer">
                   <span class="note-state" data-note-state>{{ $note->read_at ? 'Read' : 'Unread' }}</span>
                   @if(!$note->read_at)
-                    <button type="button" class="note-action" data-note-read-button onclick="markTeacherNoteRead({{ (int) $note->id }}, this)">Mark as read</button>
+                    <button type="button" class="note-action" data-note-read-button onclick="markTeacherNoteRead(this)">Mark as read</button>
                   @endif
                 </div>
               </div>
@@ -1219,7 +1424,7 @@
 </div>
 
 <dialog class="quizbee-dialog" id="quizbeeDialog" aria-labelledby="quizbeeDialogTitle" aria-describedby="quizbeeDialogDescription">
-  <form class="quizbee-dialog-content" id="quizbeeCodeForm">
+  <form class="quizbee-dialog-content" id="quizbeeCodeForm" data-redeem-url="{{ route('student.quizbee.redeem') }}">
     <h2 class="quizbee-dialog-title" id="quizbeeDialogTitle">ENTER QUIZBEE CODE</h2>
     <p class="quizbee-dialog-description" id="quizbeeDialogDescription">Enter the six-digit code from your teacher to join QuizBee.</p>
     <label for="quizbeeCode" class="sr-only">Six-digit QuizBee code</label>
@@ -1283,7 +1488,7 @@ quizbeeCodeForm.addEventListener('submit', async event => {
   quizbeeSubmit.disabled = true;
 
   try {
-    const response = await fetch(@json(route('student.quizbee.redeem')), {
+    const response = await fetch(quizbeeCodeForm.dataset.redeemUrl, {
       method: 'POST',
       headers: {
         'Accept': 'application/json',
@@ -1340,6 +1545,60 @@ function showSection(id, btn) {
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('section-' + id).classList.add('active');
   btn.classList.add('active');
+}
+
+document.getElementById('studentLeaderboardLoad')?.addEventListener('click', loadStudentLeaderboard);
+
+async function loadStudentLeaderboard() {
+  const classId = document.getElementById('studentLeaderboardClass').value;
+  const subject = document.getElementById('studentLeaderboardSubject').value;
+  const status = document.getElementById('studentLeaderboardStatus');
+  const table = document.getElementById('studentLeaderboardTable');
+  const tbody = document.getElementById('studentLeaderboardBody');
+
+  if (!classId) {
+    status.textContent = 'Select a section to view its leaderboard.';
+    status.style.display = 'block';
+    table.style.display = 'none';
+    return;
+  }
+
+  status.textContent = 'Loading leaderboard...';
+  status.style.display = 'block';
+  table.style.display = 'none';
+  try {
+    const response = await fetch(`/leaderboard?class_id=${encodeURIComponent(classId)}&subject=${encodeURIComponent(subject)}`, {
+      headers: { 'Accept': 'application/json' }
+    });
+    const data = await response.json();
+    if (!response.ok || !data.success) {
+      throw new Error(data.message || 'Could not load the leaderboard.');
+    }
+
+    tbody.replaceChildren();
+    data.students.forEach(student => {
+      const row = document.createElement('tr');
+      if (student.rank <= 3) row.classList.add(['', 'leaderboard-rank-gold', 'leaderboard-rank-silver', 'leaderboard-rank-bronze'][student.rank]);
+      [
+        student.rank,
+        student.name,
+        student.average_percent === null ? 'No score' : `${Number(student.average_percent).toFixed(2)}%`,
+        student.multiplayer_wins
+      ].forEach(value => {
+        const cell = document.createElement('td');
+        cell.textContent = value;
+        row.appendChild(cell);
+      });
+      tbody.appendChild(row);
+    });
+    table.style.display = 'table';
+    status.textContent = data.students.length ? '' : 'No students are currently assigned to this section.';
+    status.style.display = data.students.length ? 'none' : 'block';
+  } catch (error) {
+    console.error('Student leaderboard loading failed:', error);
+    status.textContent = error.message || 'Could not load the leaderboard.';
+    status.style.display = 'block';
+  }
 }
 
 function toggleHeaderMenu(popoverId, button) {
@@ -1428,10 +1687,11 @@ function showNoteActionError(message) {
   document.getElementById('notesFeedback').textContent = message;
 }
 
-async function markTeacherNoteRead(noteId, button) {
+async function markTeacherNoteRead(button) {
+  const noteId = button.closest('[data-note-id]').dataset.noteId;
   button.disabled = true;
   try {
-    const result = await postNoteRead(@json(url('/student/notes')) + '/' + encodeURIComponent(noteId) + '/read');
+    const result = await postNoteRead(document.getElementById('notificationPopover').dataset.noteReadUrl + '/' + encodeURIComponent(noteId) + '/read');
     markNoteElementsRead(noteId);
     updateUnreadCount(result.unread_count);
     showNoteActionError('');
@@ -1444,7 +1704,7 @@ async function markTeacherNoteRead(noteId, button) {
 async function markAllTeacherNotesRead(button) {
   button.disabled = true;
   try {
-    const result = await postNoteRead(@json(route('student.notes.read-all')));
+    const result = await postNoteRead(document.getElementById('notificationPopover').dataset.readAllUrl);
     document.querySelectorAll('[data-note-id]').forEach(item => {
       item.classList.remove('is-unread');
       const state = item.querySelector('[data-note-state]');
