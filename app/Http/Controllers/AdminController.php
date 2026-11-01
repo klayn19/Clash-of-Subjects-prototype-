@@ -83,16 +83,25 @@ class AdminController extends Controller
         $validator = Validator::make($request->all(), [
             'student_id' => 'required|integer|exists:users,id',
             'lrn'        => ['nullable', 'string', 'regex:/^[0-9]{12}$/'],
+            'is_verified' => 'sometimes|boolean',
             'section'    => 'nullable|string|max:100|exists:sections,name',
             'parent_email' => 'nullable|email|max:150',
         ], [
             'lrn.regex' => 'LRN must be exactly 12 numeric digits.',
+            'is_verified.boolean' => 'LRN verification must be selected or cleared.',
         ]);
 
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
                 'message' => $validator->errors()->first(),
+            ], 422);
+        }
+
+        if ($request->boolean('is_verified') && !$request->filled('lrn')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Enter the student LRN before verifying it.',
             ], 422);
         }
 
@@ -131,12 +140,23 @@ class AdminController extends Controller
         $user->is_verified = $rosterEntry !== null;
         if ($rosterEntry) {
             $user->section = $rosterEntry->section;
+        } elseif ($cleanedLrn && $request->boolean('is_verified')) {
+            $user->is_verified = true;
+        }
+        if (!$cleanedLrn) {
+            $user->is_verified = false;
         }
         $user->save();
 
         Section::syncStudentRoster((int) $user->id);
 
-        return response()->json(['success' => true, 'message' => 'Student updated successfully']);
+        return response()->json([
+            'success' => true,
+            'verified' => (bool) $user->is_verified,
+            'message' => $user->is_verified
+                ? 'Student updated and LRN verified.'
+                : 'Student updated. The LRN is not verified.',
+        ]);
     }
 
     public function deleteStudent(Request $request)

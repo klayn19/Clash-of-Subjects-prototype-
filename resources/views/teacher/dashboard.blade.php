@@ -1733,7 +1733,9 @@ async function submitManualGrade() {
     }
 
     status.textContent = `✔ ${data.message}`;
-    status.style.color = 'var(--green)';
+    status.style.color = ['missing_parent_email', 'failed'].includes(data.notification_status)
+      ? 'var(--orange)'
+      : 'var(--green)';
     document.getElementById('manualGradeValue').value = '';
   } catch (error) {
     status.textContent = `✕ ${error.message}`;

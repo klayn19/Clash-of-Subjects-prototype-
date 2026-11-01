@@ -89,6 +89,9 @@ class StudentScoreDashboardTest extends TestCase
             $table->text('question');
             $table->string('correct_answer_key', 20);
             $table->text('correct_answer_text');
+            $table->string('student_answer_key', 20)->nullable();
+            $table->text('student_answer_text')->nullable();
+            $table->boolean('is_correct')->nullable();
             $table->timestamp('answered_at')->nullable();
             $table->timestamps();
             $table->unique(['attempt_id', 'question_id']);
@@ -297,9 +300,14 @@ class StudentScoreDashboardTest extends TestCase
             'quizbee_attempt_id' => $attemptId,
         ]);
 
-        $this->getJson('/api/get_question?subject=math&type=assessment&quarter=1&sequence_number=1')
+        $this->getJson('/api/get_question?subject=math&type=assessment&mode=quizbee&quarter=1&sequence_number=1')
             ->assertOk()
             ->assertJsonPath('id', $questionId);
+
+        $this->postJson('/api/quizbee/record-answer', [
+            'question_id' => $questionId,
+            'selected_key' => 'A',
+        ])->assertOk()->assertJsonPath('success', true);
 
         $this->postJson('/api/save_score', [
             'subject' => 'math',
@@ -313,6 +321,9 @@ class StudentScoreDashboardTest extends TestCase
             'question_id' => $questionId,
             'correct_answer_key' => 'B',
             'correct_answer_text' => '4',
+            'student_answer_key' => 'A',
+            'student_answer_text' => '3',
+            'is_correct' => false,
         ]);
         $this->assertNotNull(DB::table('quizbee_attempt_questions')
             ->where('attempt_id', $attemptId)
@@ -330,6 +341,8 @@ class StudentScoreDashboardTest extends TestCase
             return $mail->studentName === 'Bee Student'
                 && count($mail->answers) === 1
                 && $mail->answers[0]->question === 'What is 2 + 2?'
+                && $mail->answers[0]->student_answer_text === '3'
+                && !(bool) $mail->answers[0]->is_correct
                 && $mail->answers[0]->correct_answer_text === '4';
         });
 
@@ -337,6 +350,8 @@ class StudentScoreDashboardTest extends TestCase
             ->assertOk()
             ->assertSee('QUIZBEE HISTORY')
             ->assertSee('What is 2 + 2?')
+            ->assertSee('Your answer (incorrect) (A):')
+            ->assertSee('3')
             ->assertSee('Correct answer (B):')
             ->assertSee('4');
     }

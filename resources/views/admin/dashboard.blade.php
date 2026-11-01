@@ -28,7 +28,7 @@
     * { cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16'%3E%3Crect x='0' y='0' width='4' height='4' fill='%23f0a000'/%3E%3Crect x='0' y='4' width='4' height='4' fill='%23f0a000'/%3E%3Crect x='0' y='8' width='4' height='4' fill='%23f0a000'/%3E%3Crect x='4' y='4' width='4' height='4' fill='%23f0a000'/%3E%3Crect x='8' y='8' width='4' height='4' fill='%23f0a000'/%3E%3C/svg%3E") 0 0, default; }
 
     /* ===== LAYOUT ===== */
-    .shell { position: relative; z-index: 10; display: flex; flex-direction: column; min-height: 100vh; }
+    .shell { position: relative; z-index: 10; display: flex; flex-direction: column; height: 100vh; height: 100dvh; min-height: 0; }
 
     /* ===== TOPBAR ===== */
     .topbar { display: flex; align-items: center; justify-content: space-between; background: var(--blue-dark); border-bottom: 3px solid var(--blue-mid); box-shadow: 0 3px 0 var(--gold), 0 0 40px rgba(240,192,0,0.12); padding: 14px 28px; position: sticky; top: 0; z-index: 100; }
@@ -42,14 +42,14 @@
     .logout-btn:hover { background: var(--gold); color: var(--blue-deep); box-shadow: 4px 4px 0 var(--gold-dim); transform: translate(-1px,-1px); }
 
     /* ===== SIDEBAR / MAIN ===== */
-    .wrapper { display: flex; flex: 1; overflow: hidden; }
-    .sidebar { width: 190px; background: var(--blue-dark); border-right: 2px solid var(--blue-mid); box-shadow: 3px 0 0 var(--gold); display: flex; flex-direction: column; gap: 2px; padding: 20px 0; flex-shrink: 0; }
+    .wrapper { display: flex; flex: 1; min-height: 0; overflow: hidden; }
+    .sidebar { align-self: stretch; width: 190px; overflow-y: auto; background: var(--blue-dark); border-right: 2px solid var(--blue-mid); box-shadow: 3px 0 0 var(--gold); display: flex; flex-direction: column; gap: 2px; padding: 20px 0; flex-shrink: 0; }
     .nav-btn { display: block; width: 100%; background: transparent; color: var(--text-dim); border: none; border-left: 4px solid transparent; font-family: 'Outfit', sans-serif; font-size: 12px; font-weight: 600; text-align: left; padding: 14px 16px; cursor: pointer; letter-spacing: 0.08em; line-height: 1.8; transition: background 0.05s steps(1); }
     .nav-btn i { margin-right: 9px; color: var(--text-muted); }
     .nav-btn:hover { background: var(--blue-mid); color: rgba(240,210,120,0.8); }
     .nav-btn.active { background: var(--blue-ui); border-left-color: var(--gold); color: var(--gold); }
     .nav-btn.active i { color: var(--gold); }
-    .main { flex: 1; padding: 24px; overflow-y: auto; position: relative; z-index: 1; }
+    .main { flex: 1; min-width: 0; min-height: 0; padding: 24px; overflow-y: auto; position: relative; z-index: 1; }
     .section { display: none; }
     .section.active { display: block; }
 
@@ -70,10 +70,11 @@
     .student-pagination-controls { display: flex; align-items: center; gap: 8px; }
     .student-pagination .pixel-btn { padding: 6px 10px; font-size: 10px; }
     .student-pagination .pixel-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    .student-action-buttons { display: flex; align-items: center; gap: 8px; min-width: 190px; }
-    .student-action-btn { min-height: 40px; padding: 8px 12px; font-size: 12px; line-height: 1.2; white-space: nowrap; }
+    .student-action-buttons { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-width: 220px; }
+    .student-action-buttons .student-action-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; flex: 1 1 auto; min-height: 38px; padding: 8px 10px; font-size: 10px; font-weight: 700; letter-spacing: 0.04em; line-height: 1.2; white-space: nowrap; }
     .student-action-btn:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
     .student-action-btn--edit { background: var(--gold); color: #090d1e; }
+    .lrn-review-row .student-action-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 38px; padding: 8px 12px; font-size: 11px; font-weight: 700; letter-spacing: 0.04em; line-height: 1.2; white-space: nowrap; }
     .student-action-btn--grades { background: #218838; color: #fff; box-shadow: 4px 4px 0 #145523; }
     .student-action-btn--grades:hover { background: #2fb34b; }
     .student-verification-badge { display: inline-block; min-width: 96px; padding: 6px 8px; border: 2px solid; font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-align: center; }
@@ -251,6 +252,7 @@
 
     /* ===== MOBILE RESPONSIVE (≤768px) ===== */
     @media (max-width: 768px) {
+      .shell { height: auto; min-height: 100vh; min-height: 100dvh; }
       .hamburger { display: flex; }
       .sidebar-mobile-header { display: flex; }
       .sidebar {
@@ -275,7 +277,7 @@
       .topbar-subtitle { display: none; }
       .topbar-gems { display: none; }
       .logout-btn { font-size: 11px; padding: 7px 12px; }
-      .main { padding: 14px; }
+      .main { min-height: auto; padding: 14px; overflow: visible; }
       .form-grid { grid-template-columns: 1fr !important; }
       .filter-row { flex-direction: column; align-items: flex-start; gap: 8px; }
       .filter-row select, .filter-row input { width: 100% !important; margin: 0 !important; max-width: 100%; }
@@ -331,6 +333,9 @@
       </div>
       <button class="nav-btn active" id="nav-students" onclick="showSection('students', this)">
         <i class="fas fa-users"></i>STUDENTS
+      </button>
+      <button class="nav-btn" id="nav-lrn-verification" onclick="showSection('lrn-verification', this)">
+        <i class="fas fa-id-card"></i>LRN VERIFICATION
       </button>
       <button class="nav-btn" id="nav-teachers-list" onclick="showSection('teachers-list', this)">
         <i class="fas fa-chalkboard-teacher"></i>TEACHERS
@@ -412,6 +417,7 @@
                       data-section="{{ strtolower($s->section ?? '') }}"
                       data-name="{{ strtolower($s->first_name.' '.$s->last_name) }}"
                       data-lrn="{{ $s->lrn ?? '' }}"
+                      data-is-verified="{{ $s->is_verified ? 'true' : 'false' }}"
                       data-parent-email="{{ $s->parent_email ?? '' }}"
                       data-overall-percent="{{ $pct ?? '' }}">
                     <td>{{ $s->id }}</td>
@@ -439,8 +445,8 @@
                     <td>
                       <div class="student-action-buttons">
                       <button class="pixel-btn btn-sm student-action-btn student-action-btn--edit"
-                        onclick="openEditStudent({{ $s->id }}, '{{ addslashes($s->lrn ?? '') }}', '{{ addslashes($s->section ?? '') }}', '{{ addslashes($s->first_name.' '.$s->last_name) }}', this.closest('tr').dataset.parentEmail)">
-                        <i class="fas fa-pen"></i> EDIT
+                        onclick="openEditStudent({{ $s->id }}, '{{ addslashes($s->lrn ?? '') }}', '{{ addslashes($s->section ?? '') }}', '{{ addslashes($s->first_name.' '.$s->last_name) }}', this.closest('tr').dataset.parentEmail, this.closest('tr').dataset.isVerified === 'true')">
+                        <i class="fas {{ $s->lrn ? 'fa-pen' : 'fa-id-card' }}"></i> {{ $s->lrn ? 'EDIT' : 'ADD LRN' }}
                       </button>
                       <button class="pixel-btn btn-sm btn-green student-action-btn student-action-btn--grades"
                         onclick="openGrades({{ $s->id }}, '{{ addslashes($s->first_name.' '.$s->last_name) }}')">
@@ -465,6 +471,77 @@
               <span id="adminStudentPageNumber"></span>
               <button type="button" class="pixel-btn" id="adminStudentNext" onclick="changeAdminStudentPage(1)">NEXT</button>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {{-- ===== LRN VERIFICATION SECTION ===== --}}
+      <section id="section-lrn-verification" class="section">
+        <div class="panel">
+          <div class="panel-title"><i class="fas fa-id-card"></i> STUDENT LRN VERIFICATION</div>
+          <p style="color:var(--text-muted);font-size:15px;margin-bottom:18px;">
+            Add a student's 12-digit LRN and verify it after confirming the student record. Matching roster LRNs are verified automatically.
+          </p>
+          @php
+            $studentsNeedingLrnReview = $students->filter(fn ($student) => !$student->lrn || !$student->is_verified);
+          @endphp
+          <div class="filter-row">
+            <label class="filter-label" for="searchLrnReview">SEARCH STUDENTS:</label>
+            <input type="search" class="pixel-input" id="searchLrnReview"
+              style="width:min(100%, 360px);margin:0;"
+              placeholder="Name, LRN, or section..."
+              aria-label="Search students by name, LRN, or section">
+          </div>
+          <div style="overflow-x:auto;">
+            <table class="pixel-table">
+              <thead>
+                <tr>
+                  <th>NAME</th>
+                  <th>LRN</th>
+                  <th>SECTION</th>
+                  <th>VERIFICATION</th>
+                  <th>ACTION</th>
+                </tr>
+              </thead>
+              <tbody>
+                @forelse($studentsNeedingLrnReview as $student)
+                  <tr class="lrn-review-row"
+                      data-student-id="{{ $student->id }}"
+                      data-lrn="{{ $student->lrn ?? '' }}"
+                      data-section="{{ $student->section ?? '' }}"
+                      data-name="{{ $student->first_name . ' ' . $student->last_name }}"
+                      data-parent-email="{{ $student->parent_email ?? '' }}"
+                      data-is-verified="{{ $student->is_verified ? 'true' : 'false' }}">
+                    <td>{{ $student->first_name }} {{ $student->last_name }}</td>
+                    <td style="color:var(--gold);">{{ $student->lrn ?: 'Not assigned' }}</td>
+                    <td>{{ $student->section ?: '—' }}</td>
+                    <td>
+                      <span class="student-verification-badge student-verification-badge--unverified">
+                        {{ $student->is_verified ? 'LRN NEEDED' : 'NOT VERIFIED' }}
+                      </span>
+                    </td>
+                    <td>
+                      <button type="button" class="pixel-btn btn-sm student-action-btn student-action-btn--edit"
+                        onclick="openLrnReviewStudent(this)">
+                        <i class="fas {{ $student->lrn ? 'fa-check' : 'fa-id-card' }}"></i>
+                        {{ $student->lrn ? 'VERIFY LRN' : 'ADD LRN' }}
+                      </button>
+                    </td>
+                  </tr>
+                @empty
+                  <tr>
+                    <td colspan="5" style="text-align:center;color:var(--text-muted);padding:20px;">
+                      All students have an assigned and verified LRN.
+                    </td>
+                  </tr>
+                @endforelse
+                <tr id="lrnReviewNoResults" hidden>
+                  <td colspan="5" style="text-align:center;color:var(--text-muted);padding:20px;">
+                    No students match your search.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </section>
@@ -626,6 +703,14 @@
     <div class="form-group">
       <label class="form-label" for="editLrn">LEARNER REFERENCE NUMBER (LRN) <span style="font-size:12px;color:var(--text-muted);font-weight:normal;">(12 digits)</span></label>
       <input type="text" id="editLrn" class="pixel-input" placeholder="12-digit LRN" maxlength="12" pattern="[0-9]{12}" inputmode="numeric">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" style="display:flex;align-items:center;gap:10px;">
+        <input type="checkbox" id="editLrnVerified" style="width:18px;height:18px;accent-color:var(--green);">
+        VERIFY THIS LRN
+      </label>
+      <small style="color:var(--text-muted);">Only verify after confirming the student’s LRN. Matching roster records are verified automatically.</small>
     </div>
 
     <div class="form-group">
@@ -817,13 +902,36 @@
   document.getElementById('searchStudent').addEventListener('input', () => filterStudents());
   filterStudents();
 
+  const lrnReviewSearch = document.getElementById('searchLrnReview');
+  if (lrnReviewSearch) {
+    lrnReviewSearch.addEventListener('input', () => {
+      const search = lrnReviewSearch.value.trim().toLowerCase();
+      const rows = Array.from(document.querySelectorAll('.lrn-review-row'));
+      let visibleCount = 0;
+
+      rows.forEach(row => {
+        const searchableText = [
+          row.dataset.name,
+          row.dataset.lrn,
+          row.dataset.section
+        ].join(' ').toLowerCase();
+        const matches = !search || searchableText.includes(search);
+        row.hidden = !matches;
+        if (matches) visibleCount++;
+      });
+
+      document.getElementById('lrnReviewNoResults').hidden = visibleCount > 0;
+    });
+  }
+
   // ===== EDIT STUDENT MODAL =====
   let currentStudentId = null;
 
-  function openEditStudent(id, lrn, section, name, parentEmail = '') {
+  function openEditStudent(id, lrn, section, name, parentEmail = '', isVerified = false) {
     currentStudentId = id;
     document.getElementById('editStudentName').textContent = name;
     document.getElementById('editLrn').value     = lrn;
+    document.getElementById('editLrnVerified').checked = isVerified;
     document.getElementById('editParentEmail').value = parentEmail;
     
     // Set editSection dropdown value
@@ -850,6 +958,20 @@
     select.value = section;
     document.getElementById('editStudentMsg').textContent = '';
     document.getElementById('modalEditStudent').classList.add('open');
+  }
+
+  function openLrnReviewStudent(button) {
+    const row = button.closest('.lrn-review-row');
+    if (!row) return;
+
+    openEditStudent(
+      Number(row.dataset.studentId),
+      row.dataset.lrn,
+      row.dataset.section,
+      row.dataset.name,
+      row.dataset.parentEmail,
+      row.dataset.isVerified === 'true'
+    );
   }
 
   function closeModal(id) {
@@ -923,6 +1045,7 @@
 
   async function saveStudent() {
     const lrn     = document.getElementById('editLrn').value.trim();
+    const isVerified = document.getElementById('editLrnVerified').checked;
     const section = document.getElementById('editSection').value.trim();
     const parentEmail = document.getElementById('editParentEmail').value.trim();
     const msg     = document.getElementById('editStudentMsg');
@@ -930,6 +1053,11 @@
     if (lrn && !/^[0-9]{12}$/.test(lrn)) {
       msg.style.color = 'var(--red)';
       msg.textContent  = 'LRN must be exactly 12 numeric digits.';
+      return;
+    }
+    if (!lrn && isVerified) {
+      msg.style.color = 'var(--red)';
+      msg.textContent = 'Enter the student LRN before verifying it.';
       return;
     }
 
@@ -940,12 +1068,12 @@
       const res = await fetch("/backend/admin/update_student", {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-        body: JSON.stringify({ student_id: currentStudentId, lrn, section, parent_email: parentEmail })
+        body: JSON.stringify({ student_id: currentStudentId, lrn, is_verified: isVerified, section, parent_email: parentEmail })
       });
       const data = await res.json();
-      if (data.success) {
+      if (res.ok && data.success) {
         msg.style.color = 'var(--green)';
-        msg.textContent  = '✓ Saved! Refreshing...';
+        msg.textContent  = `✓ ${data.message || 'Student updated.'} Refreshing...`;
         setTimeout(() => location.reload(), 900);
       } else {
         msg.style.color = 'var(--red)';

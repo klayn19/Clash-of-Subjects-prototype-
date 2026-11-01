@@ -1098,6 +1098,7 @@
       line-height: 1.5;
     }
     .quizbee-history-answer { margin-top: 6px; color: #8ee6a0; }
+    .quizbee-history-answer--wrong { color: #ff9999; }
 
     *, *::before, *::after {
       box-shadow: none !important;
@@ -1344,6 +1345,11 @@
                 <article class="quizbee-history-question">
                   <strong>{{ $index + 1 }}. {{ strtoupper($answer->subject) }}</strong>
                   <p style="margin-top:6px;">{{ $answer->question }}</p>
+                  @if($answer->student_answer_key !== null)
+                    <p class="quizbee-history-answer {{ $answer->is_correct ? '' : 'quizbee-history-answer--wrong' }}">
+                      <strong>Your answer ({{ $answer->is_correct ? 'correct' : 'incorrect' }}) ({{ $answer->student_answer_key }}):</strong> {{ $answer->student_answer_text }}
+                    </p>
+                  @endif
                   <p class="quizbee-history-answer"><strong>Correct answer ({{ $answer->correct_answer_key }}):</strong> {{ $answer->correct_answer_text }}</p>
                 </article>
               @endforeach

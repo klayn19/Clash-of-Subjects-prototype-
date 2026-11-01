@@ -76,6 +76,49 @@ class QuizbeeHistory
         ]);
     }
 
+    public function recordStudentAnswer(string $attemptId, int $questionId, string $answerKey): bool
+    {
+        $attemptQuestion = DB::table('quizbee_attempt_questions')
+            ->where('attempt_id', $attemptId)
+            ->where('question_id', $questionId)
+            ->first(['id', 'correct_answer_key', 'student_answer_key']);
+
+        if (!$attemptQuestion) {
+            return false;
+        }
+
+        if ($attemptQuestion->student_answer_key !== null) {
+            return $attemptQuestion->student_answer_key === $answerKey;
+        }
+
+        $question = DB::table('questions')
+            ->where('id', $questionId)
+            ->first(['choice_a', 'choice_b', 'choice_c', 'choice_d']);
+
+        if (!$question) {
+            return false;
+        }
+
+        $answerText = match ($answerKey) {
+            'A' => $question->choice_a,
+            'B' => $question->choice_b,
+            'C' => $question->choice_c,
+            'D' => $question->choice_d,
+        };
+        $now = now();
+
+        return DB::table('quizbee_attempt_questions')
+            ->where('id', $attemptQuestion->id)
+            ->whereNull('student_answer_key')
+            ->update([
+                'student_answer_key' => $answerKey,
+                'student_answer_text' => $answerText,
+                'is_correct' => $answerKey === $attemptQuestion->correct_answer_key,
+                'answered_at' => $now,
+                'updated_at' => $now,
+            ]) === 1;
+    }
+
     public function completeActiveAttempt(): void
     {
         if (session('user_role') !== 'student' || !session('user_id') || !session('quizbee_attempt_id')) {

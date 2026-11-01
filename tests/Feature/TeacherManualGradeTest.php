@@ -2,8 +2,10 @@
 
 namespace Tests\Feature;
 
+use App\Mail\ParentLowGradeAlert;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
@@ -20,6 +22,7 @@ class TeacherManualGradeTest extends TestCase
             $table->string('last_name');
             $table->integer('age')->nullable();
             $table->string('email')->unique();
+            $table->string('parent_email')->nullable();
             $table->string('password');
             $table->string('role');
             $table->string('section')->nullable();
@@ -68,6 +71,7 @@ class TeacherManualGradeTest extends TestCase
 
     public function test_teacher_can_save_a_separate_grade_for_an_enrolled_student(): void
     {
+        Mail::fake();
         [$teacherId, $studentId, $classId] = $this->createClassRoster();
 
         $payload = [
@@ -119,6 +123,8 @@ class TeacherManualGradeTest extends TestCase
         ])->getJson('/backend/admin/get_student_grades/' . $studentId)
             ->assertOk()
             ->assertJsonPath('scores.0.type', 'grade');
+
+        Mail::assertNothingSent();
     }
 
     public function test_teacher_cannot_save_grade_for_a_student_outside_their_class(): void
@@ -141,10 +147,64 @@ class TeacherManualGradeTest extends TestCase
         $this->assertDatabaseCount('student_scores', 0);
     }
 
-    private function createClassRoster(): array
+    public function test_saving_a_failing_grade_sends_a_parent_email(): void
+    {
+        Mail::fake();
+        [$teacherId, $studentId, $classId] = $this->createClassRoster('parent@example.test');
+
+        $this->withSession([
+            'user_id' => $teacherId,
+            'user_role' => 'teacher',
+        ])->postJson('/backend/save_manual_grade.php', [
+            'class_id' => $classId,
+            'student_id' => $studentId,
+            'subject' => 'math',
+            'quarter' => 2,
+            'grade' => 74,
+        ])->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('notification_status', 'sent');
+
+        Mail::assertSent(ParentLowGradeAlert::class, function (ParentLowGradeAlert $mail) {
+            return $mail->hasTo('parent@example.test')
+                && $mail->studentName === 'Student Test'
+                && $mail->subjectName === 'math'
+                && $mail->grade === 74.0
+                && $mail->quarter === 2;
+        });
+    }
+
+    public function test_failing_grade_is_saved_with_a_warning_when_parent_email_is_missing(): void
+    {
+        Mail::fake();
+        [$teacherId, $studentId, $classId] = $this->createClassRoster();
+
+        $this->withSession([
+            'user_id' => $teacherId,
+            'user_role' => 'teacher',
+        ])->postJson('/backend/save_manual_grade.php', [
+            'class_id' => $classId,
+            'student_id' => $studentId,
+            'subject' => 'english',
+            'quarter' => 1,
+            'grade' => 60,
+        ])->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('notification_status', 'missing_parent_email')
+            ->assertJsonPath('message', 'Grade saved, but no parent/guardian email is registered, so no alert was sent.');
+
+        $this->assertDatabaseHas('student_scores', [
+            'student_id' => $studentId,
+            'type' => 'grade',
+            'percent' => 60,
+        ]);
+        Mail::assertNothingSent();
+    }
+
+    private function createClassRoster(?string $parentEmail = null): array
     {
         $teacherId = $this->createUser('teacher', 'teacher@example.test', null);
-        $studentId = $this->createUser('student', 'student@example.test', 'Grade 7');
+        $studentId = $this->createUser('student', 'student@example.test', 'Grade 7', $parentEmail);
         $classId = DB::table('classes')->insertGetId([
             'name' => 'Grade 7',
             'section' => 'Grade 7',
@@ -162,13 +222,14 @@ class TeacherManualGradeTest extends TestCase
         return [$teacherId, $studentId, $classId];
     }
 
-    private function createUser(string $role, string $email, ?string $section): int
+    private function createUser(string $role, string $email, ?string $section, ?string $parentEmail = null): int
     {
         return DB::table('users')->insertGetId([
             'lrn' => null,
             'first_name' => ucfirst($role),
             'last_name' => 'Test',
             'email' => $email,
+            'parent_email' => $parentEmail,
             'password' => 'unused',
             'role' => $role,
             'section' => $section,

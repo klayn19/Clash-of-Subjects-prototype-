@@ -526,7 +526,9 @@ class TeacherController extends Controller
             $type = 'quizbee';
         }
         $quizbeeHistory = app(QuizbeeHistory::class);
-        $quizbeeAttemptId = $quizbeeHistory->activeAttemptId($type);
+        $quizbeeAttemptId = $quizbeeHistory->activeAttemptId(
+            $request->input('mode') === 'quizbee' ? 'quizbee' : $type
+        );
         $isMixed = ($subject === 'mixed' || $subject === 'all');
 
         $sequenceNumber = $request->input('quiz_number', $request->input('sequence_number'));
@@ -980,7 +982,7 @@ class TeacherController extends Controller
         $student = DB::table('users')
             ->where('id', $validated['student_id'])
             ->where('role', 'student')
-            ->exists();
+            ->first(['id', 'first_name', 'last_name', 'parent_email']);
 
         if (!$student) {
             return response()->json(['success' => false, 'message' => 'Student not found.'], 404);
@@ -1019,9 +1021,43 @@ class TeacherController extends Controller
             'updated_at' => now(),
         ]);
 
+        $notificationStatus = 'not_required';
+        $message = 'Grade saved successfully.';
+
+        if ($grade < 75) {
+            if (empty($student->parent_email)) {
+                $notificationStatus = 'missing_parent_email';
+                $message = 'Grade saved, but no parent/guardian email is registered, so no alert was sent.';
+            } else {
+                try {
+                    Mail::to($student->parent_email)->send(new ParentLowGradeAlert(
+                        trim($student->first_name . ' ' . $student->last_name),
+                        $validated['subject'],
+                        'grade',
+                        (float) $grade,
+                        (int) $validated['quarter'],
+                        (float) $grade,
+                        100.0,
+                    ));
+                    $notificationStatus = 'sent';
+                    $message = 'Grade saved and a low-grade alert was sent to the parent/guardian.';
+                } catch (\Throwable $exception) {
+                    Log::error('Parent low-grade alert email failed after manual grade save.', [
+                        'teacher_id' => session('user_id'),
+                        'student_id' => $student->id,
+                        'class_id' => $class->id,
+                        'message' => $exception->getMessage(),
+                    ]);
+                    $notificationStatus = 'failed';
+                    $message = 'Grade saved, but the parent/guardian email could not be sent. Check the mail configuration.';
+                }
+            }
+        }
+
         return response()->json([
             'success' => true,
-            'message' => 'Grade saved successfully.',
+            'message' => $message,
+            'notification_status' => $notificationStatus,
         ]);
     }
 

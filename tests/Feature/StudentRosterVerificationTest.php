@@ -154,6 +154,16 @@ class StudentRosterVerificationTest extends TestCase
         $this->createStudent('555555555555');
         $verifiedId = $this->createStudent('666666666666');
         DB::table('users')->where('id', $verifiedId)->update(['is_verified' => true]);
+        DB::table('users')->insert([
+            'first_name' => 'Needs',
+            'last_name' => 'Lrn',
+            'age' => 13,
+            'email' => 'needs.lrn@example.test',
+            'password' => 'unused',
+            'role' => 'student',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
         $teacherId = DB::table('users')->insertGetId([
             'first_name' => 'Teacher',
             'last_name' => 'Visible',
@@ -169,9 +179,113 @@ class StudentRosterVerificationTest extends TestCase
             ->assertOk()
             ->assertSee('VERIFIED')
             ->assertSee('NOT VERIFIED')
+            ->assertSee('LRN VERIFICATION')
+            ->assertSee('STUDENT LRN VERIFICATION')
+            ->assertSee('searchLrnReview')
+            ->assertSee('Name, LRN, or section...')
+            ->assertSee('ADD LRN')
+            ->assertSee('VERIFY THIS LRN')
             ->assertSee('REMOVE')
             ->assertSee('teacher-delete-btn')
             ->assertSee('removeTeacher(' . $teacherId, false);
+    }
+
+    public function test_admin_can_add_and_manually_verify_a_student_lrn(): void
+    {
+        $studentId = (int) DB::table('users')->insertGetId([
+            'first_name' => 'New',
+            'last_name' => 'Student',
+            'age' => 13,
+            'email' => 'new.student@example.test',
+            'password' => 'unused',
+            'role' => 'student',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->withSession(['user_id' => 1, 'user_role' => 'admin'])
+            ->postJson('/backend/admin/update_student', [
+                'student_id' => $studentId,
+                'lrn' => '888888888888',
+                'is_verified' => true,
+                'section' => 'Grade 7 - Rizal',
+                'parent_email' => '',
+            ])
+            ->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('verified', true);
+
+        $this->assertDatabaseHas('users', [
+            'id' => $studentId,
+            'lrn' => '888888888888',
+            'section' => 'Grade 7 - Rizal',
+            'is_verified' => true,
+        ]);
+    }
+
+    public function test_admin_cannot_verify_a_student_without_an_lrn(): void
+    {
+        $studentId = (int) DB::table('users')->insertGetId([
+            'first_name' => 'No',
+            'last_name' => 'Lrn',
+            'age' => 13,
+            'email' => 'no.lrn@example.test',
+            'password' => 'unused',
+            'role' => 'student',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->withSession(['user_id' => 1, 'user_role' => 'admin'])
+            ->postJson('/backend/admin/update_student', [
+                'student_id' => $studentId,
+                'lrn' => null,
+                'is_verified' => true,
+                'section' => 'Grade 7 - Rizal',
+            ])
+            ->assertUnprocessable()
+            ->assertJsonPath('message', 'Enter the student LRN before verifying it.');
+
+        $this->assertDatabaseHas('users', [
+            'id' => $studentId,
+            'lrn' => null,
+            'is_verified' => false,
+        ]);
+    }
+
+    public function test_admin_cannot_assign_an_lrn_already_used_by_another_student(): void
+    {
+        $existingStudentId = $this->createStudent('999999999999');
+        $newStudentId = (int) DB::table('users')->insertGetId([
+            'first_name' => 'Another',
+            'last_name' => 'Student',
+            'age' => 13,
+            'email' => 'another.student@example.test',
+            'password' => 'unused',
+            'role' => 'student',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->withSession(['user_id' => 1, 'user_role' => 'admin'])
+            ->postJson('/backend/admin/update_student', [
+                'student_id' => $newStudentId,
+                'lrn' => '999999999999',
+                'is_verified' => true,
+                'section' => 'Grade 7 - Rizal',
+            ])
+            ->assertUnprocessable()
+            ->assertJsonPath('success', false);
+
+        $this->assertDatabaseHas('users', [
+            'id' => $existingStudentId,
+            'lrn' => '999999999999',
+        ]);
+        $this->assertDatabaseHas('users', [
+            'id' => $newStudentId,
+            'lrn' => null,
+            'is_verified' => false,
+        ]);
     }
 
     public function test_admin_can_remove_a_student_and_their_scores_and_class_membership(): void

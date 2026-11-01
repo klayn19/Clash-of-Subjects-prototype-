@@ -55,7 +55,10 @@ class StudentController extends Controller
         $unreadNotes = $notes->whereNull('read_at')->count();
 
         $quizbeeHistoryAvailable = Schema::hasTable('quizbee_attempts')
-            && Schema::hasTable('quizbee_attempt_questions');
+            && Schema::hasTable('quizbee_attempt_questions')
+            && Schema::hasColumn('quizbee_attempt_questions', 'student_answer_key')
+            && Schema::hasColumn('quizbee_attempt_questions', 'student_answer_text')
+            && Schema::hasColumn('quizbee_attempt_questions', 'is_correct');
         $quizbeeAttempts = collect();
         if ($quizbeeHistoryAvailable) {
             $quizbeeAttempts = DB::table('quizbee_attempts')
@@ -70,13 +73,55 @@ class StudentController extends Controller
                     'quizbee_attempt_questions.subject',
                     'quizbee_attempt_questions.question',
                     'quizbee_attempt_questions.correct_answer_key',
-                    'quizbee_attempt_questions.correct_answer_text'
+                    'quizbee_attempt_questions.correct_answer_text',
+                    'quizbee_attempt_questions.student_answer_key',
+                    'quizbee_attempt_questions.student_answer_text',
+                    'quizbee_attempt_questions.is_correct'
                 )
                 ->get()
                 ->groupBy('id');
         }
 
         return view('student.dashboard', compact('scores', 'notes', 'unreadNotes', 'bestSubjectScores', 'multiplayerWins', 'leaderboardClasses', 'quizbeeAttempts', 'quizbeeHistoryAvailable'));
+    }
+
+    public function recordQuizbeeAnswer(Request $request)
+    {
+        if (session('user_role') !== 'student' || !session('user_id')) {
+            return response()->json(['success' => false, 'message' => 'Please log in as a student.'], 403);
+        }
+
+        if (
+            !Schema::hasTable('quizbee_attempt_questions')
+            || !Schema::hasColumn('quizbee_attempt_questions', 'student_answer_key')
+            || !Schema::hasColumn('quizbee_attempt_questions', 'student_answer_text')
+            || !Schema::hasColumn('quizbee_attempt_questions', 'is_correct')
+        ) {
+            return response()->json(['success' => false, 'message' => 'Quizbee history is temporarily unavailable. Please try again later.'], 503);
+        }
+
+        $validated = $request->validate([
+            'question_id' => 'required|integer|min:1',
+            'selected_key' => 'required|string|in:A,B,C,D',
+        ]);
+        $quizbeeHistory = app(\App\Services\QuizbeeHistory::class);
+        $attemptId = $quizbeeHistory->activeAttemptId('quizbee');
+
+        if (!$attemptId) {
+            return response()->json(['success' => false, 'message' => 'There is no active Quizbee session.'], 403);
+        }
+
+        $recorded = $quizbeeHistory->recordStudentAnswer(
+            $attemptId,
+            (int) $validated['question_id'],
+            $validated['selected_key'],
+        );
+
+        if (!$recorded) {
+            return response()->json(['success' => false, 'message' => 'This question was not part of your Quizbee session, or its answer was already recorded.'], 409);
+        }
+
+        return response()->json(['success' => true]);
     }
 
     public function markNoteRead(int $noteId)

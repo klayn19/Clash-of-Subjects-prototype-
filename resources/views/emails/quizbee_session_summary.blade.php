@@ -17,6 +17,9 @@
         <div style="margin-bottom:16px;padding:16px;background:#090d1e;border:1px solid #1e2a50;">
           <p style="margin:0 0 8px;color:#f0c030;font-weight:bold;">{{ $index + 1 }}. {{ strtoupper($answer->subject) }}</p>
           <p style="margin:0 0 10px;line-height:1.6;">{{ $answer->question }}</p>
+          @if(isset($answer->student_answer_key) && $answer->student_answer_key !== null)
+            <p style="margin:0 0 8px;color:{{ $answer->is_correct ? '#8ee6a0' : '#ff9999' }};"><strong>Your answer ({{ $answer->is_correct ? 'correct' : 'incorrect' }}) ({{ $answer->student_answer_key }}):</strong> {{ $answer->student_answer_text }}</p>
+          @endif
           <p style="margin:0;color:#8ee6a0;"><strong>Correct answer ({{ $answer->correct_answer_key }}):</strong> {{ $answer->correct_answer_text }}</p>
         </div>
       @endforeach

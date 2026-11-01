@@ -6,6 +6,7 @@ use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\AdminTeacherController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\LeaderboardController;
+use App\Http\Controllers\StudentController;
 
 // ─── AUTH ──────────────────────────────────────────────────────────
 Route::get('/',      [AuthController::class, 'index'])->name('home');
@@ -93,6 +94,8 @@ Route::post('/backend/email_parent_low_grade.php', [TeacherController::class, 'e
 // GET /api/get_question?class_id=3&subject=english&type=quiz&quarter=1&answered=1,2,5
 Route::any('/api/get_question', [TeacherController::class, 'getQuestion'])->name('api.getQuestion');
 Route::any('/backend/get_question.php', [TeacherController::class, 'getQuestion']);
+Route::post('/api/quizbee/record-answer', [StudentController::class, 'recordQuizbeeAnswer'])
+    ->name('api.quizbee.record-answer');
 Route::get('/backend/get_quiz_numbers.php', [TeacherController::class, 'getQuizNumbers'])
     ->name('api.getQuizNumbers');
 
