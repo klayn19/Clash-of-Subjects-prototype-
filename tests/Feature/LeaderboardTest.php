@@ -18,6 +18,7 @@ class LeaderboardTest extends TestCase
             $table->string('first_name');
             $table->string('last_name');
             $table->string('role');
+            $table->string('subject')->nullable();
             $table->unsignedInteger('multiplayer_wins')->default(0);
         });
         Schema::create('classes', function (Blueprint $table) {
@@ -103,6 +104,7 @@ class LeaderboardTest extends TestCase
     public function test_teacher_can_view_only_their_own_class_leaderboard(): void
     {
         $teacherId = $this->addUser('Teacher', 'One', 'teacher');
+        DB::table('users')->where('id', $teacherId)->update(['subject' => 'science']);
         $otherTeacherId = $this->addUser('Teacher', 'Two', 'teacher');
         $ownClassId = DB::table('classes')->insertGetId([
             'name' => 'Grade 8 - A',
@@ -122,6 +124,10 @@ class LeaderboardTest extends TestCase
 
         $this->getJson("/leaderboard?class_id={$otherClassId}&subject=science")
             ->assertNotFound();
+
+        $this->getJson("/leaderboard?class_id={$ownClassId}&subject=math")
+            ->assertForbidden()
+            ->assertJsonPath('success', false);
     }
 
     private function addUser(string $firstName, string $lastName, string $role, int $wins = 0): int

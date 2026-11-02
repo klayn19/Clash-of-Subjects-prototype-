@@ -106,6 +106,24 @@
     .form-grid { display: grid; grid-template-columns: 1fr; gap: 15px 20px; }
     .form-grid .form-group { margin-bottom: 0; }
     .form-grid .pixel-input { margin-bottom: 0; }
+    .admin-pw-wrap { position: relative; }
+    .admin-pw-wrap .pixel-input { padding-right: 44px; }
+    .admin-pw-toggle { position: absolute; top: 50%; right: 12px; transform: translateY(-50%); border: 0; background: transparent; color: var(--text-muted); cursor: pointer; }
+    .admin-pw-toggle:hover, .admin-pw-toggle:focus-visible { color: var(--gold); }
+    .admin-strength-row { display: flex; gap: 4px; margin-top: 7px; }
+    .admin-strength-segment { height: 5px; flex: 1; background: var(--blue-mid); }
+    .admin-strength-segment.weak { background: #c0392b; }
+    .admin-strength-segment.moderate { background: #e67e22; }
+    .admin-strength-segment.strong { background: #27ae60; }
+    .admin-strength-label { min-height: 18px; margin-top: 4px; color: var(--text-muted); font-size: 12px; text-align: right; }
+    .section-choice-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 6px 12px; max-height: 170px; overflow-y: auto; padding: 8px; background: var(--blue-deep); border: 1px solid var(--blue-mid); }
+    .section-choice { display: flex; align-items: center; gap: 8px; min-height: 32px; color: #fff; font-size: 13px; cursor: pointer; }
+    .section-choice input { width: 16px; height: 16px; accent-color: var(--gold); flex: 0 0 auto; }
+    .section-choice-toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 8px 0 4px; }
+    .section-choice-toolbar button { padding: 4px 8px; font-size: 10px; }
+    .section-choice-count { color: var(--text-muted); font-size: 12px; }
+    .teacher-assignment { margin-top: 8px; }
+    .teacher-assignment-sections { color: var(--text-muted); font-size: 13px; }
     .col-span-2 { grid-column: 1 / -1; }
     @media (min-width: 768px) {
       .form-grid { grid-template-columns: 1fr 1fr; }
@@ -139,11 +157,6 @@
     .overall-big { font-family: 'Cinzel', serif; font-weight: 700; font-size: 26px; }
     .overall-label { font-size: 16px; color: var(--text-dim); }
     .overall-percent { font-size: 22px; color: #fff; }
-
-    /* ===== ALERTS ===== */
-    .alert { padding: 12px 16px; margin-bottom: 16px; font-size: 18px; border-left: 4px solid; }
-    .alert-success { background: rgba(39,174,96,0.15); border-color: var(--green); color: #5dde90; }
-    .alert-error   { background: rgba(192,57,43,0.15);  border-color: var(--red);   color: #e57373; }
 
     /* ===== TEACHERS LIST ===== */
     .teacher-card { display: flex; align-items: center; gap: 14px; background: var(--blue-ui); border: 2px solid var(--blue-mid); padding: 14px 18px; margin-bottom: 10px; }
@@ -350,18 +363,6 @@
 
     <!-- MAIN -->
     <main class="main">
-      @if(session('success'))
-        <div class="alert alert-success"><i class="fas fa-check-circle"></i> {{ session('success') }}</div>
-      @endif
-      @if(session('error'))
-        <div class="alert alert-error"><i class="fas fa-exclamation-triangle"></i> {{ session('error') }}</div>
-      @endif
-      @if($errors->any())
-        <div class="alert alert-error">
-          @foreach($errors->all() as $err) ⚠ {{ $err }}<br> @endforeach
-        </div>
-      @endif
-
       {{-- ===== STUDENTS SECTION ===== --}}
       <section id="section-students" class="section active">
         <div class="panel">
@@ -529,7 +530,7 @@
                     </td>
                   </tr>
                 @empty
-                  <tr>
+                  <tr id="lrnReviewEmpty">
                     <td colspan="5" style="text-align:center;color:var(--text-muted);padding:20px;">
                       All students have an assigned and verified LRN.
                     </td>
@@ -542,6 +543,14 @@
                 </tr>
               </tbody>
             </table>
+          </div>
+          <div class="student-pagination" id="lrnReviewPagination" hidden>
+            <span id="lrnReviewPageInfo"></span>
+            <div class="student-pagination-controls">
+              <button type="button" class="pixel-btn" id="lrnReviewPrev" onclick="changeLrnReviewPage(-1)">PREVIOUS</button>
+              <span id="lrnReviewPageNumber"></span>
+              <button type="button" class="pixel-btn" id="lrnReviewNext" onclick="changeLrnReviewPage(1)">NEXT</button>
+            </div>
           </div>
         </div>
       </section>
@@ -564,6 +573,28 @@
                   <div class="teacher-name">{{ $t->first_name }} {{ $t->last_name }}</div>
                   <div class="teacher-email">{{ $t->email }}</div>
                   <div class="teacher-email">Subject: {{ $t->subject ? ucfirst($t->subject) : 'Not assigned' }}</div>
+                  <div class="teacher-assignment-sections">
+                    Sections:
+                    {{ ($teacherSections->get($t->id) ?? collect())->isNotEmpty() ? ($teacherSections->get($t->id) ?? collect())->implode(', ') : 'None assigned' }}
+                  </div>
+                  <div class="teacher-assignment">
+                    <div class="section-choice-toolbar">
+                      <button type="button" class="pixel-btn btn-outline" onclick="toggleAllSectionChoices('teacher-sections-{{ $t->id }}', true)">SELECT ALL</button>
+                      <button type="button" class="pixel-btn btn-outline" onclick="toggleAllSectionChoices('teacher-sections-{{ $t->id }}', false)">CLEAR</button>
+                      <span class="section-choice-count" id="teacher-sections-count-{{ $t->id }}">0 selected</span>
+                    </div>
+                    <div class="section-choice-list" id="teacher-sections-{{ $t->id }}" aria-label="Sections to assign to {{ $t->first_name }} {{ $t->last_name }}">
+                      @foreach($sections as $section)
+                        <label class="section-choice">
+                          <input type="checkbox" value="{{ $section->id }}" onchange="updateSectionChoiceCount('teacher-sections-{{ $t->id }}', 'teacher-sections-count-{{ $t->id }}')" {{ $sections->isEmpty() ? 'disabled' : '' }}>
+                          <span>{{ $section->name }}</span>
+                        </label>
+                      @endforeach
+                    </div>
+                    <button type="button" class="pixel-btn" onclick="assignTeacherSection({{ $t->id }}, this)" {{ $sections->isEmpty() ? 'disabled' : '' }}>
+                      <i class="fas fa-link" aria-hidden="true"></i> ASSIGN SECTIONS
+                    </button>
+                  </div>
                 </div>
                 <button type="button" class="pixel-btn teacher-delete-btn" onclick="removeTeacher({{ $t->id }}, this)" aria-label="Delete teacher {{ $t->first_name }} {{ $t->last_name }}">
                   <i class="fas fa-trash" aria-hidden="true"></i> DELETE
@@ -591,32 +622,60 @@
             <div class="form-grid">
               <div class="form-group">
                 <label class="form-label" for="t_first_name">FIRST NAME</label>
-                <input type="text" id="t_first_name" name="first_name" class="pixel-input" required placeholder="e.g. Maria">
+                <input type="text" id="t_first_name" name="first_name" class="pixel-input" value="{{ old('first_name') }}" pattern="[^0-9]+" title="Names cannot contain numbers." required placeholder="e.g. Maria">
               </div>
               <div class="form-group">
                 <label class="form-label" for="t_last_name">LAST NAME</label>
-                <input type="text" id="t_last_name" name="last_name" class="pixel-input" required placeholder="e.g. Santos">
+                <input type="text" id="t_last_name" name="last_name" class="pixel-input" value="{{ old('last_name') }}" pattern="[^0-9]+" title="Names cannot contain numbers." required placeholder="e.g. Santos">
               </div>
               <div class="form-group col-span-2">
                 <label class="form-label" for="t_email">EMAIL ADDRESS (LOGIN ID)</label>
-                <input type="email" id="t_email" name="email" class="pixel-input" required placeholder="teacher@school.edu">
+                <input type="email" id="t_email" name="email" class="pixel-input" value="{{ old('email') }}" required placeholder="teacher@school.edu">
               </div>
               <div class="form-group col-span-2">
                 <label class="form-label" for="t_subject">SUBJECT</label>
                 <select id="t_subject" name="subject" class="pixel-input" required>
-                  <option value="" disabled selected>Select a subject</option>
-                  <option value="english">English</option>
-                  <option value="math">Math</option>
-                  <option value="science">Science</option>
+                  <option value="" disabled {{ old('subject') ? '' : 'selected' }}>Select a subject</option>
+                  <option value="english" {{ old('subject') === 'english' ? 'selected' : '' }}>English</option>
+                  <option value="math" {{ old('subject') === 'math' ? 'selected' : '' }}>Math</option>
+                  <option value="science" {{ old('subject') === 'science' ? 'selected' : '' }}>Science</option>
                 </select>
+              </div>
+              <div class="form-group col-span-2">
+                <span class="form-label">ASSIGN SECTIONS (OPTIONAL)</span>
+                <div class="section-choice-toolbar">
+                  <button type="button" class="pixel-btn btn-outline" onclick="toggleAllSectionChoices('new-teacher-sections', true)">SELECT ALL</button>
+                  <button type="button" class="pixel-btn btn-outline" onclick="toggleAllSectionChoices('new-teacher-sections', false)">CLEAR</button>
+                  <span class="section-choice-count" id="new-teacher-sections-count">0 selected</span>
+                </div>
+                <div class="section-choice-list" id="new-teacher-sections" aria-label="Sections to assign to the new teacher">
+                  @foreach($sections as $section)
+                    <label class="section-choice">
+                      <input type="checkbox" name="section_ids[]" value="{{ $section->id }}" onchange="updateSectionChoiceCount('new-teacher-sections', 'new-teacher-sections-count')" {{ in_array((string) $section->id, old('section_ids', []), true) ? 'checked' : '' }}>
+                      <span>{{ $section->name }}</span>
+                    </label>
+                  @endforeach
+                </div>
               </div>
               <div class="form-group">
                 <label class="form-label" for="t_password">PASSWORD</label>
-                <input type="password" id="t_password" name="password" class="pixel-input" required placeholder="Min. 6 characters">
+                <div class="admin-pw-wrap">
+                  <input type="password" id="t_password" name="password" class="pixel-input" minlength="6" pattern="(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9]).{6,}" title="Use at least 6 characters, including a number, an uppercase letter, and a special character." required placeholder="Create a password" oninput="checkAdminPasswordStrength(this)">
+                  <button type="button" class="admin-pw-toggle" onclick="toggleAdminPassword('t_password', this)" aria-label="Show password" aria-pressed="false"><i class="fas fa-eye" aria-hidden="true"></i></button>
+                </div>
+                <div class="admin-strength-row" aria-hidden="true">
+                  <span class="admin-strength-segment"></span><span class="admin-strength-segment"></span>
+                  <span class="admin-strength-segment"></span><span class="admin-strength-segment"></span>
+                </div>
+                <div class="admin-strength-label" aria-live="polite"></div>
+                <small class="teacher-email">At least 6 characters, a number, an uppercase letter, and one special character.</small>
               </div>
               <div class="form-group">
                 <label class="form-label" for="t_confirm_password">CONFIRM PASSWORD</label>
-                <input type="password" id="t_confirm_password" name="confirm_password" class="pixel-input" required placeholder="Repeat password">
+                <div class="admin-pw-wrap">
+                  <input type="password" id="t_confirm_password" name="confirm_password" class="pixel-input" required placeholder="Repeat password">
+                  <button type="button" class="admin-pw-toggle" onclick="toggleAdminPassword('t_confirm_password', this)" aria-label="Show password" aria-pressed="false"><i class="fas fa-eye" aria-hidden="true"></i></button>
+                </div>
               </div>
             </div>
             <div class="btn-row">
@@ -763,6 +822,20 @@
   </div>
 </div>
 
+@include('components.app-dialog')
+
+<script>
+  @if(session('success'))
+    showAppDialog(@json(session('success')), { title: 'SUCCESS' });
+  @endif
+  @if(session('error'))
+    showAppDialog(@json(session('error')), { title: 'ERROR' });
+  @endif
+  @if($errors->any())
+    showAppDialog(@json($errors->all()).join('\n'), { title: 'PLEASE CHECK YOUR INPUT' });
+  @endif
+</script>
+
 <script>
   // ===== NAV =====
   function toggleSidebar() {
@@ -903,25 +976,50 @@
   filterStudents();
 
   const lrnReviewSearch = document.getElementById('searchLrnReview');
+  let lrnReviewPage = 1;
+  const lrnReviewPageSize = 10;
+
+  function renderLrnReviewPage() {
+    const rows = Array.from(document.querySelectorAll('.lrn-review-row'));
+    const search = lrnReviewSearch.value.trim().toLowerCase();
+    const filteredRows = rows.filter(row => [
+      row.dataset.name,
+      row.dataset.lrn,
+      row.dataset.section
+    ].join(' ').toLowerCase().includes(search));
+    const pageCount = Math.max(1, Math.ceil(filteredRows.length / lrnReviewPageSize));
+    lrnReviewPage = Math.min(lrnReviewPage, pageCount);
+    const pageStart = (lrnReviewPage - 1) * lrnReviewPageSize;
+    const visibleRows = filteredRows.slice(pageStart, pageStart + lrnReviewPageSize);
+
+    rows.forEach(row => { row.hidden = true; });
+    visibleRows.forEach(row => { row.hidden = false; });
+
+    const emptyState = document.getElementById('lrnReviewEmpty');
+    if (emptyState) emptyState.hidden = rows.length > 0;
+    document.getElementById('lrnReviewNoResults').hidden = rows.length === 0 || filteredRows.length > 0;
+
+    const pagination = document.getElementById('lrnReviewPagination');
+    pagination.hidden = filteredRows.length <= lrnReviewPageSize;
+    document.getElementById('lrnReviewPageInfo').textContent = filteredRows.length
+      ? `Showing ${pageStart + 1}–${pageStart + visibleRows.length} of ${filteredRows.length} students`
+      : 'No students match your search';
+    document.getElementById('lrnReviewPageNumber').textContent = `Page ${lrnReviewPage} of ${pageCount}`;
+    document.getElementById('lrnReviewPrev').disabled = lrnReviewPage === 1;
+    document.getElementById('lrnReviewNext').disabled = lrnReviewPage === pageCount;
+  }
+
+  function changeLrnReviewPage(direction) {
+    lrnReviewPage += direction;
+    renderLrnReviewPage();
+  }
+
   if (lrnReviewSearch) {
     lrnReviewSearch.addEventListener('input', () => {
-      const search = lrnReviewSearch.value.trim().toLowerCase();
-      const rows = Array.from(document.querySelectorAll('.lrn-review-row'));
-      let visibleCount = 0;
-
-      rows.forEach(row => {
-        const searchableText = [
-          row.dataset.name,
-          row.dataset.lrn,
-          row.dataset.section
-        ].join(' ').toLowerCase();
-        const matches = !search || searchableText.includes(search);
-        row.hidden = !matches;
-        if (matches) visibleCount++;
-      });
-
-      document.getElementById('lrnReviewNoResults').hidden = visibleCount > 0;
+      lrnReviewPage = 1;
+      renderLrnReviewPage();
     });
+    renderLrnReviewPage();
   }
 
   // ===== EDIT STUDENT MODAL =====
@@ -981,7 +1079,12 @@
   async function removeStudent(id, button) {
     const row = button.closest('.student-row');
     const studentName = row?.cells[2]?.textContent.trim() || 'this student';
-    if (!confirm(`Permanently remove ${studentName} and their saved scores and class links? This cannot be undone.`)) return;
+    if (!await showAppDialog(`Permanently remove ${studentName} and their saved scores and class links? This cannot be undone.`, {
+      title: 'DELETE STUDENT',
+      confirm: true,
+      confirmLabel: 'DELETE',
+      danger: true
+    })) return;
 
     button.disabled = true;
     try {
@@ -998,47 +1101,51 @@
       if (!response.ok || !data.success) {
         throw new Error(data.message || 'Could not remove the student.');
       }
-
-      async function removeTeacher(id, button) {
-        const card = button.closest('[data-teacher-card]');
-        const teacherName = card?.querySelector('.teacher-name')?.textContent.trim() || 'this teacher';
-        if (!confirm(`Permanently remove ${teacherName}, their classes, questions, and class scores? Student accounts will remain. This cannot be undone.`)) return;
-
-        button.disabled = true;
-        try {
-          const response = await fetch('/backend/admin/delete_teacher', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Accept': 'application/json',
-              'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-            },
-            body: JSON.stringify({ teacher_id: id })
-          });
-          const data = await response.json();
-          if (!response.ok || !data.success) {
-            throw new Error(data.message || 'Could not remove the teacher.');
-          }
-
-          card.remove();
-          const remainingTeachers = document.querySelectorAll('[data-teacher-card]').length;
-          const count = document.getElementById('teacherCount');
-          if (count) count.textContent = String(remainingTeachers);
-          if (remainingTeachers === 0) {
-            document.getElementById('noTeachersMessage').style.display = 'block';
-          }
-        } catch (error) {
-          console.error('Teacher removal failed:', error);
-          alert(error.message || 'Could not remove the teacher. Please try again.');
-          button.disabled = false;
-        }
-      }
-
       row.remove();
       filterStudents();
     } catch (error) {
       console.error('Student removal failed:', error);
-      alert(error.message || 'Could not remove the student. Please try again.');
+      await showAppDialog(error.message || 'Could not remove the student. Please try again.', { title: 'STUDENT DELETE FAILED' });
+      button.disabled = false;
+    }
+  }
+
+  async function removeTeacher(id, button) {
+    const card = button.closest('[data-teacher-card]');
+    const teacherName = card?.querySelector('.teacher-name')?.textContent.trim() || 'this teacher';
+    if (!await showAppDialog(`Permanently remove ${teacherName}, their classes, questions, and class scores? Student accounts will remain. This cannot be undone.`, {
+      title: 'DELETE TEACHER',
+      confirm: true,
+      confirmLabel: 'DELETE',
+      danger: true
+    })) return;
+
+    button.disabled = true;
+    try {
+      const response = await fetch('/backend/admin/delete_teacher', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+        },
+        body: JSON.stringify({ teacher_id: id })
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || 'Could not remove the teacher.');
+      }
+
+      card.remove();
+      const remainingTeachers = document.querySelectorAll('[data-teacher-card]').length;
+      const count = document.getElementById('teacherCount');
+      if (count) count.textContent = String(remainingTeachers);
+      if (remainingTeachers === 0) {
+        document.getElementById('noTeachersMessage').style.display = 'block';
+      }
+    } catch (error) {
+      console.error('Teacher removal failed:', error);
+      await showAppDialog(error.message || 'Could not remove the teacher. Please try again.', { title: 'TEACHER DELETE FAILED' });
       button.disabled = false;
     }
   }
@@ -1186,6 +1293,92 @@
     showSection('teachers-list', document.getElementById('nav-teachers-list'));
   @endif
 
+  async function assignTeacherSection(teacherId, button) {
+    const sectionList = document.getElementById(`teacher-sections-${teacherId}`);
+    const sectionIds = Array.from(sectionList?.querySelectorAll('input[type="checkbox"]:checked') ?? [], checkbox => checkbox.value);
+    if (!sectionIds.length) {
+      await showAppDialog('Select at least one section to assign.', { title: 'SECTION REQUIRED' });
+      sectionList?.querySelector('input[type="checkbox"]')?.focus();
+      return;
+    }
+
+    button.disabled = true;
+    try {
+      const response = await fetch("{{ route('admin.assign_teacher_section') }}", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+        },
+        body: JSON.stringify({ teacher_id: teacherId, section_ids: sectionIds })
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || 'Could not assign the section.');
+      }
+
+      location.reload();
+    } catch (error) {
+      console.error('Teacher section assignment failed:', error);
+      await showAppDialog(error.message || 'Could not assign the section. Please try again.', { title: 'SECTION ASSIGNMENT FAILED' });
+      button.disabled = false;
+    }
+  }
+
+  function toggleAllSectionChoices(listId, checked) {
+    const list = document.getElementById(listId);
+    if (!list) return;
+    list.querySelectorAll('input[type="checkbox"]:not(:disabled)').forEach(checkbox => {
+      checkbox.checked = checked;
+    });
+    updateSectionChoiceCount(listId);
+  }
+
+  function updateSectionChoiceCount(listId, countId = null) {
+    const list = document.getElementById(listId);
+    if (!list) return;
+    const selectedCount = list.querySelectorAll('input[type="checkbox"]:checked').length;
+    const count = document.getElementById(countId || `${listId}-count`);
+    if (count) count.textContent = `${selectedCount} selected`;
+  }
+
+  document.querySelectorAll('.section-choice-list').forEach(list => updateSectionChoiceCount(list.id));
+
+  function toggleAdminPassword(inputId, button) {
+    const input = document.getElementById(inputId);
+    const isVisible = input.type === 'text';
+    input.type = isVisible ? 'password' : 'text';
+    button.setAttribute('aria-pressed', String(!isVisible));
+    button.setAttribute('aria-label', isVisible ? 'Show password' : 'Hide password');
+    button.innerHTML = `<i class="fas fa-eye${isVisible ? '' : '-slash'}" aria-hidden="true"></i>`;
+  }
+
+  function checkAdminPasswordStrength(input) {
+    const field = input.closest('.form-group');
+    const segments = field.querySelectorAll('.admin-strength-segment');
+    const label = field.querySelector('.admin-strength-label');
+    segments.forEach(segment => segment.className = 'admin-strength-segment');
+
+    if (!input.value) {
+      label.textContent = '';
+      return;
+    }
+
+    let score = 0;
+    if (input.value.length >= 8) score++;
+    if (/[A-Z]/.test(input.value)) score++;
+    if (/[0-9]/.test(input.value)) score++;
+    if (/[^A-Za-z0-9]/.test(input.value)) score++;
+
+    const level = score <= 2 ? 'weak' : (score === 3 ? 'moderate' : 'strong');
+    segments.forEach((segment, index) => {
+      if (index < score) segment.classList.add(level);
+    });
+    label.textContent = `${level[0].toUpperCase()}${level.slice(1)} password`;
+    label.style.color = level === 'weak' ? '#e57373' : (level === 'moderate' ? '#f0a050' : '#5dde90');
+  }
+
   // ===== SECTION CRUD =====
   async function addSection(e) {
     e.preventDefault();
@@ -1203,10 +1396,10 @@
       if (data.success) {
         location.reload();
       } else {
-        alert(data.message || 'Error adding section.');
+        await showAppDialog(data.message || 'Error adding section.', { title: 'SECTION ADD FAILED' });
       }
     } catch (err) {
-      alert('Network error adding section.');
+      await showAppDialog('Network error adding section.', { title: 'NETWORK ERROR' });
     }
   }
 
@@ -1243,15 +1436,20 @@
       if (data.success) {
         location.reload();
       } else {
-        alert(data.message || 'Error updating section.');
+        await showAppDialog(data.message || 'Error updating section.', { title: 'SECTION UPDATE FAILED' });
       }
     } catch (err) {
-      alert('Network error updating section.');
+      await showAppDialog('Network error updating section.', { title: 'NETWORK ERROR' });
     }
   }
 
   async function deleteSection(id) {
-    if (!confirm('Are you sure you want to delete this section? Students in this section will have their section cleared.')) return;
+    if (!await showAppDialog('Are you sure you want to delete this section? Students in this section will have their section cleared.', {
+      title: 'DELETE SECTION',
+      confirm: true,
+      confirmLabel: 'DELETE',
+      danger: true
+    })) return;
 
     try {
       const res = await fetch("{{ route('admin.delete_section') }}", {
@@ -1263,10 +1461,10 @@
       if (data.success) {
         location.reload();
       } else {
-        alert(data.message || 'Error deleting section.');
+        await showAppDialog(data.message || 'Error deleting section.', { title: 'SECTION DELETE FAILED' });
       }
     } catch (err) {
-      alert('Network error deleting section.');
+      await showAppDialog('Network error deleting section.', { title: 'NETWORK ERROR' });
     }
   }
 

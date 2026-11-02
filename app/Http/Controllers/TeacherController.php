@@ -15,6 +15,52 @@ use App\Services\QuizbeeHistory;
 
 class TeacherController extends Controller
 {
+    private function assignedTeacherSubject(): ?string
+    {
+        $subject = strtolower(trim((string) DB::table('users')
+            ->where('id', session('user_id'))
+            ->where('role', 'teacher')
+            ->value('subject')));
+
+        return in_array($subject, ['english', 'math', 'science'], true) ? $subject : null;
+    }
+
+    private function studentQuestionClassIds(?int $requestedClassId = null): array
+    {
+        $studentId = (int) session('user_id');
+        $studentSection = DB::table('users')
+            ->where('id', $studentId)
+            ->where('role', 'student')
+            ->value('section');
+
+        if ($studentSection) {
+            $classIds = DB::table('classes')
+                ->where('section', $studentSection)
+                ->pluck('id')
+                ->all();
+        } else {
+            $classIds = DB::table('class_students')
+                ->where('student_id', $studentId)
+                ->pluck('class_id')
+                ->all();
+        }
+
+        $classIds = array_values(array_unique(array_map('intval', $classIds)));
+        if ($requestedClassId !== null && in_array($requestedClassId, $classIds, true)) {
+            return [$requestedClassId];
+        }
+
+        if ($requestedClassId !== null) {
+            Log::info('Ignoring a question request class ID outside the student section.', [
+                'student_id' => $studentId,
+                'requested_class_id' => $requestedClassId,
+                'resolved_class_ids' => $classIds,
+            ]);
+        }
+
+        return $classIds;
+    }
+
     // ─── TEACHER DASHBOARD ────────────────────────────────────────
     public function index()
     {
@@ -24,6 +70,7 @@ class TeacherController extends Controller
 
         $teacherId = session('user_id');
         $teacher = User::findOrFail($teacherId);
+        $assignedSubject = $this->assignedTeacherSubject();
 
         $teacherClassIds = DB::table('classes')
             ->where('teacher_id', $teacherId)
@@ -45,91 +92,51 @@ class TeacherController extends Controller
             ->orderBy('classes.id')
             ->get();
 
-        $sections = Section::orderBy('name')->get();
+        $submittedQuestionSets = DB::table('questions')
+            ->join('classes', 'questions.class_id', '=', 'classes.id')
+            ->where('classes.teacher_id', $teacherId)
+            ->when(
+                $assignedSubject !== null,
+                fn ($query) => $query->whereRaw('LOWER(questions.subject) = ?', [$assignedSubject]),
+                fn ($query) => $query->whereRaw('1 = 0')
+            )
+            ->orderByDesc('questions.created_at')
+            ->orderBy('questions.type')
+            ->orderBy('questions.subject')
+            ->orderBy('questions.quarter')
+            ->orderBy('questions.sequence_number')
+            ->orderBy('questions.id')
+            ->get([
+                'questions.id',
+                'questions.class_id',
+                'questions.subject',
+                'questions.type',
+                'questions.quarter',
+                'questions.sequence_number',
+                'questions.question',
+                'questions.choice_a',
+                'questions.choice_b',
+                'questions.choice_c',
+                'questions.choice_d',
+                'questions.answer',
+                'questions.created_at',
+                'classes.name as class_name',
+                'classes.section',
+            ])
+            ->groupBy(fn ($question) => implode('|', [
+                $question->class_id,
+                strtolower($question->subject),
+                in_array($question->type, ['assessment', 'quizbee'], true) ? 'quizbee' : $question->type,
+                $question->quarter,
+                $question->sequence_number,
+            ]))
+            ->map(fn ($questions) => (object) [
+                'first' => $questions->first(),
+                'questions' => $questions,
+            ])
+            ->values();
 
-        return view('teacher.dashboard', compact('classes', 'sections', 'teacher'));
-    }
-
-    // ─── SAVE / UPDATE CLASS ──────────────────────────────────────
-    public function saveClass(Request $request)
-    {
-        if (session('user_role') !== 'teacher') {
-            return response()->json(['success' => false, 'message' => 'Session expired. Please refresh the page and log in.'], 403);
-        }
-
-        $teacherId = session('user_id');
-
-        if ($request->filled('id')) {
-            $request->validate([
-                'id' => 'required|integer',
-                'section_id' => 'required|integer|exists:sections,id',
-            ]);
-
-            $section = Section::findOrFail($request->section_id);
-            $class = DB::table('classes')
-                ->where('id', $request->id)
-                ->where('teacher_id', $teacherId)
-                ->first();
-
-            if (!$class) {
-                return response()->json(['success' => false, 'message' => 'Class not found or not yours']);
-            }
-
-            $alreadyAssigned = DB::table('classes')
-                ->where('teacher_id', $teacherId)
-                ->where('section', $section->name)
-                ->where('id', '!=', $class->id)
-                ->exists();
-
-            if ($alreadyAssigned) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'You already have a class for this section.',
-                ], 422);
-            }
-
-            DB::table('classes')->where('id', $class->id)->update([
-                'name' => $section->name,
-                'section' => $section->name,
-                'updated_at' => now(),
-            ]);
-            Section::syncClassRoster((int) $class->id);
-
-            return response()->json(['success' => true, 'message' => 'Section updated successfully']);
-        }
-
-        $request->validate([
-            'section_id' => 'required|integer|exists:sections,id',
-        ]);
-
-        $section = Section::findOrFail($request->section_id);
-        $alreadyAssigned = DB::table('classes')
-            ->where('teacher_id', $teacherId)
-            ->where('section', $section->name)
-            ->exists();
-
-        if ($alreadyAssigned) {
-            return response()->json([
-                'success' => false,
-                'message' => 'You already have a class for this section.',
-            ], 422);
-        }
-
-        $classId = DB::table('classes')->insertGetId([
-            'name'       => $section->name,
-            'section'    => $section->name,
-            'teacher_id' => $teacherId,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-
-        Section::syncClassRoster($classId);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Section added successfully.',
-            'class_id' => $classId,
-        ]);
+        return view('teacher.dashboard', compact('classes', 'teacher', 'submittedQuestionSets', 'assignedSubject'));
     }
 
     // ─── DELETE CLASS ─────────────────────────────────────────────
@@ -157,10 +164,87 @@ class TeacherController extends Controller
         return response()->json(['success' => true]);
     }
 
+    public function deleteSubmittedQuestion(Request $request)
+    {
+        if (session('user_role') !== 'teacher' || !session('user_id')) {
+            return response()->json(['success' => false, 'message' => 'Session expired. Please refresh the page and log in.'], 403);
+        }
+
+        $validated = $request->validate([
+            'question_id' => 'required|integer',
+        ]);
+        $assignedSubject = $this->assignedTeacherSubject();
+        if (!$assignedSubject) {
+            return response()->json(['success' => false, 'message' => 'No subject is assigned to this teacher account.'], 403);
+        }
+
+        $question = DB::table('questions')
+            ->join('classes', 'questions.class_id', '=', 'classes.id')
+            ->where('questions.id', $validated['question_id'])
+            ->where('classes.teacher_id', session('user_id'))
+            ->whereRaw('LOWER(questions.subject) = ?', [$assignedSubject])
+            ->select('questions.id')
+            ->first();
+
+        if (!$question) {
+            return response()->json(['success' => false, 'message' => 'Question not found or not yours.'], 404);
+        }
+
+        DB::table('questions')->where('id', $question->id)->delete();
+
+        return response()->json(['success' => true]);
+    }
+
+    public function deleteSubmittedQuestionSet(Request $request)
+    {
+        if (session('user_role') !== 'teacher' || !session('user_id')) {
+            return response()->json(['success' => false, 'message' => 'Session expired. Please refresh the page and log in.'], 403);
+        }
+
+        $validated = $request->validate([
+            'class_id' => 'required|integer',
+            'subject' => 'required|string|max:100',
+            'type' => 'required|in:quiz,quizbee,exam',
+            'quarter' => 'required|integer|between:1,4',
+            'sequence_number' => 'required|integer|min:1',
+        ]);
+        $assignedSubject = $this->assignedTeacherSubject();
+        if (!$assignedSubject || strtolower(trim($validated['subject'])) !== $assignedSubject) {
+            return response()->json(['success' => false, 'message' => 'You can only manage question sets for your assigned subject.'], 403);
+        }
+
+        $class = DB::table('classes')
+            ->where('id', $validated['class_id'])
+            ->where('teacher_id', session('user_id'))
+            ->exists();
+        if (!$class) {
+            return response()->json(['success' => false, 'message' => 'Question set not found or not yours.'], 404);
+        }
+
+        $query = DB::table('questions')
+            ->where('class_id', $validated['class_id'])
+            ->whereRaw('LOWER(subject) = ?', [$assignedSubject])
+            ->where('quarter', $validated['quarter'])
+            ->where('sequence_number', $validated['sequence_number']);
+
+        if ($validated['type'] === 'quizbee') {
+            $query->whereIn('type', ['quizbee', 'assessment']);
+        } else {
+            $query->where('type', $validated['type']);
+        }
+
+        $deleted = $query->delete();
+        if ($deleted === 0) {
+            return response()->json(['success' => false, 'message' => 'Question set was not found.'], 404);
+        }
+
+        return response()->json(['success' => true, 'deleted' => $deleted]);
+    }
+
     // ─── SAVE QUESTIONS ───────────────────────────────────────────
-    // Accepts an array of questions to insert/replace for a class+subject+type+quarter.
+    // Accepts an array of questions to insert/replace for one or more classes.
     // Frontend should POST:
-    //   { class_id, subject, type, quarter, questions: [{question, choice_a, …, answer}, …] }
+    //   { class_ids, subject, type, quarter, questions: [{question, choice_a, …, answer}, …] }
     public function saveQuestions(Request $request)
     {
         Log::info('saveQuestions hit. Session role: ' . session('user_role'));
@@ -169,12 +253,15 @@ class TeacherController extends Controller
             return response()->json(['success' => false, 'message' => 'Session expired. Please refresh the page and log in.'], 403);
         }
 
-        $request->validate([
-            'class_id'             => 'required|integer|exists:classes,id',
+        $validated = $request->validate([
+            'class_id'             => 'required_without:class_ids|nullable|integer|exists:classes,id',
+            'class_ids'            => 'required_without:class_id|array|min:1',
+            'class_ids.*'          => 'required|integer|distinct|exists:classes,id',
             'subject'              => 'required|string|max:100',
             'type'                 => 'required|in:quiz,exam,assessment,quizbee',
             'quarter'              => 'required|integer|between:1,4',
             'sequence_number'      => 'required|integer|min:1',
+            'append'               => 'sometimes|boolean',
             'questions'            => 'required|array|min:1',
             'questions.*.question' => 'required|string',
             'questions.*.choice_a' => 'required|string',
@@ -183,55 +270,72 @@ class TeacherController extends Controller
             'questions.*.choice_d' => 'required|string',
             'questions.*.answer'   => 'required|in:A,B,C,D',
         ]);
+        $assignedSubject = $this->assignedTeacherSubject();
+        if (!$assignedSubject || strtolower(trim($request->input('subject'))) !== $assignedSubject) {
+            return response()->json(['success' => false, 'message' => 'You can only save questions for your assigned subject.'], 403);
+        }
 
         $teacherId = session('user_id');
-
-        $class = DB::table('classes')
-            ->where('id', $request->class_id)
+        $classIds = array_values(array_unique(array_map(
+            'intval',
+            $validated['class_ids'] ?? [$validated['class_id']]
+        )));
+        $ownedClassCount = DB::table('classes')
+            ->whereIn('id', $classIds)
             ->where('teacher_id', $teacherId)
-            ->first();
+            ->count();
 
-        if (!$class) {
-            return response()->json(['success' => false, 'message' => 'Class not found or not yours']);
+        if ($ownedClassCount !== count($classIds)) {
+            return response()->json(['success' => false, 'message' => 'One or more classes were not found or are not yours.'], 404);
         }
 
+        $subject = $assignedSubject;
         $type = $request->input('type') === 'assessment' ? 'quizbee' : $request->input('type');
+        $append = $request->boolean('append');
 
-        DB::table('questions')
-            ->where('class_id', $request->class_id)
-            ->where('subject',  $request->subject)
-            ->where('type',     $type)
-            ->where('quarter',  $request->quarter)
-            ->where('sequence_number', $request->sequence_number)
-            ->delete();
+        DB::transaction(function () use ($request, $classIds, $subject, $type, $append) {
+            foreach ($classIds as $classId) {
+                if (!$append) {
+                    DB::table('questions')
+                        ->where('class_id', $classId)
+                        ->whereRaw('LOWER(subject) = ?', [$subject])
+                        ->where('type', $type)
+                        ->where('quarter', $request->quarter)
+                        ->where('sequence_number', $request->sequence_number)
+                        ->delete();
+                }
 
-        // Bulk insert new questions
-        $rows = [];
-        foreach ($request->questions as $q) {
-            $rows[] = [
-                'class_id'        => $request->class_id,
-                'subject'         => strtolower(trim($request->subject)),
-                'type'            => $type,
-                'quarter'         => $request->quarter,
-                'sequence_number' => $request->sequence_number,
-                'question'        => $q['question'],
-                'choice_a'        => $q['choice_a'],
-                'choice_b'        => $q['choice_b'],
-                'choice_c'        => $q['choice_c'],
-                'choice_d'        => $q['choice_d'],
-                'answer'          => strtoupper($q['answer']),
-                'created_at'      => now(),
-                'updated_at'      => now(),
-            ];
-        }
+                $rows = [];
+                foreach ($request->questions as $question) {
+                    $rows[] = [
+                        'class_id'        => $classId,
+                        'subject'         => $subject,
+                        'type'            => $type,
+                        'quarter'         => $request->quarter,
+                        'sequence_number' => $request->sequence_number,
+                        'question'        => $question['question'],
+                        'choice_a'        => $question['choice_a'],
+                        'choice_b'        => $question['choice_b'],
+                        'choice_c'        => $question['choice_c'],
+                        'choice_d'        => $question['choice_d'],
+                        'answer'          => strtoupper($question['answer']),
+                        'created_at'      => now(),
+                        'updated_at'      => now(),
+                    ];
+                }
 
-        DB::table('questions')->insert($rows);
+                DB::table('questions')->insert($rows);
+            }
+        });
 
+        $inserted = count($validated['questions']) * count($classIds);
         return response()->json([
             'success' => true,
-            'inserted' => count($rows),
+            'inserted' => $inserted,
             'skipped' => 0,
-            'message' => count($rows) . ' question(s) saved successfully',
+            'message' => count($validated['questions']) . ' question(s) ' .
+                ($append ? 'appended' : 'saved') . ' successfully to ' . count($classIds) .
+                (count($classIds) === 1 ? ' class' : ' classes'),
         ]);
     }
 
@@ -242,21 +346,31 @@ class TeacherController extends Controller
         }
 
         $validated = $request->validate([
-            'class_id' => 'required|integer|exists:classes,id',
+            'class_id' => 'required_without:class_ids|nullable|integer|exists:classes,id',
+            'class_ids' => 'required_without:class_id|array|min:1',
+            'class_ids.*' => 'required|integer|distinct|exists:classes,id',
             'subject' => 'required|in:english,math,science',
             'type' => 'required|in:quiz,exam,assessment,quizbee',
             'quarter' => 'required|integer|between:1,4',
             'sequence_number' => 'required|integer|min:1',
             'questions_file' => 'required|file|extensions:csv|max:5120',
         ]);
+        $assignedSubject = $this->assignedTeacherSubject();
+        if (!$assignedSubject || $validated['subject'] !== $assignedSubject) {
+            return response()->json(['success' => false, 'message' => 'You can only upload questions for your assigned subject.'], 403);
+        }
 
-        $class = DB::table('classes')
-            ->where('id', $validated['class_id'])
+        $classIds = array_values(array_unique(array_map(
+            'intval',
+            $validated['class_ids'] ?? [$validated['class_id']]
+        )));
+        $ownedClassCount = DB::table('classes')
+            ->whereIn('id', $classIds)
             ->where('teacher_id', session('user_id'))
-            ->first();
+            ->count();
 
-        if (!$class) {
-            return response()->json(['success' => false, 'message' => 'Class not found or not yours.'], 404);
+        if ($ownedClassCount !== count($classIds)) {
+            return response()->json(['success' => false, 'message' => 'One or more classes were not found or are not yours.'], 404);
         }
 
         $validated['type'] = $validated['type'] === 'assessment' ? 'quizbee' : $validated['type'];
@@ -363,32 +477,36 @@ class TeacherController extends Controller
         }
 
         $now = now();
-        $rows = array_map(static fn ($question) => [
-            'class_id' => $validated['class_id'],
-            'subject' => $validated['subject'],
-            'type' => $validated['type'],
-            'quarter' => $validated['quarter'],
-            'sequence_number' => $validated['sequence_number'],
-            'question' => $question['question'],
-            'choice_a' => $question['choice_a'],
-            'choice_b' => $question['choice_b'],
-            'choice_c' => $question['choice_c'],
-            'choice_d' => $question['choice_d'],
-            'answer' => $question['answer'],
-            'created_at' => $now,
-            'updated_at' => $now,
-        ], $questions);
+        DB::transaction(function () use ($classIds, $validated, $questions, $now) {
+            foreach ($classIds as $classId) {
+                $rows = array_map(static fn ($question) => [
+                    'class_id' => $classId,
+                    'subject' => $validated['subject'],
+                    'type' => $validated['type'],
+                    'quarter' => $validated['quarter'],
+                    'sequence_number' => $validated['sequence_number'],
+                    'question' => $question['question'],
+                    'choice_a' => $question['choice_a'],
+                    'choice_b' => $question['choice_b'],
+                    'choice_c' => $question['choice_c'],
+                    'choice_d' => $question['choice_d'],
+                    'answer' => $question['answer'],
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ], $questions);
 
-        DB::transaction(function () use ($rows) {
-            foreach (array_chunk($rows, 100) as $batch) {
-                DB::table('questions')->insert($batch);
+                foreach (array_chunk($rows, 100) as $batch) {
+                    DB::table('questions')->insert($batch);
+                }
             }
         });
 
+        $inserted = count($questions) * count($classIds);
         return response()->json([
             'success' => true,
-            'inserted' => count($rows),
-            'message' => count($rows) . ' question(s) uploaded successfully and appended to the selected set.',
+            'inserted' => $inserted,
+            'message' => count($questions) . ' question(s) uploaded successfully to ' .
+                count($classIds) . (count($classIds) === 1 ? ' class' : ' classes') . ' and appended.',
         ]);
     }
 
@@ -410,48 +528,28 @@ class TeacherController extends Controller
         $classId = (int) $validated['class_id'];
         $classIds = [$classId];
         if (session('user_role') === 'student' && session('user_id')) {
-            $classIds = DB::table('class_students')
-                ->where('student_id', session('user_id'))
-                ->pluck('class_id')
-                ->all();
-
-            $studentSection = DB::table('users')
-                ->where('id', session('user_id'))
-                ->where('role', 'student')
-                ->value('section');
-
-            if ($studentSection) {
-                $sectionClassIds = DB::table('classes')
-                    ->where('section', $studentSection)
-                    ->pluck('id')
-                    ->all();
-                $classIds = array_merge($classIds, $sectionClassIds);
-            }
-
-            $classIds = array_values(array_unique(array_map('intval', $classIds)));
-            if (!in_array($classId, $classIds, true)) {
-                Log::info('Ignoring a quiz-number request class ID that is not linked to the student.', [
-                    'student_id' => session('user_id'),
-                    'requested_class_id' => $classId,
-                    'resolved_class_ids' => $classIds,
-                ]);
-            }
+            $classIds = $this->studentQuestionClassIds($classId);
         }
 
         $type = $validated['type'] === 'assessment' ? 'quizbee' : $validated['type'];
+        $isStudent = session('user_role') === 'student' && session('user_id');
         $query = DB::table('questions')
-            ->where('subject', $validated['subject'])
+            ->whereRaw('LOWER(subject) = ?', [$validated['subject']])
             ->where('type', $type)
             ->where('quarter', $validated['quarter'])
             ->where('sequence_number', '>=', 1);
 
         if ($classIds !== []) {
-            $query->where(function ($classQuery) use ($classIds) {
-                $classQuery->whereIn('class_id', $classIds)
-                    ->orWhereNull('class_id');
+            $query->where(function ($classQuery) use ($classIds, $isStudent, $type) {
+                $classQuery->whereIn('class_id', $classIds);
+                if (!$isStudent || !in_array($type, ['quiz', 'exam'], true)) {
+                    $classQuery->orWhereNull('class_id');
+                }
             });
-        } elseif (session('user_role') === 'student') {
+        } elseif ($isStudent && !in_array($type, ['quiz', 'exam'], true)) {
             $query->whereNull('class_id');
+        } elseif ($isStudent) {
+            $query->whereRaw('1 = 0');
         }
 
         $quizNumbers = $query->distinct()
@@ -481,34 +579,10 @@ class TeacherController extends Controller
         $query = DB::table('questions');
 
         $classIds = [];
-        $classId = $request->query('class_id');
+        $classId = $request->input('class_id');
         $isStudent = session('user_role') === 'student' && session('user_id');
         if ($isStudent) {
-            $classIds = DB::table('class_students')
-                ->where('student_id', session('user_id'))
-                ->pluck('class_id')
-                ->all();
-
-            $studentSection = DB::table('users')
-                ->where('id', session('user_id'))
-                ->where('role', 'student')
-                ->value('section');
-
-            if ($studentSection) {
-                $sectionClassIds = DB::table('classes')
-                    ->where('section', $studentSection)
-                    ->pluck('id')
-                    ->all();
-                $classIds = array_values(array_unique(array_merge($classIds, $sectionClassIds)));
-            }
-
-            if ($classId && !in_array((int) $classId, array_map('intval', $classIds), true)) {
-                Log::info('Ignoring a question request class ID that is not linked to the student.', [
-                    'student_id' => session('user_id'),
-                    'requested_class_id' => (int) $classId,
-                    'resolved_class_ids' => $classIds,
-                ]);
-            }
+            $classIds = $this->studentQuestionClassIds($classId !== null ? (int) $classId : null);
         } elseif (!empty($classId)) {
             $classIds = [(int) $classId];
         } elseif (session('user_id')) {
@@ -525,29 +599,40 @@ class TeacherController extends Controller
         if ($type === 'assessment') {
             $type = 'quizbee';
         }
+        $isMixed = ($subject === 'mixed' || $subject === 'all');
+        if ($isStudent && in_array($type, ['quiz', 'exam'], true) && $isMixed) {
+            return response()->json([
+                'completed' => true,
+                'cycle_finished' => true,
+                'error' => 'Select a subject before loading quiz or exam questions.',
+            ], 422);
+        }
         $quizbeeHistory = app(QuizbeeHistory::class);
         $quizbeeAttemptId = $quizbeeHistory->activeAttemptId(
             $request->input('mode') === 'quizbee' ? 'quizbee' : $type
         );
-        $isMixed = ($subject === 'mixed' || $subject === 'all');
 
         $sequenceNumber = $request->input('quiz_number', $request->input('sequence_number'));
         $buildQuery = function () use ($request, $classIds, $isStudent, $subject, $isMixed, $type, $sequenceNumber) {
             $q = DB::table('questions');
             if ($isStudent || $classIds !== []) {
-                $q->where(function ($classQuery) use ($classIds) {
+                $q->where(function ($classQuery) use ($classIds, $isStudent, $type) {
                     if ($classIds !== []) {
-                        $classQuery->whereIn('class_id', $classIds)
-                            ->orWhereNull('class_id');
-                    } else {
+                        $classQuery->whereIn('class_id', $classIds);
+                        if (!$isStudent || !in_array($type, ['quiz', 'exam'], true)) {
+                            $classQuery->orWhereNull('class_id');
+                        }
+                    } elseif (!$isStudent || !in_array($type, ['quiz', 'exam'], true)) {
                         $classQuery->whereNull('class_id');
+                    } else {
+                        $classQuery->whereRaw('1 = 0');
                     }
                 });
             }
             if ($isMixed) {
-                $q->whereIn('subject', ['english', 'math', 'science']);
+                $q->whereIn(DB::raw('LOWER(subject)'), ['english', 'math', 'science']);
             } else {
-                $q->where('subject', $subject);
+                $q->whereRaw('LOWER(subject) = ?', [$subject]);
             }
             $q->where('type', $type);
             if ($request->filled('quarter')) {
@@ -664,6 +749,10 @@ class TeacherController extends Controller
             'type' => 'nullable|in:all,quiz,exam,assessment,quizbee,grade',
             'quarter' => 'nullable|in:all,1,2,3,4',
         ]);
+        $assignedSubject = $this->assignedTeacherSubject();
+        if (!$assignedSubject) {
+            return response()->json(['success' => false, 'message' => 'No subject is assigned to this teacher account.'], 403);
+        }
 
         $teacherId = session('user_id');
 
@@ -689,13 +778,13 @@ class TeacherController extends Controller
         $bestSubjectScores = DB::table('student_scores')
             ->where('class_id', $request->class_id)
             ->whereIn('student_id', $students->pluck('id'))
-            ->whereIn('subject', ['english', 'math', 'science'])
+            ->where('subject', $assignedSubject)
             ->select('student_id', 'subject', DB::raw('MAX(percent) as percent'))
             ->groupBy('student_id', 'subject')
             ->get()
             ->keyBy(fn ($score) => $score->student_id . ':' . $score->subject);
 
-        $subjectFilter = $validated['subject'] ?? 'all';
+        $subjectFilter = $assignedSubject;
         $typeFilter    = $validated['type'] ?? 'all';
         if ($typeFilter === 'assessment') {
             $typeFilter = 'quizbee';
@@ -705,18 +794,18 @@ class TeacherController extends Controller
         foreach ($students as $student) {
             $student->name = trim($student->first_name . ' ' . $student->last_name);
             $student->best_subjects = [];
-            foreach (['english', 'math', 'science'] as $subject) {
+            foreach ([$assignedSubject] as $subject) {
                 $bestScore = $bestSubjectScores->get($student->id . ':' . $subject);
                 $student->best_subjects[$subject] = $bestScore ? round((float) $bestScore->percent, 2) : null;
+            }
+            foreach (array_diff(['english', 'math', 'science'], [$assignedSubject]) as $subject) {
+                $student->best_subjects[$subject] = null;
             }
 
             $scoreQuery = DB::table('student_scores')
                 ->where('student_id', $student->id)
-                ->where('class_id', $request->class_id);
-
-            if ($subjectFilter !== 'all') {
-                $scoreQuery->where('subject', $subjectFilter);
-            }
+                ->where('class_id', $request->class_id)
+                ->where('subject', $assignedSubject);
             if ($typeFilter !== 'all') {
                 $scoreQuery->where('type', $typeFilter);
             }
@@ -767,6 +856,10 @@ class TeacherController extends Controller
             'type' => 'required|in:all,quiz,exam,assessment,quizbee,grade',
             'quarter' => 'required|in:all,1,2,3,4',
         ]);
+        $assignedSubject = $this->assignedTeacherSubject();
+        if (!$assignedSubject) {
+            return response()->json(['success' => false, 'message' => 'No subject is assigned to this teacher account.'], 403);
+        }
 
         $class = DB::table('classes')
             ->where('id', $validated['class_id'])
@@ -796,10 +889,8 @@ class TeacherController extends Controller
 
         $scoresQuery = DB::table('student_scores')
             ->where('class_id', $class->id)
-            ->where('student_id', $student->id);
-        if ($validated['subject'] !== 'all') {
-            $scoresQuery->where('subject', $validated['subject']);
-        }
+            ->where('student_id', $student->id)
+            ->where('subject', $assignedSubject);
         $type = $validated['type'] === 'assessment' ? 'quizbee' : $validated['type'];
         if ($type !== 'all') {
             $scoresQuery->where('type', $type);
@@ -866,11 +957,19 @@ class TeacherController extends Controller
         if (!$request->filled('class_id') && !$request->filled('student_id')) {
             return response()->json(['success' => false, 'message' => 'Missing class_id or student_id']);
         }
+        $assignedSubject = $this->assignedTeacherSubject();
+        if (!$assignedSubject) {
+            return response()->json(['success' => false, 'message' => 'No subject is assigned to this teacher account.'], 403);
+        }
 
         $teacherId = session('user_id');
 
         $query = DB::table('student_scores')
             ->join('users', 'student_scores.student_id', '=', 'users.id')
+            ->where('student_scores.subject', $assignedSubject)
+            ->whereIn('student_scores.class_id', DB::table('classes')
+                ->select('id')
+                ->where('teacher_id', $teacherId))
             ->select(
                 'users.first_name',
                 'users.last_name',
@@ -927,11 +1026,27 @@ class TeacherController extends Controller
         if (!$class) {
             return response()->json(['success' => false, 'message' => 'Class not found']);
         }
+        $assignedSubject = $this->assignedTeacherSubject();
+        if (!$assignedSubject) {
+            return response()->json(['success' => false, 'message' => 'No subject is assigned to this teacher account.'], 403);
+        }
 
         // Fetch scores for the class, with correct/wrong logic, plus created_at for sorting
         $scores = DB::table('student_scores')
             ->join('users', 'student_scores.student_id', '=', 'users.id')
-            ->where('student_scores.class_id', $request->class_id)
+            ->where(function ($query) use ($request) {
+                $query->where('student_scores.class_id', $request->class_id)
+                    ->orWhere(function ($legacyScores) use ($request) {
+                        $legacyScores->whereNull('student_scores.class_id')
+                            ->whereExists(function ($classMembership) use ($request) {
+                                $classMembership->selectRaw('1')
+                                    ->from('class_students')
+                                    ->whereColumn('class_students.student_id', 'student_scores.student_id')
+                                    ->where('class_students.class_id', $request->class_id);
+                            });
+                    });
+            })
+            ->where('student_scores.subject', $assignedSubject)
             ->select(
                 'users.id as student_id',
                 'users.first_name',
@@ -969,6 +1084,10 @@ class TeacherController extends Controller
             'quarter' => 'required|integer|between:1,4',
             'grade' => 'required|integer|min:0|max:100',
         ]);
+        $assignedSubject = $this->assignedTeacherSubject();
+        if (!$assignedSubject || $validated['subject'] !== $assignedSubject) {
+            return response()->json(['success' => false, 'message' => 'You can only manage grades for your assigned subject.'], 403);
+        }
 
         $class = DB::table('classes')
             ->where('id', $validated['class_id'])

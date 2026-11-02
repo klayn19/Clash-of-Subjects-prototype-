@@ -18,6 +18,7 @@ class GeneralKnowledgeQuarterTest extends TestCase
             $table->unsignedBigInteger('class_id')->nullable();
             $table->string('subject');
             $table->unsignedTinyInteger('quarter');
+            $table->unsignedInteger('sequence_number')->default(1);
             $table->string('type');
             $table->string('difficulty')->nullable();
             $table->text('question');
@@ -28,10 +29,27 @@ class GeneralKnowledgeQuarterTest extends TestCase
             $table->string('answer');
             $table->text('explanation')->nullable();
         });
+        Schema::create('users', function (Blueprint $table) {
+            $table->id();
+            $table->string('role');
+            $table->string('section')->nullable();
+        });
+        Schema::create('classes', function (Blueprint $table) {
+            $table->id();
+            $table->string('section')->nullable();
+        });
+        Schema::create('class_students', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('class_id');
+            $table->unsignedBigInteger('student_id');
+        });
     }
 
     protected function tearDown(): void
     {
+        Schema::dropIfExists('class_students');
+        Schema::dropIfExists('classes');
+        Schema::dropIfExists('users');
         Schema::dropIfExists('questions');
 
         parent::tearDown();
@@ -100,29 +118,67 @@ class GeneralKnowledgeQuarterTest extends TestCase
         $this->withSession(['user_role' => 'student'])
             ->get('/student/general-knowledge')
             ->assertOk()
+            ->assertSee('id="appDialogOverlay"', false)
+            ->assertDontSee('alert(', false)
             ->assertSee('stage-quarters')
             ->assertSee('CHOOSE A QUARTER')
             ->assertSee('selectSubject')
             ->assertSee('startArena(4)');
     }
 
-    public function test_single_player_question_endpoint_filters_by_optional_quarter(): void
+    public function test_multiplayer_questions_ignore_subject_quarter_type_and_set_number_filters(): void
     {
-        $matchingId = $this->createQuestion('math', 3, 'average');
-        $this->createQuestion('math', 2, 'average');
-        $this->createQuestion('science', 3, 'average');
+        $allowedIds = [
+            $this->createQuestion('english', 1, null, 'exam'),
+            $this->createQuestion('math', 2, null, 'quiz'),
+            $this->createQuestion('science', 3, null, 'exam'),
+        ];
+        $this->createQuestion('science', 4, null, 'quizbee');
 
-        $this->getJson('/api/generate_ai_question?subject=math&quarter=3&difficulty=5')
+        $firstQuestion = $this->getJson('/api/generate_ai_question?subject=math&quarter=5&sequence_number=999')
             ->assertOk()
-            ->assertJsonPath('id', $matchingId)
-            ->assertJsonPath('subject', 'math');
+            ->assertJsonPath('success', true)
+            ->json('id');
+        $this->assertContains($firstQuestion, $allowedIds);
+
+        $secondQuestion = $this->getJson(
+            '/api/generate_ai_question?subject=math&quarter=5&sequence_number=999&answered=' . $firstQuestion
+        )
+            ->assertOk()
+            ->assertJsonPath('success', true)
+            ->json('id');
+
+        $this->assertContains($secondQuestion, $allowedIds);
+        $this->assertNotSame($firstQuestion, $secondQuestion);
+
+        $this->getJson(
+            '/api/generate_ai_question?answered=' . $firstQuestion . ',' . $secondQuestion . ',' . $allowedIds[2]
+        )
+            ->assertNotFound()
+            ->assertJsonPath('success', false);
     }
 
-    public function test_single_player_question_endpoint_rejects_invalid_quarter(): void
+    public function test_multiplayer_questions_are_limited_to_the_students_sections_and_shared_questions(): void
     {
-        $this->getJson('/api/generate_ai_question?subject=math&quarter=5')
-            ->assertUnprocessable()
-            ->assertJsonValidationErrors('quarter');
+        $studentId = DB::table('users')->insertGetId([
+            'role' => 'student',
+            'section' => 'Grade 7',
+        ]);
+        $studentClassId = DB::table('classes')->insertGetId(['section' => 'Grade 7']);
+        $otherClassId = DB::table('classes')->insertGetId(['section' => 'Grade 8']);
+        $ownedQuestionId = $this->createQuestion('english', 1, null, 'exam', $studentClassId);
+        $sharedQuestionId = $this->createQuestion('science', 2);
+        $otherQuestionId = $this->createQuestion('math', 3, null, 'quiz', $otherClassId);
+
+        $response = $this->withSession(['user_id' => $studentId, 'user_role' => 'student'])
+            ->getJson('/api/generate_ai_question?quarter=4')
+            ->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonMissing(['id' => $otherQuestionId]);
+
+        $this->assertContains($response->json('id'), [$ownedQuestionId, $sharedQuestionId]);
+        $this->assertDatabaseHas('questions', ['id' => $ownedQuestionId]);
+        $this->assertDatabaseHas('questions', ['id' => $sharedQuestionId]);
     }
 
     public function test_exam_question_lookup_keeps_the_selected_subject_type_and_quarter(): void
@@ -203,6 +259,7 @@ class GeneralKnowledgeQuarterTest extends TestCase
             'class_id' => $classId,
             'subject' => $subject,
             'quarter' => $quarter,
+            'sequence_number' => 1,
             'type' => $type,
             'difficulty' => $difficulty,
             'question' => 'Sample question',

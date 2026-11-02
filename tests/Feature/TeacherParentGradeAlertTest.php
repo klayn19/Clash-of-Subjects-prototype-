@@ -24,6 +24,7 @@ class TeacherParentGradeAlertTest extends TestCase
             $table->string('password');
             $table->string('role');
             $table->string('section')->nullable();
+            $table->string('subject')->nullable();
             $table->timestamps();
         });
 
@@ -78,7 +79,7 @@ class TeacherParentGradeAlertTest extends TestCase
             ->assertOk()
             ->assertJsonPath('students.0.score', 60)
             ->assertJsonPath('students.0.quarter', 'Q1')
-            ->assertJsonPath('students.0.subject', 'Multiple')
+            ->assertJsonPath('students.0.subject', 'english')
             ->assertJsonPath('students.0.has_parent_email', true);
     }
 
@@ -174,6 +175,7 @@ class TeacherParentGradeAlertTest extends TestCase
             'password' => 'unused',
             'role' => $role,
             'section' => 'Grade 7',
+            'subject' => $role === 'teacher' ? 'english' : null,
             'created_at' => now(),
             'updated_at' => now(),
         ]);

@@ -183,11 +183,35 @@ class StudentRosterVerificationTest extends TestCase
             ->assertSee('STUDENT LRN VERIFICATION')
             ->assertSee('searchLrnReview')
             ->assertSee('Name, LRN, or section...')
+            ->assertSee('lrnReviewPagination')
+            ->assertSee('changeLrnReviewPage(-1)')
             ->assertSee('ADD LRN')
             ->assertSee('VERIFY THIS LRN')
             ->assertSee('REMOVE')
             ->assertSee('teacher-delete-btn')
-            ->assertSee('removeTeacher(' . $teacherId, false);
+            ->assertSee('removeTeacher(' . $teacherId, false)
+            ->assertSee('async function removeTeacher(id, button)', false)
+            ->assertSee('id="appDialogOverlay"', false)
+            ->assertDontSee('class="alert alert-', false)
+            ->assertDontSee('confirm(', false)
+            ->assertDontSee('alert(', false);
+    }
+
+    public function test_admin_lrn_review_list_has_pagination_for_more_than_ten_students(): void
+    {
+        for ($number = 1; $number <= 11; $number++) {
+            $this->createStudent(str_pad((string) $number, 12, '0', STR_PAD_LEFT));
+        }
+
+        $response = $this->withSession(['user_id' => 1, 'user_role' => 'admin'])
+            ->get('/admin/dashboard')
+            ->assertOk()
+            ->assertSee('lrnReviewPagination')
+            ->assertSee('lrnReviewPageInfo')
+            ->assertSee('lrnReviewPageNumber')
+            ->assertSee('changeLrnReviewPage(1)', false);
+
+        $this->assertSame(11, substr_count($response->getContent(), 'class="lrn-review-row"'));
     }
 
     public function test_admin_can_add_and_manually_verify_a_student_lrn(): void

@@ -1078,6 +1078,31 @@
       margin-top: 12px;
     }
     .notes-feedback { margin: 0 0 10px; color: #ff9999; font-size: 12px; }
+    .student-pagination {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 14px;
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+    .student-pagination-controls { display: flex; align-items: center; gap: 8px; }
+    .pagination-link {
+      display: inline-block;
+      padding: 6px 10px;
+      color: var(--gold);
+      background: var(--blue-ui);
+      border: 1px solid var(--gold-dim);
+      font-size: 11px;
+      text-decoration: none;
+    }
+    .pagination-link:hover,
+    .pagination-link:focus-visible { color: var(--blue-deep); background: var(--gold); }
+    .pagination-link.is-disabled { opacity: 0.5; cursor: not-allowed; }
+    @media (max-width: 480px) {
+      .student-pagination { align-items: flex-start; flex-direction: column; }
+    }
     .quizbee-attempt {
       margin-bottom: 16px;
       padding: 14px;
@@ -1140,7 +1165,7 @@
               <button type="button" class="note-action" id="markAllNotesRead" onclick="markAllTeacherNotesRead(this)">Mark all read</button>
             @endif
           </div>
-          @forelse($notes->take(3) as $note)
+          @forelse($notificationNotes as $note)
             <div class="notification-item {{ $note->read_at ? '' : 'is-unread' }}" data-note-id="{{ $note->id }}">
               <div class="notification-author">NOTE FROM {{ strtoupper($note->teacher_first . ' ' . $note->teacher_last) }}</div>
               <div class="notification-message">{{ $note->note }}</div>
@@ -1155,7 +1180,7 @@
             <p class="notification-empty">No teacher notes right now.</p>
           @endforelse
           <p class="notification-feedback" id="notificationFeedback" role="status" aria-live="polite"></p>
-          @if(count($notes))
+          @if($notes->total() > 0)
             <button type="button" class="popover-link" onclick="showSection('notes', document.getElementById('teacherNotesNav')); closeHeaderMenus();">VIEW ALL TEACHER NOTES</button>
           @endif
         </div>
@@ -1172,6 +1197,14 @@
             <span class="profile-detail-label">Signed in as</span>
             <strong>{{ session('user_full_name', session('user_name', 'Student')) }}</strong>
           </div>
+          <div class="profile-detail">
+            <span class="profile-detail-label">Section</span>
+            <strong>{{ $studentProfile->section ?: 'Not assigned' }}</strong>
+          </div>
+          <div class="profile-detail">
+            <span class="profile-detail-label">LRN</span>
+            <strong>{{ $studentProfile->lrn ?: 'Not provided' }}</strong>
+          </div>
           <a href="{{ route('logout') }}" class="profile-logout"><i class="fas fa-sign-out-alt" aria-hidden="true"></i> LOG OUT</a>
         </div>
       </div>
@@ -1184,7 +1217,7 @@
         <span class="sidebar-mobile-title">⚔ MENU</span>
         <button type="button" class="sidebar-close-btn" onclick="closeSidebar()" aria-label="Close menu">&times;</button>
       </div>
-      <button class="nav-btn active" onclick="showSection('grades', this)">
+      <button class="nav-btn {{ $activeSection === 'grades' ? 'active' : '' }}" onclick="showSection('grades', this)">
         <i class="fas fa-gamepad"></i>GAME &amp; GRADES
       </button>
       <div class="nav-divider"></div>
@@ -1196,14 +1229,14 @@
         <i class="fas fa-trophy"></i>LEADERBOARD
       </button>
       <div class="nav-divider"></div>
-      <button class="nav-btn" id="teacherNotesNav" onclick="showSection('notes', this)">
+      <button class="nav-btn {{ $activeSection === 'notes' ? 'active' : '' }}" id="teacherNotesNav" onclick="showSection('notes', this)">
         <i class="fas fa-envelope"></i>TEACHER NOTES
       </button>
     </nav>
 
     <main class="main">
       <!-- ===== GAME AND GRADES SECTION ===== -->
-      <section id="section-grades" class="section active">
+      <section id="section-grades" class="section {{ $activeSection === 'grades' ? 'active' : '' }}">
         <div class="panel game-modes-panel">
           <div class="corner-bl"></div><div class="corner-br"></div>
           <div class="panel-title game-modes-title">GAME MODES</div>
@@ -1226,7 +1259,25 @@
         <div class="panel">
           <div class="corner-bl"></div><div class="corner-br"></div>
           <div class="panel-title">🏆 MY GRADES</div>
-          @if(count($scores) > 0)
+          <form class="leaderboard-filter-row" method="GET" action="{{ route('student.dashboard') }}">
+            <input type="hidden" name="section" value="grades">
+            <label class="leaderboard-filter-label" for="gradeSubjectFilter">SUBJECT</label>
+            <select class="leaderboard-filter-select" id="gradeSubjectFilter" name="subject">
+              <option value="">All subjects</option>
+              @foreach($gradeSubjects as $subject)
+                <option value="{{ $subject }}" {{ $selectedGradeSubject === $subject ? 'selected' : '' }}>{{ strtoupper($subject) }}</option>
+              @endforeach
+            </select>
+            <label class="leaderboard-filter-label" for="gradeTypeFilter">TYPE</label>
+            <select class="leaderboard-filter-select" id="gradeTypeFilter" name="type">
+              <option value="">All types</option>
+              <option value="quiz" {{ $selectedGradeType === 'quiz' ? 'selected' : '' }}>QUIZ</option>
+              <option value="exam" {{ $selectedGradeType === 'exam' ? 'selected' : '' }}>EXAM</option>
+              <option value="grade" {{ $selectedGradeType === 'grade' ? 'selected' : '' }}>GRADE</option>
+            </select>
+            <button type="submit" class="leaderboard-load-button">FILTER GRADES</button>
+          </form>
+          @if($scores->count() > 0)
             <div class="table-scroll"><table class="pixel-table">
               <thead>
                 <tr>
@@ -1254,8 +1305,28 @@
                 @endforeach
               </tbody>
             </table></div>
+            @if($scores->hasPages())
+              <nav class="student-pagination" aria-label="Grades pagination">
+                <span>Showing {{ $scores->firstItem() }}–{{ $scores->lastItem() }} of {{ $scores->total() }} grades</span>
+                <div class="student-pagination-controls">
+                  @if($scores->onFirstPage())
+                    <span class="pagination-link is-disabled" aria-disabled="true">Previous</span>
+                  @else
+                    <a class="pagination-link" href="{{ $scores->previousPageUrl() }}">Previous</a>
+                  @endif
+                  <span>Page {{ $scores->currentPage() }} of {{ $scores->lastPage() }}</span>
+                  @if($scores->hasMorePages())
+                    <a class="pagination-link" href="{{ $scores->nextPageUrl() }}">Next</a>
+                  @else
+                    <span class="pagination-link is-disabled" aria-disabled="true">Next</span>
+                  @endif
+                </div>
+              </nav>
+            @endif
           @else
-            <p style="color:var(--text-muted); font-size:18px; text-align:center; padding: 20px;">No grades available yet.</p>
+            <p style="color:var(--text-muted); font-size:18px; text-align:center; padding: 20px;">
+              {{ $selectedGradeSubject !== '' || $selectedGradeType !== '' ? 'No grades match these filters.' : 'No grades available yet.' }}
+            </p>
           @endif
         </div>
 
@@ -1399,12 +1470,12 @@
       </section>
 
       <!-- ===== NOTES SECTION ===== -->
-      <section id="section-notes" class="section">
+      <section id="section-notes" class="section {{ $activeSection === 'notes' ? 'active' : '' }}">
         <div class="panel">
           <div class="corner-bl"></div><div class="corner-br"></div>
           <div class="panel-title">📬 MESSAGE FROM TEACHER</div>
           <p class="notes-feedback" id="notesFeedback" role="status" aria-live="polite"></p>
-          @if(count($notes) > 0)
+          @if($notes->count() > 0)
             @foreach($notes as $note)
               <div class="note-card {{ $note->read_at ? '' : 'is-unread' }}" data-note-id="{{ $note->id }}">
                 <div class="note-header">
@@ -1420,6 +1491,24 @@
                 </div>
               </div>
             @endforeach
+            @if($notes->hasPages())
+              <nav class="student-pagination" aria-label="Teacher messages pagination">
+                <span>Showing {{ $notes->firstItem() }}–{{ $notes->lastItem() }} of {{ $notes->total() }} messages</span>
+                <div class="student-pagination-controls">
+                  @if($notes->onFirstPage())
+                    <span class="pagination-link is-disabled" aria-disabled="true">Previous</span>
+                  @else
+                    <a class="pagination-link" href="{{ $notes->previousPageUrl() }}">Previous</a>
+                  @endif
+                  <span>Page {{ $notes->currentPage() }} of {{ $notes->lastPage() }}</span>
+                  @if($notes->hasMorePages())
+                    <a class="pagination-link" href="{{ $notes->nextPageUrl() }}">Next</a>
+                  @else
+                    <span class="pagination-link is-disabled" aria-disabled="true">Next</span>
+                  @endif
+                </div>
+              </nav>
+            @endif
           @else
             <p style="color:var(--text-muted); font-size:18px; text-align:center; padding: 20px;">You have no messages from teachers.</p>
           @endif

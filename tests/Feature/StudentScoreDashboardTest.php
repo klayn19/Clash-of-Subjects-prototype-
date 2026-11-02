@@ -17,6 +17,7 @@ class StudentScoreDashboardTest extends TestCase
 
         Schema::create('users', function (Blueprint $table) {
             $table->id();
+            $table->string('lrn')->nullable();
             $table->string('first_name');
             $table->string('last_name');
             $table->string('email');
@@ -225,6 +226,151 @@ class StudentScoreDashboardTest extends TestCase
             ->assertSee('9/10')
             ->assertDontSee('7/10')
             ->assertDontSee('70%');
+    }
+
+    public function test_student_account_menu_displays_the_logged_in_students_section_and_lrn(): void
+    {
+        $studentId = DB::table('users')->insertGetId([
+            'lrn' => '001234567890',
+            'first_name' => 'Profile',
+            'last_name' => 'Student',
+            'email' => 'profile.student@example.test',
+            'role' => 'student',
+            'section' => 'Grade 7 - Rizal',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->withSession([
+            'user_id' => $studentId,
+            'user_role' => 'student',
+            'user_name' => 'Profile Student',
+        ])->get('/student/dashboard')
+            ->assertOk()
+            ->assertSee('>Section</span>', false)
+            ->assertSee('>Grade 7 - Rizal</strong>', false)
+            ->assertSee('>LRN</span>', false)
+            ->assertSee('>001234567890</strong>', false);
+    }
+
+    public function test_dashboard_paginates_grades_and_teacher_messages_independently(): void
+    {
+        $studentId = DB::table('users')->insertGetId([
+            'first_name' => 'Student',
+            'last_name' => 'One',
+            'email' => 'student@example.test',
+            'role' => 'student',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $teacherId = DB::table('users')->insertGetId([
+            'first_name' => 'Teacher',
+            'last_name' => 'One',
+            'email' => 'teacher@example.test',
+            'role' => 'teacher',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        for ($sequence = 1; $sequence <= 16; $sequence++) {
+            DB::table('student_scores')->insert([
+                'student_id' => $studentId,
+                'subject' => 'math',
+                'type' => 'quiz',
+                'quarter' => 1,
+                'sequence_number' => $sequence,
+                'correct' => 8,
+                'total' => 10,
+                'percent' => 80,
+                'created_at' => now()->subMinutes($sequence),
+                'updated_at' => now()->subMinutes($sequence),
+            ]);
+        }
+
+        for ($message = 1; $message <= 11; $message++) {
+            DB::table('student_notes')->insert([
+                'student_id' => $studentId,
+                'teacher_id' => $teacherId,
+                'note' => 'Teacher message ' . $message,
+                'created_at' => now()->subMinutes($message),
+                'updated_at' => now()->subMinutes($message),
+            ]);
+        }
+
+        $this->withSession([
+            'user_id' => $studentId,
+            'user_role' => 'student',
+            'user_name' => 'Student One',
+        ])->get('/student/dashboard?grades_page=1')
+            ->assertOk()
+            ->assertSee('Showing 1–15 of 16 grades')
+            ->assertSee('Page 1 of 2')
+            ->assertSee('Q1 / #1</td>', false)
+            ->assertDontSee('Q1 / #16</td>', false);
+
+        $this->get('/student/dashboard?grades_page=2&notes_page=2&section=notes')
+            ->assertOk()
+            ->assertSee('Q1 / #16</td>', false)
+            ->assertSee('Showing 11–11 of 11 messages')
+            ->assertSee('Teacher message 11</div>', false)
+            ->assertDontSee('Teacher message 8')
+            ->assertSee('<section id="section-notes" class="section active">', false);
+    }
+
+    public function test_student_can_filter_grades_by_subject_and_type_while_paging(): void
+    {
+        $studentId = DB::table('users')->insertGetId([
+            'first_name' => 'Student',
+            'last_name' => 'Filter',
+            'email' => 'student.filter@example.test',
+            'role' => 'student',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        for ($sequence = 1; $sequence <= 16; $sequence++) {
+            DB::table('student_scores')->insert([
+                'student_id' => $studentId,
+                'subject' => 'math',
+                'type' => 'quiz',
+                'quarter' => 1,
+                'sequence_number' => $sequence,
+                'correct' => 8,
+                'total' => 10,
+                'percent' => 80,
+                'created_at' => now()->subMinutes($sequence),
+                'updated_at' => now()->subMinutes($sequence),
+            ]);
+        }
+
+        foreach ([['math', 'exam', 99], ['english', 'quiz', 100]] as [$subject, $type, $sequence]) {
+            DB::table('student_scores')->insert([
+                'student_id' => $studentId,
+                'subject' => $subject,
+                'type' => $type,
+                'quarter' => 1,
+                'sequence_number' => $sequence,
+                'correct' => 9,
+                'total' => 10,
+                'percent' => 90,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
+        $this->withSession([
+            'user_id' => $studentId,
+            'user_role' => 'student',
+            'user_name' => 'Student Filter',
+        ])->get('/student/dashboard?subject=math&type=quiz&grades_page=2')
+            ->assertOk()
+            ->assertSee('Showing 16–16 of 16 grades')
+            ->assertSee('Q1 / #16</td>', false)
+            ->assertDontSee('Q1 / #99</td>', false)
+            ->assertDontSee('ENGLISH</td>', false)
+            ->assertSee('subject=math&amp;type=quiz', false)
+            ->assertSee('<option value="math" selected>MATH</option>', false)
+            ->assertSee('<option value="quiz" selected>QUIZ</option>', false);
     }
 
     public function test_high_score_endpoint_accepts_student_id_for_stateless_gameplay_requests(): void

@@ -20,6 +20,7 @@ class PrototypeRemovalTest extends TestCase
             $table->string('email')->unique();
             $table->string('password');
             $table->string('role');
+            $table->string('subject')->nullable();
             $table->timestamps();
         });
 
@@ -184,6 +185,7 @@ class PrototypeRemovalTest extends TestCase
             'email' => $email,
             'password' => 'unused',
             'role' => $role,
+            'subject' => $role === 'teacher' ? 'english' : null,
             'created_at' => now(),
             'updated_at' => now(),
         ]);

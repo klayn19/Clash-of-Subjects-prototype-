@@ -22,6 +22,7 @@ class TeacherQuestionCsvUploadTest extends TestCase
             $table->string('password');
             $table->string('role');
             $table->string('section')->nullable();
+            $table->string('subject')->nullable();
             $table->timestamps();
         });
 
@@ -114,6 +115,37 @@ class TeacherQuestionCsvUploadTest extends TestCase
             'What is 2 + 2?',
             'Which value has a comma, too?',
         ]);
+    }
+
+    public function test_csv_upload_can_append_questions_to_multiple_selected_classes(): void
+    {
+        [$teacherId, $firstClassId] = $this->createTeacherClass();
+        $secondClassId = DB::table('classes')->insertGetId([
+            'name' => 'Grade 8',
+            'section' => 'Grade 8',
+            'teacher_id' => $teacherId,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->withSession(['user_id' => $teacherId, 'user_role' => 'teacher'])
+            ->post('/backend/bulk_upload_questions.php', [
+                'class_ids' => [$firstClassId, $secondClassId],
+                'subject' => 'math',
+                'type' => 'quiz',
+                'quarter' => 3,
+                'sequence_number' => 2,
+                'questions_file' => UploadedFile::fake()->createWithContent(
+                    'questions.csv',
+                    "question,choice_a,choice_b,choice_c,choice_d,answer\nShared CSV question?,A,B,C,D,A\n"
+                ),
+            ], ['Accept' => 'application/json'])
+            ->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('inserted', 2);
+
+        $this->assertDatabaseHas('questions', ['class_id' => $firstClassId, 'question' => 'Shared CSV question?']);
+        $this->assertDatabaseHas('questions', ['class_id' => $secondClassId, 'question' => 'Shared CSV question?']);
     }
 
     public function test_student_without_explicit_class_id_can_fetch_questions_from_any_linked_class(): void
@@ -292,6 +324,88 @@ class TeacherQuestionCsvUploadTest extends TestCase
             ->assertJsonPath('question', 'Question in quiz two');
     }
 
+    public function test_student_gameplay_questions_match_the_students_section_and_requested_subject(): void
+    {
+        [$teacherId, $studentSectionClassId] = $this->createTeacherClass();
+        $otherSectionClassId = DB::table('classes')->insertGetId([
+            'name' => 'Grade 8 Math',
+            'section' => 'Grade 8',
+            'teacher_id' => $teacherId,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $studentId = DB::table('users')->insertGetId([
+            'first_name' => 'Section',
+            'last_name' => 'Student',
+            'email' => 'section.gameplay@example.test',
+            'password' => 'unused',
+            'role' => 'student',
+            'section' => 'Grade 7',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        DB::table('class_students')->insert([
+            'class_id' => $otherSectionClassId,
+            'student_id' => $studentId,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        DB::table('questions')->insert([
+            array_replace($this->questionRow($studentSectionClassId, 'Grade 7 math quiz question'), [
+                'subject' => 'math',
+                'type' => 'quiz',
+                'quarter' => 1,
+            ]),
+            array_replace($this->questionRow($studentSectionClassId, 'Wrong subject quiz question'), [
+                'subject' => 'english',
+                'type' => 'quiz',
+                'quarter' => 1,
+            ]),
+            array_replace($this->questionRow($otherSectionClassId, 'Wrong section quiz question'), [
+                'subject' => 'math',
+                'type' => 'quiz',
+                'quarter' => 1,
+                'sequence_number' => 2,
+            ]),
+            array_replace($this->questionRow($studentSectionClassId, 'Grade 7 science exam question'), [
+                'subject' => 'science',
+                'type' => 'exam',
+                'quarter' => 1,
+            ]),
+            array_replace($this->questionRow($otherSectionClassId, 'Wrong section exam question'), [
+                'subject' => 'science',
+                'type' => 'exam',
+                'quarter' => 1,
+            ]),
+            array_replace($this->questionRow($studentSectionClassId, 'Wrong subject exam question'), [
+                'subject' => 'math',
+                'type' => 'exam',
+                'quarter' => 1,
+            ]),
+            array_replace($this->questionRow($studentSectionClassId, 'Global quiz question'), [
+                'class_id' => null,
+                'subject' => 'math',
+                'type' => 'quiz',
+                'quarter' => 1,
+                'sequence_number' => 3,
+            ]),
+        ]);
+
+        $this->withSession(['user_id' => $studentId, 'user_role' => 'student'])
+            ->getJson('/api/get_question?class_id=' . $otherSectionClassId . '&subject=math&type=quiz&quarter=1')
+            ->assertOk()
+            ->assertJsonPath('question', 'Grade 7 math quiz question');
+
+        $this->getJson('/api/get_question?class_id=' . $otherSectionClassId . '&subject=science&type=exam&quarter=1')
+            ->assertOk()
+            ->assertJsonPath('question', 'Grade 7 science exam question');
+
+        $this->getJson('/backend/get_quiz_numbers.php?class_id=' . $otherSectionClassId . '&subject=math&type=quiz&quarter=1')
+            ->assertOk()
+            ->assertExactJson(['quiz_numbers' => [1]]);
+    }
+
     public function test_student_can_fetch_questions_from_section_class_without_roster_link(): void
     {
         [, $classId] = $this->createTeacherClass();
@@ -324,7 +438,7 @@ class TeacherQuestionCsvUploadTest extends TestCase
         $this->withSession(['user_id' => $teacherId, 'user_role' => 'teacher'])
             ->post('/backend/bulk_upload_questions.php', [
                 'class_id' => $classId,
-                'subject' => 'english',
+                'subject' => 'math',
                 'type' => 'quiz',
                 'quarter' => 1,
                 'sequence_number' => 1,
@@ -340,6 +454,232 @@ class TeacherQuestionCsvUploadTest extends TestCase
         $this->assertDatabaseCount('questions', 1);
     }
 
+    public function test_teacher_cannot_upload_or_save_questions_for_an_unassigned_subject(): void
+    {
+        [$teacherId, $classId] = $this->createTeacherClass();
+        $csvUpload = UploadedFile::fake()->createWithContent(
+            'questions.csv',
+            "question,choice_a,choice_b,choice_c,choice_d,answer\nQuestion?,A,B,C,D,A\n"
+        );
+
+        $this->withSession(['user_id' => $teacherId, 'user_role' => 'teacher'])
+            ->post('/backend/bulk_upload_questions.php', [
+                'class_id' => $classId,
+                'subject' => 'english',
+                'type' => 'quiz',
+                'quarter' => 1,
+                'sequence_number' => 1,
+                'questions_file' => $csvUpload,
+            ], ['Accept' => 'application/json'])
+            ->assertForbidden()
+            ->assertJsonPath('success', false);
+
+        $this->withSession(['user_id' => $teacherId, 'user_role' => 'teacher'])
+            ->postJson('/backend/save_questions.php', [
+                'class_id' => $classId,
+                'subject' => 'science',
+                'type' => 'quiz',
+                'quarter' => 1,
+                'sequence_number' => 1,
+                'questions' => [[
+                    'question' => 'Question?',
+                    'choice_a' => 'A',
+                    'choice_b' => 'B',
+                    'choice_c' => 'C',
+                    'choice_d' => 'D',
+                    'answer' => 'A',
+                ]],
+            ])
+            ->assertForbidden()
+            ->assertJsonPath('success', false);
+
+        $this->assertDatabaseCount('questions', 0);
+    }
+
+    public function test_save_questions_appends_when_csv_questions_are_staged(): void
+    {
+        [$teacherId, $classId] = $this->createTeacherClass();
+        DB::table('questions')->insert($this->questionRow($classId, 'Existing question?'));
+
+        $this->withSession(['user_id' => $teacherId, 'user_role' => 'teacher'])
+            ->postJson('/backend/save_questions.php', [
+                'class_id' => $classId,
+                'subject' => 'math',
+                'type' => 'quiz',
+                'quarter' => 2,
+                'sequence_number' => 1,
+                'append' => true,
+                'questions' => [[
+                    'question' => 'Imported question?',
+                    'choice_a' => 'A',
+                    'choice_b' => 'B',
+                    'choice_c' => 'C',
+                    'choice_d' => 'D',
+                    'answer' => 'B',
+                ]],
+            ])
+            ->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('inserted', 1);
+
+        $this->assertDatabaseCount('questions', 2);
+        $this->assertDatabaseHas('questions', ['question' => 'Existing question?']);
+        $this->assertDatabaseHas('questions', ['question' => 'Imported question?']);
+    }
+
+    public function test_save_questions_uploads_exam_and_quiz_sets_to_multiple_selected_classes(): void
+    {
+        [$teacherId, $firstClassId] = $this->createTeacherClass();
+        $secondClassId = DB::table('classes')->insertGetId([
+            'name' => 'Grade 8',
+            'section' => 'Grade 8',
+            'teacher_id' => $teacherId,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->withSession(['user_id' => $teacherId, 'user_role' => 'teacher'])
+            ->postJson('/backend/save_questions.php', [
+                'class_ids' => [$firstClassId, $secondClassId],
+                'subject' => 'math',
+                'type' => 'quiz',
+                'quarter' => 3,
+                'sequence_number' => 2,
+                'questions' => [[
+                    'question' => 'Shared question?',
+                    'choice_a' => 'A',
+                    'choice_b' => 'B',
+                    'choice_c' => 'C',
+                    'choice_d' => 'D',
+                    'answer' => 'A',
+                ]],
+            ])
+            ->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('inserted', 2)
+            ->assertJsonPath('message', '1 question(s) saved successfully to 2 classes');
+
+        $this->assertDatabaseHas('questions', [
+            'class_id' => $firstClassId,
+            'question' => 'Shared question?',
+            'quarter' => 3,
+            'sequence_number' => 2,
+        ]);
+        $this->assertDatabaseHas('questions', [
+            'class_id' => $secondClassId,
+            'question' => 'Shared question?',
+            'quarter' => 3,
+            'sequence_number' => 2,
+        ]);
+
+        $this->withSession(['user_id' => $teacherId, 'user_role' => 'teacher'])
+            ->postJson('/backend/save_questions.php', [
+                'class_ids' => [$firstClassId, $secondClassId],
+                'subject' => 'math',
+                'type' => 'exam',
+                'quarter' => 4,
+                'sequence_number' => 3,
+                'questions' => [[
+                    'question' => 'Shared exam question?',
+                    'choice_a' => 'A',
+                    'choice_b' => 'B',
+                    'choice_c' => 'C',
+                    'choice_d' => 'D',
+                    'answer' => 'A',
+                ]],
+            ])
+            ->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('inserted', 2);
+
+        $this->assertDatabaseHas('questions', [
+            'class_id' => $firstClassId,
+            'question' => 'Shared exam question?',
+            'quarter' => 4,
+            'sequence_number' => 3,
+        ]);
+        $this->assertDatabaseHas('questions', [
+            'class_id' => $secondClassId,
+            'question' => 'Shared exam question?',
+            'quarter' => 4,
+            'sequence_number' => 3,
+        ]);
+    }
+
+    public function test_save_questions_rejects_all_classes_if_any_selected_class_is_not_owned(): void
+    {
+        [$teacherId, $ownedClassId] = $this->createTeacherClass();
+        $otherTeacherId = DB::table('users')->insertGetId([
+            'first_name' => 'Other',
+            'last_name' => 'Teacher',
+            'email' => 'other-class-owner@example.test',
+            'password' => 'unused',
+            'role' => 'teacher',
+            'subject' => 'math',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $otherClassId = DB::table('classes')->insertGetId([
+            'name' => 'Other Grade',
+            'section' => 'Other Grade',
+            'teacher_id' => $otherTeacherId,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->withSession(['user_id' => $teacherId, 'user_role' => 'teacher'])
+            ->postJson('/backend/save_questions.php', [
+                'class_ids' => [$ownedClassId, $otherClassId],
+                'subject' => 'math',
+                'type' => 'quiz',
+                'quarter' => 1,
+                'sequence_number' => 1,
+                'questions' => [[
+                    'question' => 'Unauthorized target?',
+                    'choice_a' => 'A',
+                    'choice_b' => 'B',
+                    'choice_c' => 'C',
+                    'choice_d' => 'D',
+                    'answer' => 'A',
+                ]],
+            ])
+            ->assertNotFound()
+            ->assertJsonPath('success', false);
+
+        $this->assertDatabaseCount('questions', 0);
+    }
+
+    public function test_save_questions_replaces_existing_set_without_csv_import(): void
+    {
+        [$teacherId, $classId] = $this->createTeacherClass();
+        DB::table('questions')->insert($this->questionRow($classId, 'Existing question?'));
+
+        $this->withSession(['user_id' => $teacherId, 'user_role' => 'teacher'])
+            ->postJson('/backend/save_questions.php', [
+                'class_id' => $classId,
+                'subject' => 'math',
+                'type' => 'quiz',
+                'quarter' => 2,
+                'sequence_number' => 1,
+                'append' => false,
+                'questions' => [[
+                    'question' => 'Replacement question?',
+                    'choice_a' => 'A',
+                    'choice_b' => 'B',
+                    'choice_c' => 'C',
+                    'choice_d' => 'D',
+                    'answer' => 'B',
+                ]],
+            ])
+            ->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('inserted', 1);
+
+        $this->assertDatabaseCount('questions', 1);
+        $this->assertDatabaseMissing('questions', ['question' => 'Existing question?']);
+        $this->assertDatabaseHas('questions', ['question' => 'Replacement question?']);
+    }
+
     public function test_teacher_cannot_upload_to_another_teachers_class(): void
     {
         [$teacherId, $classId] = $this->createTeacherClass();
@@ -349,6 +689,7 @@ class TeacherQuestionCsvUploadTest extends TestCase
             'email' => 'other-teacher@example.test',
             'password' => 'unused',
             'role' => 'teacher',
+            'subject' => 'math',
             'created_at' => now(),
             'updated_at' => now(),
         ]);
@@ -357,7 +698,7 @@ class TeacherQuestionCsvUploadTest extends TestCase
         $this->withSession(['user_id' => $teacherId, 'user_role' => 'teacher'])
             ->post('/backend/bulk_upload_questions.php', [
                 'class_id' => $classId,
-                'subject' => 'english',
+                'subject' => 'math',
                 'type' => 'quiz',
                 'quarter' => 1,
                 'sequence_number' => 1,
@@ -402,6 +743,7 @@ class TeacherQuestionCsvUploadTest extends TestCase
             'email' => 'teacher@example.test',
             'password' => 'unused',
             'role' => 'teacher',
+            'subject' => 'math',
             'created_at' => now(),
             'updated_at' => now(),
         ]);

@@ -69,6 +69,16 @@ class ScoreController extends Controller
         $studentId = (int) ($sessionStudentId ?? $validated['student_id']);
         $subject   = strtolower(trim($validated['subject']));
         $type      = $validated['type'] === 'assessment' ? 'quizbee' : $validated['type'];
+        $classId   = $validated['class_id'] ?? null;
+        if ($classId === null) {
+            $classId = DB::table('class_students')
+                ->join('classes', 'class_students.class_id', '=', 'classes.id')
+                ->join('users as teachers', 'classes.teacher_id', '=', 'teachers.id')
+                ->where('class_students.student_id', $studentId)
+                ->whereRaw('LOWER(TRIM(teachers.subject)) = ?', [$subject])
+                ->orderBy('classes.id')
+                ->value('classes.id');
+        }
         $correct   = (int) $validated['correct'];
         $total     = (int) $validated['total'];
         $quarter   = (int) ($validated['quarter'] ?? 1);
@@ -112,7 +122,7 @@ class ScoreController extends Controller
 
         DB::table('student_scores')->insert([
             'student_id'      => $studentId,
-            'class_id'        => $validated['class_id'] ?? null,
+            'class_id'        => $classId,
             'subject'         => $subject,
             'type'            => $type,
             'quarter'         => $quarter,

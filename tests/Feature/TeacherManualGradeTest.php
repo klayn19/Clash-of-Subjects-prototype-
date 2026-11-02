@@ -26,6 +26,7 @@ class TeacherManualGradeTest extends TestCase
             $table->string('password');
             $table->string('role');
             $table->string('section')->nullable();
+            $table->string('subject')->nullable();
             $table->timestamps();
         });
 
@@ -138,13 +139,68 @@ class TeacherManualGradeTest extends TestCase
         ])->postJson('/backend/save_manual_grade.php', [
             'class_id' => $classId,
             'student_id' => $otherStudentId,
-            'subject' => 'english',
+            'subject' => 'math',
             'quarter' => 1,
             'grade' => 95,
         ])->assertUnprocessable()
             ->assertJsonPath('success', false);
 
         $this->assertDatabaseCount('student_scores', 0);
+    }
+
+    public function test_student_game_score_without_class_id_is_assigned_to_their_matching_subject_class(): void
+    {
+        [$teacherId, $studentId, $classId] = $this->createClassRoster();
+
+        $this->withSession([
+            'user_id' => $studentId,
+            'user_role' => 'student',
+        ])->postJson('/api/save_score', [
+            'subject' => 'math',
+            'type' => 'quiz',
+            'quarter' => 2,
+            'sequence_number' => 3,
+            'correct' => 8,
+            'total' => 10,
+        ])->assertOk()
+            ->assertJsonPath('success', true);
+
+        $this->assertDatabaseHas('student_scores', [
+            'student_id' => $studentId,
+            'class_id' => $classId,
+            'subject' => 'math',
+            'type' => 'quiz',
+            'quarter' => 2,
+            'sequence_number' => 3,
+        ]);
+    }
+
+    public function test_teacher_submissions_include_legacy_scores_for_students_in_the_selected_class(): void
+    {
+        [$teacherId, $studentId, $classId] = $this->createClassRoster();
+        DB::table('student_scores')->insert([
+            'student_id' => $studentId,
+            'class_id' => null,
+            'subject' => 'math',
+            'type' => 'exam',
+            'quarter' => 1,
+            'sequence_number' => 1,
+            'correct' => 6,
+            'total' => 10,
+            'percent' => 60,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->withSession([
+            'user_id' => $teacherId,
+            'user_role' => 'teacher',
+        ])->getJson('/backend/get_student_analytics.php?class_id=' . $classId)
+            ->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('analytics.0.first_name', 'Student')
+            ->assertJsonPath('analytics.0.type', 'exam')
+            ->assertJsonPath('analytics.0.correct', 6);
     }
 
     public function test_saving_a_failing_grade_sends_a_parent_email(): void
@@ -185,7 +241,7 @@ class TeacherManualGradeTest extends TestCase
         ])->postJson('/backend/save_manual_grade.php', [
             'class_id' => $classId,
             'student_id' => $studentId,
-            'subject' => 'english',
+            'subject' => 'math',
             'quarter' => 1,
             'grade' => 60,
         ])->assertOk()
@@ -201,9 +257,10 @@ class TeacherManualGradeTest extends TestCase
         Mail::assertNothingSent();
     }
 
-    private function createClassRoster(?string $parentEmail = null): array
+    private function createClassRoster(?string $parentEmail = null, string $teacherSubject = 'math'): array
     {
         $teacherId = $this->createUser('teacher', 'teacher@example.test', null);
+        DB::table('users')->where('id', $teacherId)->update(['subject' => $teacherSubject]);
         $studentId = $this->createUser('student', 'student@example.test', 'Grade 7', $parentEmail);
         $classId = DB::table('classes')->insertGetId([
             'name' => 'Grade 7',
@@ -233,6 +290,7 @@ class TeacherManualGradeTest extends TestCase
             'password' => 'unused',
             'role' => $role,
             'section' => $section,
+            'subject' => $role === 'teacher' ? 'math' : null,
             'created_at' => now(),
             'updated_at' => now(),
         ]);

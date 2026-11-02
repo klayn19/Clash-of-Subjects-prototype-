@@ -84,8 +84,8 @@ class AuthController extends Controller
                 'unique:users,lrn',
             ],
             'section'          => 'required|string|max:100|exists:sections,name',
-            'first_name'       => 'required|string|max:100',
-            'last_name'        => 'required|string|max:100',
+            'first_name'       => ['required', 'string', 'max:100', 'regex:/^[^\d]+$/u'],
+            'last_name'        => ['required', 'string', 'max:100', 'regex:/^[^\d]+$/u'],
             'age'              => 'required|integer|min:12|max:99',
             'email'            => 'required|email|max:150|unique:users,email',
             'parent_email'     => 'nullable|email|max:150',
@@ -97,6 +97,8 @@ class AuthController extends Controller
             'lrn.unique'       => 'An account with this LRN already exists. Only one account per LRN is allowed.',
             'email.unique'     => 'An account with this email already exists.',
             'password.regex'  => 'Password must include a number, an uppercase letter, and a special character.',
+            'first_name.regex' => 'First name cannot contain numbers.',
+            'last_name.regex' => 'Last name cannot contain numbers.',
             'confirm_password.same' => 'Passwords do not match.',
         ]);
 
@@ -178,8 +180,10 @@ class AuthController extends Controller
         $request->validate([
             'email'             => 'required|email',
             'verification_code' => 'required',
-            'new_password'      => 'required|min:6',
+            'new_password'      => ['required', 'min:6', 'regex:/^(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9]).{6,}$/'],
             'confirm_password'  => 'required|same:new_password',
+        ], [
+            'new_password.regex' => 'Password must include a number, an uppercase letter, and a special character.',
         ]);
 
         $record = DB::table('resetpassword')

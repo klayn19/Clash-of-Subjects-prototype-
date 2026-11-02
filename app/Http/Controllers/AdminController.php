@@ -35,8 +35,14 @@ class AdminController extends Controller
 
         $teachers = User::where('role', 'teacher')->orderBy('last_name')->get();
         $sections = Section::orderBy('name')->get();
+        $teacherSections = DB::table('classes')
+            ->whereNotNull('section')
+            ->orderBy('section')
+            ->get(['teacher_id', 'section'])
+            ->groupBy('teacher_id')
+            ->map(fn ($assignments) => $assignments->pluck('section')->unique()->values());
 
-        return view('admin.dashboard', compact('students', 'scoreMap', 'teachers', 'sections'));
+        return view('admin.dashboard', compact('students', 'scoreMap', 'teachers', 'sections', 'teacherSections'));
     }
 
     public function getStudentGrades($id)
@@ -201,23 +207,44 @@ class AdminController extends Controller
         }
 
         $request->validate([
-            'first_name'       => 'required|string',
-            'last_name'        => 'required|string',
+            'first_name'       => ['required', 'string', 'max:100', 'regex:/^[^\d]+$/u'],
+            'last_name'        => ['required', 'string', 'max:100', 'regex:/^[^\d]+$/u'],
             'email'            => 'required|email|unique:users,email',
             'subject'          => 'required|in:english,math,science',
-            'password'         => 'required|min:6',
+            'section_ids'      => 'nullable|array',
+            'section_ids.*'    => 'integer|distinct|exists:sections,id',
+            'password'         => ['required', 'min:6', 'regex:/^(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9]).{6,}$/'],
             'confirm_password' => 'required|same:password',
+        ], [
+            'first_name.regex' => 'First name cannot contain numbers.',
+            'last_name.regex' => 'Last name cannot contain numbers.',
+            'password.regex' => 'Password must include a number, an uppercase letter, and a special character.',
         ]);
 
-        $teacher = User::create([
-            'first_name' => $request->first_name,
-            'last_name'  => $request->last_name,
-            'age'        => 0, // Teachers might not have age inputted
-            'email'      => $request->email,
-            'subject'    => $request->subject,
-            'password'   => Hash::make($request->password),
-            'role'       => 'teacher',
-        ]);
+        $teacher = DB::transaction(function () use ($request) {
+            $teacher = User::create([
+                'first_name' => $request->first_name,
+                'last_name'  => $request->last_name,
+                'age'        => 0,
+                'email'      => $request->email,
+                'subject'    => $request->subject,
+                'password'   => Hash::make($request->password),
+                'role'       => 'teacher',
+            ]);
+
+            foreach (Section::whereIn('id', $request->input('section_ids', []))->get() as $section) {
+                $classId = DB::table('classes')->insertGetId([
+                    'name' => $section->name,
+                    'section' => $section->name,
+                    'teacher_id' => $teacher->id,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+                Section::syncClassRoster($classId);
+            }
+
+            return $teacher;
+        });
 
         Mail::to($teacher->email)->send(new TeacherWelcome(
             trim($teacher->first_name . ' ' . $teacher->last_name),
@@ -225,6 +252,60 @@ class AdminController extends Controller
         ));
 
         return back()->with('success', 'Teacher account created successfully!');
+    }
+
+    public function assignSectionToTeacher(Request $request)
+    {
+        if (session('user_role') !== 'admin') {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+        }
+
+        $validated = $request->validate([
+            'teacher_id' => 'required|integer|exists:users,id',
+            'section_ids' => 'required|array|min:1',
+            'section_ids.*' => 'required|integer|distinct|exists:sections,id',
+        ]);
+        $teacher = User::where('id', $validated['teacher_id'])
+            ->where('role', 'teacher')
+            ->first();
+
+        if (!$teacher) {
+            return response()->json(['success' => false, 'message' => 'Teacher not found.'], 404);
+        }
+
+        $sections = Section::whereIn('id', $validated['section_ids'])->get();
+        $classIds = DB::transaction(function () use ($teacher, $sections) {
+            $classIds = [];
+            foreach ($sections as $section) {
+                $alreadyAssigned = DB::table('classes')
+                    ->where('teacher_id', $teacher->id)
+                    ->where('section', $section->name)
+                    ->exists();
+                if ($alreadyAssigned) {
+                    continue;
+                }
+
+                $classId = DB::table('classes')->insertGetId([
+                    'name' => $section->name,
+                    'section' => $section->name,
+                    'teacher_id' => $teacher->id,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+                Section::syncClassRoster($classId);
+                $classIds[] = $classId;
+            }
+
+            return $classIds;
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => $classIds
+                ? 'Selected sections assigned to teacher.'
+                : 'All selected sections are already assigned to this teacher.',
+            'class_ids' => $classIds,
+        ]);
     }
 
     public function addSection(Request $request)

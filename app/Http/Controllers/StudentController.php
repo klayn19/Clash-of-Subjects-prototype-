@@ -19,6 +19,9 @@ class StudentController extends Controller
 
         $studentId = session('user_id');
         Section::syncStudentRoster((int) $studentId);
+        $studentProfile = DB::table('users')
+            ->where('id', $studentId)
+            ->first(['lrn', 'section']);
         $multiplayerWins = (int) DB::table('users')
             ->where('id', $studentId)
             ->value('multiplayer_wins');
@@ -31,28 +34,56 @@ class StudentController extends Controller
             ->get();
 
         // Fetch grades (scores)
-        $scores = DB::table('student_scores')
+        $scoreQuery = DB::table('student_scores')
             ->where('student_id', $studentId)
-            ->whereNotIn('type', ['quizbee', 'assessment'])
+            ->whereNotIn('type', ['quizbee', 'assessment']);
+        $gradeSubjects = (clone $scoreQuery)
+            ->distinct()
+            ->orderBy('subject')
+            ->pluck('subject');
+        $selectedGradeSubject = (string) $request->query('subject', '');
+        if (!$gradeSubjects->contains($selectedGradeSubject)) {
+            $selectedGradeSubject = '';
+        }
+        $selectedGradeType = (string) $request->query('type', '');
+        if (!in_array($selectedGradeType, ['quiz', 'exam', 'grade'], true)) {
+            $selectedGradeType = '';
+        }
+
+        $scores = (clone $scoreQuery)
+            ->when($selectedGradeSubject !== '', fn ($query) => $query->where('subject', $selectedGradeSubject))
+            ->when($selectedGradeType !== '', fn ($query) => $query->where('type', $selectedGradeType))
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->orderByDesc('id')
+            ->paginate(15, ['*'], 'grades_page')
+            ->appends(array_merge($request->except('grades_page'), ['section' => 'grades']));
 
         $bestSubjectScores = [];
         foreach (['english', 'math', 'science'] as $subject) {
-            $bestSubjectScores[$subject] = $scores
+            $bestSubjectScores[$subject] = (clone $scoreQuery)
                 ->where('subject', $subject)
-                ->sortByDesc('percent')
+                ->orderByDesc('percent')
+                ->orderByDesc('created_at')
+                ->orderByDesc('id')
                 ->first();
         }
 
         // Fetch notes from teachers
-        $notes = DB::table('student_notes')
+        $notesQuery = DB::table('student_notes')
             ->join('users', 'student_notes.teacher_id', '=', 'users.id')
             ->where('student_notes.student_id', $studentId)
             ->select('student_notes.*', 'users.first_name as teacher_first', 'users.last_name as teacher_last')
             ->orderBy('student_notes.created_at', 'desc')
-            ->get();
-        $unreadNotes = $notes->whereNull('read_at')->count();
+            ->orderByDesc('student_notes.id');
+        $notes = (clone $notesQuery)
+            ->paginate(10, ['*'], 'notes_page')
+            ->appends(array_merge($request->except('notes_page'), ['section' => 'notes']));
+        $notificationNotes = (clone $notesQuery)->limit(3)->get();
+        $unreadNotes = DB::table('student_notes')
+            ->where('student_id', $studentId)
+            ->whereNull('read_at')
+            ->count();
+        $activeSection = $request->query('section') === 'notes' ? 'notes' : 'grades';
 
         $quizbeeHistoryAvailable = Schema::hasTable('quizbee_attempts')
             && Schema::hasTable('quizbee_attempt_questions')
@@ -82,7 +113,7 @@ class StudentController extends Controller
                 ->groupBy('id');
         }
 
-        return view('student.dashboard', compact('scores', 'notes', 'unreadNotes', 'bestSubjectScores', 'multiplayerWins', 'leaderboardClasses', 'quizbeeAttempts', 'quizbeeHistoryAvailable'));
+        return view('student.dashboard', compact('scores', 'notes', 'notificationNotes', 'unreadNotes', 'bestSubjectScores', 'multiplayerWins', 'leaderboardClasses', 'quizbeeAttempts', 'quizbeeHistoryAvailable', 'activeSection', 'gradeSubjects', 'selectedGradeSubject', 'selectedGradeType', 'studentProfile'));
     }
 
     public function recordQuizbeeAnswer(Request $request)

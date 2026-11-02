@@ -20,6 +20,18 @@ class LeaderboardController extends Controller
             'class_id' => 'required|integer',
             'subject' => 'required|in:english,math,science',
         ]);
+        if ($role === 'teacher') {
+            $assignedSubject = strtolower(trim((string) DB::table('users')
+                ->where('id', $userId)
+                ->where('role', 'teacher')
+                ->value('subject')));
+            if (!in_array($assignedSubject, ['english', 'math', 'science'], true)) {
+                return response()->json(['success' => false, 'message' => 'No subject is assigned to this teacher account.'], 403);
+            }
+            if ($validated['subject'] !== $assignedSubject) {
+                return response()->json(['success' => false, 'message' => 'You can only view the leaderboard for your assigned subject.'], 403);
+            }
+        }
 
         $classQuery = DB::table('classes')->where('classes.id', $validated['class_id']);
         if ($role === 'student') {

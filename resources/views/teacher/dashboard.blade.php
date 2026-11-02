@@ -354,6 +354,25 @@
       letter-spacing: 0.08em;
       text-transform: uppercase;
     }
+    .question-set-card { width: 100%; color: #fff; font: inherit; text-align: center; }
+    .question-set-card[hidden] { display: none !important; }
+    .question-set-card .class-circle { flex-shrink: 0; }
+    .question-set-wrapper { display: flex; flex-direction: column; min-width: 0; }
+    .question-set-wrapper[hidden] { display: none !important; }
+    .question-set-delete { width: 100%; margin-top: 8px; padding: 7px 10px; font-size: 10px; }
+    .question-set-type { font-size: 13px; font-weight: 700; }
+    .question-set-count { margin-top: 6px; color: var(--gold); font-size: 11px; }
+    .question-review-empty { padding: 18px; color: var(--text-muted); text-align: center; }
+    .question-review-details[hidden] { display: none !important; }
+    .question-review-card { background: var(--blue-ui); border: 2px solid var(--blue-mid); padding: 16px; margin-bottom: 12px; }
+    .question-review-meta { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 12px; }
+    .question-review-delete { margin-top: 12px; padding: 7px 12px; font-size: 11px; }
+    .question-review-tag { padding: 4px 8px; background: var(--blue-deep); border: 1px solid var(--blue-mid); color: var(--gold); font-size: 11px; }
+    .question-review-prompt { margin-bottom: 12px; color: #fff; font-size: 15px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .question-review-choices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .question-review-choice { padding: 8px 10px; background: var(--blue-deep); border: 1px solid var(--blue-mid); color: var(--text-muted); font-size: 13px; overflow-wrap: anywhere; }
+    .question-review-choice.is-answer { border-color: var(--green); color: #8df0b2; }
+    @media (max-width: 600px) { .question-review-choices { grid-template-columns: 1fr; } }
     .class-card .add-class {
       font-size: 36px;
       color: var(--gold);
@@ -543,7 +562,9 @@
     }
     .question-preview-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
     .question-preview-empty { grid-column: 1 / -1; padding: 16px; color: var(--text-muted); font-size: 13px; }
-    .question-preview-item { padding: 14px; background: var(--blue-ui); border: 1px solid var(--blue-mid); }
+    .question-preview-item { padding: 14px; background: var(--blue-ui); border: 1px solid var(--blue-mid); cursor: pointer; transition: border-color 0.15s, box-shadow 0.15s; }
+    .question-preview-item:hover, .question-preview-item:focus-visible { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold-dim); outline: none; }
+    .question-preview-item.is-editing { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold-dim); }
     .question-preview-item-title { margin-bottom: 10px; color: var(--gold); font-size: 11px; font-weight: 700; letter-spacing: 0.08em; }
     .question-preview-question { margin-bottom: 12px; color: #fff; font-size: 14px; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }
     .question-preview-choices { display: grid; gap: 7px; }
@@ -642,6 +663,8 @@
       text-transform: uppercase;
       transition: all 0.05s steps(1);
     }
+    .pixel-btn[hidden] { display: none !important; }
+    .pixel-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
     .pixel-btn:hover {
       background: var(--gold-light);
       box-shadow: 5px 5px 0 var(--gold-dim);
@@ -703,6 +726,77 @@
       letter-spacing: 0.08em;
       text-transform: uppercase;
     }
+    .question-class-picker {
+      width: min(440px, 100%);
+      padding: 8px;
+      background: var(--blue-deep);
+      border: 2px solid var(--blue-mid);
+    }
+    .question-class-picker-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin-bottom: 8px;
+    }
+    .question-class-picker-actions { display: flex; gap: 6px; }
+    .question-class-action {
+      padding: 5px 8px;
+      background: var(--blue-mid);
+      border: 1px solid var(--gold-dim);
+      color: var(--gold);
+      font: 600 10px 'Outfit', sans-serif;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+    }
+    .question-class-selection {
+      margin-left: auto;
+      color: var(--text-muted);
+      font-size: 11px;
+      white-space: nowrap;
+    }
+    .question-class-options {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 6px;
+      max-height: 132px;
+      overflow-y: auto;
+    }
+    .question-class-option {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+      padding: 7px;
+      border: 1px solid var(--blue-mid);
+      color: var(--text-muted);
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .question-class-option input {
+      flex: 0 0 auto;
+      width: 16px;
+      height: 16px;
+      margin: 0;
+      accent-color: var(--gold);
+    }
+    .question-class-option input:checked + span { color: #fff; }
+    .question-class-option span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .question-set-field {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .question-set-field .pixel-select,
+    .question-set-field .pixel-input {
+      width: auto;
+      min-width: 82px;
+      margin: 0;
+    }
+    .question-set-field .pixel-input { width: 96px; }
 
     /* ===== MODAL ===== */
     .modal-overlay {
@@ -1017,6 +1111,9 @@
     <button class="nav-btn active" onclick="showSection('classes', this)">
       <i class="fas fa-users"></i>CLASSES
     </button>
+    <button class="nav-btn" onclick="showSection('question-review', this)">
+      <i class="fas fa-file-alt"></i>MY QUESTIONS
+    </button>
     <div class="nav-divider"></div>
     <button class="nav-btn" onclick="showSection('assessment', this)">
       <i class="fas fa-bolt"></i>QUIZBEE
@@ -1052,7 +1149,6 @@
 
         @php
             $uniqueSections = collect($classes)->pluck('section')->filter()->unique();
-            $availableSections = $sections->whereNotIn('name', $uniqueSections);
         @endphp
         <div class="filter-row" style="margin-bottom: 20px;">
           <span class="filter-label">SECTION:</span>
@@ -1090,15 +1186,8 @@
           </div>
           @endforeach
 
-          @if($availableSections->isNotEmpty())
-            <div class="class-card" onclick="openModal('modalAddClass')">
-              <div class="class-circle"><span class="add-class">+</span></div>
-              <div class="class-label">add section</div>
-            </div>
-          @elseif($sections->isNotEmpty())
-            <p style="grid-column:1/-1;color:var(--text-muted);text-align:center;">All admin-defined sections have been added to your classes.</p>
-          @else
-            <p style="grid-column:1/-1;color:var(--text-muted);text-align:center;">No sections are available. Ask an admin to create a section first.</p>
+          @if($classes->isEmpty())
+            <p style="grid-column:1/-1;color:var(--text-muted);text-align:center;">No sections assigned yet. Ask an administrator to assign a section to your account.</p>
           @endif
         </div>
       </div>
@@ -1110,11 +1199,12 @@
 
         <div class="filter-row">
           <span class="filter-label">SUBJECT:</span>
-          <select class="pixel-select" style="width:auto;margin:0;" id="filterSubject">
-            <option value="all">All Subjects</option>
-            <option value="english">English</option>
-            <option value="math">Math</option>
-            <option value="science">Science</option>
+          <select class="pixel-select" style="width:auto;margin:0;" id="filterSubject" {{ $assignedSubject ? '' : 'disabled' }}>
+            @if($assignedSubject)
+              <option value="{{ $assignedSubject }}">{{ ucfirst($assignedSubject) }}</option>
+            @else
+              <option value="">No subject assigned</option>
+            @endif
           </select>
           <span class="filter-label">TYPE:</span>
           <select class="pixel-select" style="width:auto;margin:0;" id="filterType">
@@ -1133,6 +1223,13 @@
             <option value="4">Quarter 4</option>
           </select>
           <button class="pixel-btn pixel-btn-red" style="padding:8px 12px;font-size:7px;" onclick="closeStudentList()">✕ CLOSE</button>
+        </div>
+        <div class="filter-row" style="margin-top:0;">
+          <label class="filter-label" for="classStudentSearch">SEARCH STUDENT:</label>
+          <input type="search" class="pixel-input" id="classStudentSearch"
+            style="width:min(100%, 320px);margin:0;"
+            placeholder="Search by student name..."
+            aria-label="Search students in this class">
         </div>
         <p id="parentAlertStatus" role="status" aria-live="polite" style="min-height:18px;margin:0 0 10px;color:var(--text-muted);font-size:12px;"></p>
 
@@ -1168,6 +1265,113 @@
       </div>
     </section>
 
+    <!-- ===== SUBMITTED QUESTIONS REVIEW ===== -->
+    <section id="section-question-review" class="section">
+      <div class="panel">
+        <div class="corner-bl"></div><div class="corner-br"></div>
+        <div class="panel-title">📚 MY SUBMITTED QUESTIONS</div>
+        <p style="color:var(--text-muted);font-size:14px;margin-bottom:16px;">
+          Select a Quiz, QuizBee, or Exam set to review its questions and correct answers.
+        </p>
+        <div class="filter-row">
+          <label class="filter-label" for="reviewQuestionType">QUESTION TYPE:</label>
+          <select class="pixel-select" style="width:auto;margin:0;" id="reviewQuestionType" onchange="filterSubmittedQuestions()">
+            <option value="all">All Types</option>
+            <option value="quiz">Quiz</option>
+            <option value="quizbee">QuizBee</option>
+            <option value="exam">Exam</option>
+          </select>
+          <label class="filter-label" for="reviewQuestionSection">SECTION:</label>
+          <select class="pixel-select" style="width:auto;margin:0;" id="reviewQuestionSection" onchange="filterSubmittedQuestions()">
+            <option value="all">All Sections</option>
+            @foreach($classes->pluck('section')->filter()->unique()->sort()->values() as $sectionName)
+              <option value="{{ $sectionName }}">{{ $sectionName }}</option>
+            @endforeach
+          </select>
+          <label class="filter-label" for="reviewQuestionQuarter">QUARTER:</label>
+          <select class="pixel-select" style="width:auto;margin:0;" id="reviewQuestionQuarter" onchange="filterSubmittedQuestions()">
+            <option value="all">All Quarters</option>
+            <option value="1">Quarter 1</option>
+            <option value="2">Quarter 2</option>
+            <option value="3">Quarter 3</option>
+            <option value="4">Quarter 4</option>
+          </select>
+        </div>
+        <div class="class-grid" id="submittedQuestionSets">
+          @forelse($submittedQuestionSets as $setIndex => $reviewSet)
+            @php
+              $submittedQuestion = $reviewSet->first;
+              $reviewType = in_array($submittedQuestion->type, ['assessment', 'quizbee'], true) ? 'quizbee' : $submittedQuestion->type;
+              $reviewTypeLabel = $reviewType === 'quizbee' ? 'QuizBee' : ucfirst($reviewType);
+            @endphp
+            <div class="question-set-wrapper">
+              <button type="button" class="class-card question-set-card"
+                data-question-type="{{ $reviewType }}"
+                data-class-id="{{ $submittedQuestion->class_id }}"
+                data-section="{{ $submittedQuestion->section }}"
+                data-subject="{{ strtolower($submittedQuestion->subject) }}"
+                data-quarter="{{ $submittedQuestion->quarter }}"
+                data-sequence-number="{{ $submittedQuestion->sequence_number }}"
+                aria-controls="submittedQuestionDetails-{{ $setIndex }}"
+                aria-expanded="false"
+                onclick="openSubmittedQuestionSet({{ $setIndex }}, this)">
+                <span class="class-circle">
+                  <span class="question-set-type">{{ strtoupper($reviewTypeLabel) }}</span>
+                  <small>SET {{ $submittedQuestion->sequence_number }}</small>
+                </span>
+                <span class="class-label">{{ ucfirst($submittedQuestion->subject) }} · {{ $submittedQuestion->class_name }}</span>
+                <span class="question-set-count">{{ $reviewSet->questions->count() }} QUESTION(S)</span>
+                <span class="class-label">Quarter {{ $submittedQuestion->quarter }}</span>
+              </button>
+              <button type="button" class="pixel-btn pixel-btn-red question-set-delete"
+                onclick="deleteSubmittedQuestionSet(event, this)">
+                ✕ DELETE SET
+              </button>
+            </div>
+          @empty
+            <p class="question-review-empty">You have not submitted any questions yet.</p>
+          @endforelse
+        </div>
+        @if($submittedQuestionSets->isNotEmpty())
+          <p id="submittedQuestionsNoMatch" class="question-review-empty" hidden>No submitted sets match these filters.</p>
+        @endif
+        @foreach($submittedQuestionSets as $setIndex => $reviewSet)
+          @php
+            $submittedQuestion = $reviewSet->first;
+            $reviewType = in_array($submittedQuestion->type, ['assessment', 'quizbee'], true) ? 'quizbee' : $submittedQuestion->type;
+            $reviewTypeLabel = $reviewType === 'quizbee' ? 'QuizBee' : ucfirst($reviewType);
+          @endphp
+          <div class="panel question-review-details" id="submittedQuestionDetails-{{ $setIndex }}" hidden>
+            <div class="panel-title">{{ $reviewTypeLabel }} · {{ ucfirst($submittedQuestion->subject) }} · {{ $submittedQuestion->class_name }} · QUARTER {{ $submittedQuestion->quarter }} · SET {{ $submittedQuestion->sequence_number }}</div>
+            @foreach($reviewSet->questions as $questionIndex => $submittedQuestion)
+              <article class="question-review-card">
+                <div class="question-review-meta">
+                  <span class="question-review-tag">QUESTION {{ $questionIndex + 1 }}</span>
+                </div>
+                <div class="question-review-prompt">{{ $submittedQuestion->question }}</div>
+                <div class="question-review-choices">
+                  @foreach(['A', 'B', 'C', 'D'] as $choiceLetter)
+                    @php $choiceColumn = 'choice_' . strtolower($choiceLetter); @endphp
+                    <div class="question-review-choice {{ strtoupper($submittedQuestion->answer) === $choiceLetter ? 'is-answer' : '' }}">
+                      <strong>{{ $choiceLetter }}.</strong> {{ $submittedQuestion->$choiceColumn }}
+                      @if(strtoupper($submittedQuestion->answer) === $choiceLetter)
+                        <strong>✓ Correct answer</strong>
+                      @endif
+                    </div>
+                  @endforeach
+                </div>
+                <button type="button" class="pixel-btn pixel-btn-red question-review-delete"
+                  onclick="deleteSubmittedQuestion(this, {{ $submittedQuestion->id }}, {{ $setIndex }})">
+                  ✕ DELETE QUESTION
+                </button>
+              </article>
+            @endforeach
+            <button type="button" class="pixel-btn pixel-btn-red" onclick="closeSubmittedQuestionSet()">✕ CLOSE REVIEW</button>
+          </div>
+        @endforeach
+      </div>
+    </section>
+
         <!-- ===== QUIZBEE SECTION ===== -->
     <section id="section-assessment" class="section">
       <div class="panel">
@@ -1175,31 +1379,40 @@
         <div class="panel-title">⚡ QUIZBEE — ADD QUESTIONS</div>
 
         <div class="filter-row">
-          <span class="filter-label">CLASS:</span>
-          <select class="pixel-select" style="width:auto;margin:0;" id="assessmentClass">
-            <option value="">-- Select --</option>
-            @foreach($classes as $c)
-              <option value="{{ $c->id }}">{{ $c->name }} {{ $c->section ? ' - '.$c->section : '' }}</option>
-            @endforeach
-          </select>
+          <span class="filter-label">CLASSES:</span>
+          <div class="question-class-picker" id="assessmentClassPicker" role="group" aria-label="Select classes for these questions">
+            <div class="question-class-picker-toolbar">
+              <div class="question-class-picker-actions">
+                <button type="button" class="question-class-action" onclick="selectAllQuestionClasses('assessment')">SELECT ALL</button>
+                <button type="button" class="question-class-action" onclick="clearQuestionClasses('assessment')">CLEAR</button>
+              </div>
+              <span class="question-class-selection" id="assessmentClassSelection" aria-live="polite">0 selected</span>
+            </div>
+            <div class="question-class-options">
+              @forelse($classes as $c)
+                <label class="question-class-option">
+                  <input type="checkbox" class="question-class-checkbox" value="{{ $c->id }}" onchange="updateQuestionClassSelection('assessment')">
+                  <span>{{ $c->name }}{{ $c->section ? ' - '.$c->section : '' }}</span>
+                </label>
+              @empty
+                <span class="question-class-selection">No classes assigned.</span>
+              @endforelse
+            </div>
+          </div>
           <span class="filter-label">SUBJECT:</span>
-          <select class="pixel-select" style="width:auto;margin:0;" id="assessmentSubject">
-            <option value="english">English</option>
-            <option value="math">Math</option>
-            <option value="science">Science</option>
+          <select class="pixel-select" style="width:auto;margin:0;" id="assessmentSubject" {{ $assignedSubject ? '' : 'disabled' }}>
+            @if($assignedSubject)
+              <option value="{{ $assignedSubject }}">{{ ucfirst($assignedSubject) }}</option>
+            @else
+              <option value="">No subject assigned</option>
+            @endif
           </select>
-          <span class="filter-label">QUARTER:</span>
-          <select class="pixel-select" style="width:auto;margin:0;" id="assessmentQuarter">
-            <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option>
-          </select>
-          <span class="filter-label">NO.:</span>
-          <input type="number" class="pixel-input" style="width:70px;margin:0;padding:5px;" id="assessmentNumber" value="1" min="1">
-          <div class="counter-box">QUESTIONS: <span id="assessmentCount">1</span></div>
+          <div class="counter-box">QUESTIONS: <span id="assessmentCount">0</span></div>
         </div>
 
         <div id="assessmentQuestions">
           <div class="question-block" id="assessmentQ1">
-            <div class="q-number">QUESTION 1</div>
+            <div class="q-number">ADD QUESTION</div>
             <textarea class="pixel-textarea" placeholder="Enter question here..."></textarea>
             <div class="choices-grid">
               <div class="choice-row"><span class="choice-label">A:</span><input class="pixel-input" style="margin:0;" placeholder="Choice A"></div>
@@ -1216,29 +1429,31 @@
           </div>
         </div>
 
+        <div class="btn-row">
+          <button type="button" class="pixel-btn" id="assessmentQuestionAction" onclick="addQuestion('assessment')" {{ $assignedSubject ? '' : 'disabled' }}>+ ADD QUESTION</button>
+          <button type="button" class="pixel-btn pixel-btn-outline" id="assessmentCancelEdit" onclick="cancelQuestionEdit('assessment')" hidden>CANCEL EDIT</button>
+          <button type="button" class="pixel-btn pixel-btn-outline" onclick="submitQuestions('assessment')" {{ $assignedSubject ? '' : 'disabled' }}>▶ SUBMIT</button>
+          <input type="file" id="assessmentCsvFile" accept=".csv,text/csv" hidden onchange="uploadQuestionCsv('assessment', this)">
+          <button type="button" class="pixel-btn pixel-btn-outline" onclick="document.getElementById('assessmentCsvFile').click()" {{ $assignedSubject ? '' : 'disabled' }}>UPLOAD CSV</button>
+          <button type="button" class="pixel-btn pixel-btn-outline" onclick="downloadQuestionCsvTemplate()">CSV TEMPLATE</button>
+          <span id="assessmentItems" style="font-size:16px;color:var(--text-muted);letter-spacing:0.06em;">Items: add questions to the live preview</span>
+          <span style="font-size:12px;color:var(--text-muted);">SUBMIT saves these questions to every selected class; CSV imports append and manual sets replace.</span>
+        </div>
+
         <div class="question-preview" id="assessmentPreview" aria-label="QuizBee question preview">
           <div class="question-preview-header">
             <div>
               <div class="question-preview-title">LIVE QUESTION PREVIEW</div>
-              <p class="question-preview-hint">Review the question set and correct answers before saving.</p>
+              <p class="question-preview-hint">Click a question to edit it. Review answers before saving.</p>
             </div>
             <span class="question-preview-count" id="assessmentPreviewCount">0 QUESTIONS</span>
           </div>
           <div class="question-preview-meta" id="assessmentPreviewMeta"></div>
           <div class="question-preview-list" id="assessmentPreviewList">
-            <p class="question-preview-empty">Start entering a question to preview it here.</p>
+            <p class="question-preview-empty">Questions you add will appear here.</p>
           </div>
         </div>
 
-        <div class="btn-row">
-          <button class="pixel-btn" onclick="addQuestion('assessment')">+ ADD QUESTION</button>
-          <button class="pixel-btn pixel-btn-outline" onclick="submitQuestions('assessment')">▶ SUBMIT</button>
-          <input type="file" id="assessmentCsvFile" accept=".csv,text/csv" hidden onchange="uploadQuestionCsv('assessment', this)">
-          <button type="button" class="pixel-btn pixel-btn-outline" onclick="document.getElementById('assessmentCsvFile').click()">UPLOAD CSV</button>
-          <button type="button" class="pixel-btn pixel-btn-outline" onclick="downloadQuestionCsvTemplate()">CSV TEMPLATE</button>
-          <span id="assessmentItems" style="font-size:16px;color:var(--text-muted);letter-spacing:0.06em;">Items: ready for new questions</span>
-          <span style="font-size:12px;color:var(--text-muted);">CSV uploads append; manual SUBMIT replaces the selected question set.</span>
-        </div>
       </div>
     </section>
 
@@ -1249,31 +1464,53 @@
         <div class="panel-title">📜 EXAM — ADD QUESTIONS</div>
 
         <div class="filter-row">
-          <span class="filter-label">CLASS:</span>
-          <select class="pixel-select" style="width:auto;margin:0;" id="examClass">
-            <option value="">-- Select --</option>
-            @foreach($classes as $c)
-              <option value="{{ $c->id }}">{{ $c->name }} {{ $c->section ? ' - '.$c->section : '' }}</option>
-            @endforeach
-          </select>
+          <span class="filter-label">CLASSES:</span>
+          <div class="question-class-picker" id="examClassPicker" role="group" aria-label="Select classes for these questions">
+            <div class="question-class-picker-toolbar">
+              <div class="question-class-picker-actions">
+                <button type="button" class="question-class-action" onclick="selectAllQuestionClasses('exam')">SELECT ALL</button>
+                <button type="button" class="question-class-action" onclick="clearQuestionClasses('exam')">CLEAR</button>
+              </div>
+              <span class="question-class-selection" id="examClassSelection" aria-live="polite">0 selected</span>
+            </div>
+            <div class="question-class-options">
+              @forelse($classes as $c)
+                <label class="question-class-option">
+                  <input type="checkbox" class="question-class-checkbox" value="{{ $c->id }}" onchange="updateQuestionClassSelection('exam')">
+                  <span>{{ $c->name }}{{ $c->section ? ' - '.$c->section : '' }}</span>
+                </label>
+              @empty
+                <span class="question-class-selection">No classes assigned.</span>
+              @endforelse
+            </div>
+          </div>
           <span class="filter-label">SUBJECT:</span>
-          <select class="pixel-select" style="width:auto;margin:0;" id="examSubject">
-            <option value="english">English</option>
-            <option value="math">Math</option>
-            <option value="science">Science</option>
+          <select class="pixel-select" style="width:auto;margin:0;" id="examSubject" {{ $assignedSubject ? '' : 'disabled' }}>
+            @if($assignedSubject)
+              <option value="{{ $assignedSubject }}">{{ ucfirst($assignedSubject) }}</option>
+            @else
+              <option value="">No subject assigned</option>
+            @endif
           </select>
-          <span class="filter-label">QUARTER:</span>
-          <select class="pixel-select" style="width:auto;margin:0;" id="examQuarter">
-            <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option>
-          </select>
-          <span class="filter-label">NO.:</span>
-          <input type="number" class="pixel-input" style="width:70px;margin:0;padding:5px;" id="examNumber" value="1" min="1">
-          <div class="counter-box">QUESTIONS: <span id="examCount">1</span></div>
+          <label class="question-set-field">
+            <span class="filter-label">QUARTER:</span>
+            <select class="pixel-select" id="examQuarter" aria-label="Exam quarter">
+              <option value="1">Quarter 1</option>
+              <option value="2">Quarter 2</option>
+              <option value="3">Quarter 3</option>
+              <option value="4">Quarter 4</option>
+            </select>
+          </label>
+          <label class="question-set-field">
+            <span class="filter-label">EXAM NUMBER:</span>
+            <input class="pixel-input" type="number" id="examNumber" aria-label="Exam number" min="1" step="1" value="1">
+          </label>
+          <div class="counter-box">QUESTIONS: <span id="examCount">0</span></div>
         </div>
 
         <div id="examQuestions">
           <div class="question-block" id="examQ1">
-            <div class="q-number">QUESTION 1</div>
+            <div class="q-number">ADD QUESTION</div>
             <textarea class="pixel-textarea" placeholder="Enter question here..."></textarea>
             <div class="choices-grid">
               <div class="choice-row"><span class="choice-label">A:</span><input class="pixel-input" style="margin:0;" placeholder="Choice A"></div>
@@ -1290,29 +1527,31 @@
           </div>
         </div>
 
+        <div class="btn-row">
+          <button type="button" class="pixel-btn" id="examQuestionAction" onclick="addQuestion('exam')" {{ $assignedSubject ? '' : 'disabled' }}>+ ADD QUESTION</button>
+          <button type="button" class="pixel-btn pixel-btn-outline" id="examCancelEdit" onclick="cancelQuestionEdit('exam')" hidden>CANCEL EDIT</button>
+          <button type="button" class="pixel-btn pixel-btn-outline" onclick="submitQuestions('exam')" {{ $assignedSubject ? '' : 'disabled' }}>▶ SUBMIT</button>
+          <input type="file" id="examCsvFile" accept=".csv,text/csv" hidden onchange="uploadQuestionCsv('exam', this)">
+          <button type="button" class="pixel-btn pixel-btn-outline" onclick="document.getElementById('examCsvFile').click()" {{ $assignedSubject ? '' : 'disabled' }}>UPLOAD CSV</button>
+          <button type="button" class="pixel-btn pixel-btn-outline" onclick="downloadQuestionCsvTemplate()">CSV TEMPLATE</button>
+          <span id="examItems" style="font-size:16px;color:var(--text-muted);letter-spacing:0.06em;">Items: add questions to the live preview</span>
+          <span style="font-size:12px;color:var(--text-muted);">SUBMIT saves these questions to every selected class; CSV imports append and manual sets replace.</span>
+        </div>
+
         <div class="question-preview" id="examPreview" aria-label="Exam question preview">
           <div class="question-preview-header">
             <div>
               <div class="question-preview-title">LIVE QUESTION PREVIEW</div>
-              <p class="question-preview-hint">Review the question set and correct answers before saving.</p>
+              <p class="question-preview-hint">Click a question to edit it. Review answers before saving.</p>
             </div>
             <span class="question-preview-count" id="examPreviewCount">0 QUESTIONS</span>
           </div>
           <div class="question-preview-meta" id="examPreviewMeta"></div>
           <div class="question-preview-list" id="examPreviewList">
-            <p class="question-preview-empty">Start entering a question to preview it here.</p>
+            <p class="question-preview-empty">Questions you add will appear here.</p>
           </div>
         </div>
 
-        <div class="btn-row">
-          <button class="pixel-btn" onclick="addQuestion('exam')">+ ADD QUESTION</button>
-          <button class="pixel-btn pixel-btn-outline" onclick="submitQuestions('exam')">▶ SUBMIT</button>
-          <input type="file" id="examCsvFile" accept=".csv,text/csv" hidden onchange="uploadQuestionCsv('exam', this)">
-          <button type="button" class="pixel-btn pixel-btn-outline" onclick="document.getElementById('examCsvFile').click()">UPLOAD CSV</button>
-          <button type="button" class="pixel-btn pixel-btn-outline" onclick="downloadQuestionCsvTemplate()">CSV TEMPLATE</button>
-          <span id="examItems" style="font-size:16px;color:var(--text-muted);letter-spacing:0.06em;">Items: ready for new questions</span>
-          <span style="font-size:12px;color:var(--text-muted);">CSV uploads append; manual SUBMIT replaces the selected question set.</span>
-        </div>
       </div>
     </section>
 
@@ -1323,31 +1562,53 @@
         <div class="panel-title">⚡ QUIZ — ADD QUESTIONS</div>
 
         <div class="filter-row">
-          <span class="filter-label">CLASS:</span>
-          <select class="pixel-select" style="width:auto;margin:0;" id="quizClass">
-            <option value="">-- Select --</option>
-            @foreach($classes as $c)
-              <option value="{{ $c->id }}">{{ $c->name }} {{ $c->section ? ' - '.$c->section : '' }}</option>
-            @endforeach
-          </select>
+          <span class="filter-label">CLASSES:</span>
+          <div class="question-class-picker" id="quizClassPicker" role="group" aria-label="Select classes for these questions">
+            <div class="question-class-picker-toolbar">
+              <div class="question-class-picker-actions">
+                <button type="button" class="question-class-action" onclick="selectAllQuestionClasses('quiz')">SELECT ALL</button>
+                <button type="button" class="question-class-action" onclick="clearQuestionClasses('quiz')">CLEAR</button>
+              </div>
+              <span class="question-class-selection" id="quizClassSelection" aria-live="polite">0 selected</span>
+            </div>
+            <div class="question-class-options">
+              @forelse($classes as $c)
+                <label class="question-class-option">
+                  <input type="checkbox" class="question-class-checkbox" value="{{ $c->id }}" onchange="updateQuestionClassSelection('quiz')">
+                  <span>{{ $c->name }}{{ $c->section ? ' - '.$c->section : '' }}</span>
+                </label>
+              @empty
+                <span class="question-class-selection">No classes assigned.</span>
+              @endforelse
+            </div>
+          </div>
           <span class="filter-label">SUBJECT:</span>
-          <select class="pixel-select" style="width:auto;margin:0;" id="quizSubject">
-            <option value="english">English</option>
-            <option value="math">Math</option>
-            <option value="science">Science</option>
+          <select class="pixel-select" style="width:auto;margin:0;" id="quizSubject" {{ $assignedSubject ? '' : 'disabled' }}>
+            @if($assignedSubject)
+              <option value="{{ $assignedSubject }}">{{ ucfirst($assignedSubject) }}</option>
+            @else
+              <option value="">No subject assigned</option>
+            @endif
           </select>
-          <span class="filter-label">QUARTER:</span>
-          <select class="pixel-select" style="width:auto;margin:0;" id="quizQuarter">
-            <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option>
-          </select>
-          <span class="filter-label">NO.:</span>
-          <input type="number" class="pixel-input" style="width:70px;margin:0;padding:5px;" id="quizNumber" value="1" min="1">
-          <div class="counter-box">QUESTIONS: <span id="quizCount">1</span></div>
+          <label class="question-set-field">
+            <span class="filter-label">QUARTER:</span>
+            <select class="pixel-select" id="quizQuarter" aria-label="Quiz quarter">
+              <option value="1">Quarter 1</option>
+              <option value="2">Quarter 2</option>
+              <option value="3">Quarter 3</option>
+              <option value="4">Quarter 4</option>
+            </select>
+          </label>
+          <label class="question-set-field">
+            <span class="filter-label">QUIZ NUMBER:</span>
+            <input class="pixel-input" type="number" id="quizNumber" aria-label="Quiz number" min="1" step="1" value="1">
+          </label>
+          <div class="counter-box">QUESTIONS: <span id="quizCount">0</span></div>
         </div>
 
         <div id="quizQuestions">
           <div class="question-block" id="quizQ1">
-            <div class="q-number">QUESTION 1</div>
+            <div class="q-number">ADD QUESTION</div>
             <textarea class="pixel-textarea" placeholder="Enter question here..."></textarea>
             <div class="choices-grid">
               <div class="choice-row"><span class="choice-label">A:</span><input class="pixel-input" style="margin:0;" placeholder="Choice A"></div>
@@ -1364,29 +1625,31 @@
           </div>
         </div>
 
+        <div class="btn-row">
+          <button type="button" class="pixel-btn" id="quizQuestionAction" onclick="addQuestion('quiz')" {{ $assignedSubject ? '' : 'disabled' }}>+ ADD QUESTION</button>
+          <button type="button" class="pixel-btn pixel-btn-outline" id="quizCancelEdit" onclick="cancelQuestionEdit('quiz')" hidden>CANCEL EDIT</button>
+          <button type="button" class="pixel-btn pixel-btn-outline" onclick="submitQuestions('quiz')" {{ $assignedSubject ? '' : 'disabled' }}>▶ SUBMIT</button>
+          <input type="file" id="quizCsvFile" accept=".csv,text/csv" hidden onchange="uploadQuestionCsv('quiz', this)">
+          <button type="button" class="pixel-btn pixel-btn-outline" onclick="document.getElementById('quizCsvFile').click()" {{ $assignedSubject ? '' : 'disabled' }}>UPLOAD CSV</button>
+          <button type="button" class="pixel-btn pixel-btn-outline" onclick="downloadQuestionCsvTemplate()">CSV TEMPLATE</button>
+          <span id="quizItems" style="font-size:16px;color:var(--text-muted);letter-spacing:0.06em;">Items: add questions to the live preview</span>
+          <span style="font-size:12px;color:var(--text-muted);">SUBMIT saves these questions to every selected class; CSV imports append and manual sets replace.</span>
+        </div>
+
         <div class="question-preview" id="quizPreview" aria-label="Quiz question preview">
           <div class="question-preview-header">
             <div>
               <div class="question-preview-title">LIVE QUESTION PREVIEW</div>
-              <p class="question-preview-hint">Review the question set and correct answers before saving.</p>
+              <p class="question-preview-hint">Click a question to edit it. Review answers before saving.</p>
             </div>
             <span class="question-preview-count" id="quizPreviewCount">0 QUESTIONS</span>
           </div>
           <div class="question-preview-meta" id="quizPreviewMeta"></div>
           <div class="question-preview-list" id="quizPreviewList">
-            <p class="question-preview-empty">Start entering a question to preview it here.</p>
+            <p class="question-preview-empty">Questions you add will appear here.</p>
           </div>
         </div>
 
-        <div class="btn-row">
-          <button class="pixel-btn" onclick="addQuestion('quiz')">+ ADD QUESTION</button>
-          <button class="pixel-btn pixel-btn-outline" onclick="submitQuestions('quiz')">▶ SUBMIT</button>
-          <input type="file" id="quizCsvFile" accept=".csv,text/csv" hidden onchange="uploadQuestionCsv('quiz', this)">
-          <button type="button" class="pixel-btn pixel-btn-outline" onclick="document.getElementById('quizCsvFile').click()">UPLOAD CSV</button>
-          <button type="button" class="pixel-btn pixel-btn-outline" onclick="downloadQuestionCsvTemplate()">CSV TEMPLATE</button>
-          <span id="quizItems" style="font-size:16px;color:var(--text-muted);letter-spacing:0.06em;">Items: ready for new questions</span>
-          <span style="font-size:12px;color:var(--text-muted);">CSV uploads append; manual SUBMIT replaces the selected question set.</span>
-        </div>
       </div>
     </section>
 
@@ -1414,10 +1677,12 @@
         </div>
         <div class="filter-row">
           <span class="filter-label">SUBJECT:</span>
-          <select class="pixel-select" style="width:auto;margin:0;" id="manualGradeSubject">
-            <option value="english">English</option>
-            <option value="math">Math</option>
-            <option value="science">Science</option>
+          <select class="pixel-select" style="width:auto;margin:0;" id="manualGradeSubject" {{ $assignedSubject ? '' : 'disabled' }}>
+            @if($assignedSubject)
+              <option value="{{ $assignedSubject }}">{{ ucfirst($assignedSubject) }}</option>
+            @else
+              <option value="">No subject assigned</option>
+            @endif
           </select>
           <span class="filter-label">QUARTER:</span>
           <select class="pixel-select" style="width:auto;margin:0;" id="manualGradeQuarter">
@@ -1425,14 +1690,14 @@
           </select>
           <span class="filter-label">GRADE (%):</span>
           <input type="number" class="pixel-input" style="width:100px;margin:0;padding:5px;" id="manualGradeValue" min="0" max="100" step="1" placeholder="0-100">
-          <button class="pixel-btn pixel-btn-outline" id="manualGradeSubmit" onclick="submitManualGrade()">▶ SAVE GRADE</button>
+          <button class="pixel-btn pixel-btn-outline" id="manualGradeSubmit" onclick="submitManualGrade()" {{ $assignedSubject ? '' : 'disabled' }}>▶ SAVE GRADE</button>
         </div>
         <div id="manualGradeStatus" aria-live="polite" style="margin-top:10px;font-size:14px;font-family:'Outfit',sans-serif;letter-spacing:0.06em;"></div>
       </div>
     </section>
 
     <!-- ===== SUBMISSIONS & ANALYTICS SECTION ===== -->
-    <section id="section-submissions" class="section">
+    <section id="section-submissions" class="section" data-teacher-subject="{{ $assignedSubject ?? '' }}">
       <div class="panel">
         <div class="corner-bl"></div><div class="corner-br"></div>
         <div class="panel-title">📥 SUBMISSIONS &amp; LEADERBOARD</div>
@@ -1445,8 +1710,15 @@
             <option value="{{ $c->id }}">{{ $c->name }} {{ $c->section ? ' - '.$c->section : '' }}</option>
           @endforeach
           </select>
+          <label class="filter-label" for="submissionsTypeFilter">ASSESSMENT:</label>
+          <select class="pixel-select" style="width:auto;margin:0;" id="submissionsTypeFilter">
+            <option value="all">All types</option>
+            <option value="quiz">Quiz</option>
+            <option value="exam">Exam</option>
+          </select>
           <button class="pixel-btn pixel-btn-outline" type="button" onclick="loadAnalytics()">LOAD DATA</button>
         </div>
+        <p id="submissionsSubjectFilter" style="margin:0 0 12px;color:var(--text-muted);font-size:13px;"></p>
 
         <!-- Submissions Table -->
         <div class="table-scroll" style="margin-bottom: 24px; max-height: 300px; overflow: auto; border: 2px solid var(--blue-mid);">
@@ -1464,6 +1736,14 @@
             <tbody id="submissionsTableBody"></tbody>
           </table>
           <div id="submissionsLoading" style="color:var(--text-muted); font-size:18px; text-align:center; padding: 20px;">Select a class and load data</div>
+        </div>
+        <div class="student-pagination" id="submissionsPagination" hidden>
+          <span id="submissionsPageSummary"></span>
+          <div class="student-pagination-controls">
+            <button type="button" class="pixel-btn" id="submissionsPrevious" onclick="changeSubmissionsPage(-1)">PREVIOUS</button>
+            <span id="submissionsPageStatus"></span>
+            <button type="button" class="pixel-btn" id="submissionsNext" onclick="changeSubmissionsPage(1)">NEXT</button>
+          </div>
         </div>
 
         <!-- Pie Chart Container -->
@@ -1495,12 +1775,14 @@
             <p style="color:var(--text-muted);font-size:13px;margin-bottom:16px;">Ranked by average score for the selected subject. Multiplayer wins break score ties.</p>
             <div class="filter-row" style="margin-bottom:16px;">
               <label class="filter-label" for="leaderboardSubject">SUBJECT:</label>
-              <select class="pixel-select" style="width:auto;margin:0;" id="leaderboardSubject">
-                <option value="english">English</option>
-                <option value="math">Math</option>
-                <option value="science">Science</option>
+              <select class="pixel-select" style="width:auto;margin:0;" id="leaderboardSubject" {{ $assignedSubject ? '' : 'disabled' }}>
+                @if($assignedSubject)
+                  <option value="{{ $assignedSubject }}">{{ ucfirst($assignedSubject) }}</option>
+                @else
+                  <option value="">No subject assigned</option>
+                @endif
               </select>
-              <button class="leaderboard-load-button" type="button" id="loadLeaderboardButton" onclick="loadLeaderboard()">
+              <button class="leaderboard-load-button" type="button" id="loadLeaderboardButton" onclick="loadLeaderboard()" {{ $assignedSubject ? '' : 'disabled' }}>
                 <i class="fas fa-trophy" aria-hidden="true"></i> LOAD LEADERBOARD
               </button>
             </div>
@@ -1529,10 +1811,22 @@
         </div>
 
         <div class="filter-row">
-          <span class="filter-label">STUDENT:</span>
+          <label class="filter-label" for="noteSection">SECTION:</label>
+          <select class="pixel-select" style="width:auto;margin:0;" id="noteSection" onchange="filterNoteStudents()">
+            <option value="">All sections</option>
+          </select>
+          <label class="filter-label" for="noteStudent">STUDENT:</label>
           <select class="pixel-select" style="width:auto;margin:0;" id="noteStudent">
             <option value="">-- Loading Students --</option>
           </select>
+        </div>
+        <div class="filter-row" style="margin-top:0;">
+          <label class="filter-label" for="noteStudentSearch">SEARCH STUDENT:</label>
+          <input type="search" class="pixel-input" id="noteStudentSearch"
+            style="width:min(100%, 320px);margin:0;"
+            placeholder="Search student name..."
+            aria-label="Search students for a teacher note"
+            oninput="filterNoteStudents()">
         </div>
         <textarea class="pixel-textarea" id="noteText" placeholder="Enter your note here..."></textarea>
         <div class="btn-row">
@@ -1561,28 +1855,7 @@
   </div>
 </div>
 
-<!-- ===== MODAL: ADD CLASS ===== -->
-<div class="modal-overlay" id="modalAddClass">
-  <div class="modal-box">
-    <div class="mc tl"></div><div class="mc tr"></div>
-    <div class="mc bl"></div><div class="mc br"></div>
-    <div class="modal-title">➕ ADD A SECTION</div>
-    <label class="field-label" for="newClassSection">ADMIN-DEFINED SECTION</label>
-    <select class="pixel-select" id="newClassSection" required>
-      <option value="">-- Select a section --</option>
-      @foreach($availableSections as $section)
-        <option value="{{ $section->id }}">{{ $section->name }}</option>
-      @endforeach
-    </select>
-    <p style="font-family:'Outfit',sans-serif;color:var(--text-muted);font-size:13px;margin-top:10px;">
-      Students assigned to this section by the admin will appear in this class automatically.
-    </p>
-    <div class="btn-row">
-      <button class="pixel-btn" onclick="confirmAddClass()">▶ ADD SECTION</button>
-      <button class="pixel-btn pixel-btn-red" onclick="closeModal('modalAddClass')">✕ CANCEL</button>
-    </div>
-  </div>
-</div>
+@include('components.app-dialog')
 
 <!-- CSRF Token for Backend Data fetch via fetch() -->
 <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -1621,6 +1894,153 @@ function showSection(id, btn) {
   btn.classList.add('active');
   if (id === 'notes' && document.getElementById('noteStudent').options.length <= 1) {
     loadNoteStudents();
+  }
+}
+
+function filterSubmittedQuestions() {
+  const typeFilter = document.getElementById('reviewQuestionType').value;
+  const sectionFilter = document.getElementById('reviewQuestionSection').value;
+  const quarterFilter = document.getElementById('reviewQuestionQuarter').value;
+  const cards = [...document.querySelectorAll('.question-set-card')];
+  let visibleCount = 0;
+
+  cards.forEach(card => {
+    const matchesType = typeFilter === 'all' || card.dataset.questionType === typeFilter;
+    const matchesSection = sectionFilter === 'all' || card.dataset.section === sectionFilter;
+    const matchesQuarter = quarterFilter === 'all' || card.dataset.quarter === quarterFilter;
+    const matches = matchesType && matchesSection && matchesQuarter;
+    const wrapper = card.closest('.question-set-wrapper');
+    if (wrapper) wrapper.hidden = !matches;
+    if (matches) visibleCount++;
+  });
+
+  closeSubmittedQuestionSet();
+  const noMatchMessage = document.getElementById('submittedQuestionsNoMatch');
+  if (noMatchMessage) noMatchMessage.hidden = visibleCount > 0 || cards.length === 0;
+}
+
+function openSubmittedQuestionSet(setIndex, card) {
+  closeSubmittedQuestionSet();
+  const details = document.getElementById(`submittedQuestionDetails-${setIndex}`);
+  if (!details) return;
+  details.hidden = false;
+  card.setAttribute('aria-expanded', 'true');
+  details.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function closeSubmittedQuestionSet() {
+  document.querySelectorAll('.question-review-details').forEach(details => {
+    details.hidden = true;
+  });
+  document.querySelectorAll('.question-set-card[aria-expanded="true"]').forEach(card => {
+    card.setAttribute('aria-expanded', 'false');
+  });
+}
+
+async function deleteSubmittedQuestion(button, questionId, setIndex) {
+  const card = button.closest('.question-review-card');
+  const questionText = card ? card.querySelector('.question-review-prompt')?.textContent.trim() : '';
+  if (!await showAppDialog(`Delete this question${questionText ? `: "${questionText}"` : ''}? This cannot be undone.`, {
+    title: 'DELETE QUESTION',
+    confirm: true,
+    confirmLabel: 'DELETE',
+    danger: true
+  })) return;
+
+  button.disabled = true;
+  try {
+    const response = await fetch('/backend/delete_question.php', {
+      method: 'POST',
+      headers: fetchConfig.headers,
+      body: JSON.stringify({ question_id: questionId })
+    });
+    const result = await response.json();
+    if (!response.ok || !result.success) {
+      throw new Error(result.message || 'Could not delete the question.');
+    }
+
+    const details = document.getElementById(`submittedQuestionDetails-${setIndex}`);
+    const setCard = [...document.querySelectorAll('.question-set-card')]
+      .find(item => item.getAttribute('aria-controls') === `submittedQuestionDetails-${setIndex}`);
+    if (!card || !details || !setCard) return;
+
+    card.remove();
+    const remainingQuestions = details.querySelectorAll('.question-review-card');
+    if (remainingQuestions.length === 0) {
+      details.remove();
+      setCard.closest('.question-set-wrapper')?.remove();
+      const setGrid = document.getElementById('submittedQuestionSets');
+      if (setGrid.querySelectorAll('.question-set-card').length === 0) {
+        const emptyMessage = document.createElement('p');
+        emptyMessage.className = 'question-review-empty';
+        emptyMessage.textContent = 'You have not submitted any questions yet.';
+        setGrid.appendChild(emptyMessage);
+      }
+    } else {
+      const count = setCard.querySelector('.question-set-count');
+      if (count) count.textContent = `${remainingQuestions.length} QUESTION(S)`;
+      remainingQuestions.forEach((questionCard, index) => {
+        const tag = questionCard.querySelector('.question-review-tag');
+        if (tag) tag.textContent = `QUESTION ${index + 1}`;
+      });
+    }
+    filterSubmittedQuestions();
+  } catch (error) {
+    await showAppDialog(error.message || 'Could not delete the question. Please try again.', { title: 'QUESTION DELETE FAILED' });
+    console.error('deleteSubmittedQuestion error:', error);
+    button.disabled = false;
+  }
+}
+
+async function deleteSubmittedQuestionSet(event, button) {
+  event.stopPropagation();
+  const setCard = button.closest('.question-set-wrapper')?.querySelector('.question-set-card');
+  if (!setCard) return;
+
+  const typeLabel = setCard.querySelector('.question-set-type')?.textContent.trim() || 'question';
+  const setNumber = setCard.dataset.sequenceNumber;
+  if (!await showAppDialog(`Delete this ${typeLabel} set${setNumber ? ` #${setNumber}` : ''} and all of its questions? This cannot be undone.`, {
+    title: 'DELETE QUESTION SET',
+    confirm: true,
+    confirmLabel: 'DELETE',
+    danger: true
+  })) return;
+
+  button.disabled = true;
+  try {
+    const response = await fetch('/backend/delete_question_set.php', {
+      method: 'POST',
+      headers: fetchConfig.headers,
+      body: JSON.stringify({
+        class_id: Number(setCard.dataset.classId),
+        subject: setCard.dataset.subject,
+        type: setCard.dataset.questionType,
+        quarter: Number(setCard.dataset.quarter),
+        sequence_number: Number(setCard.dataset.sequenceNumber)
+      })
+    });
+    const result = await response.json();
+    if (!response.ok || !result.success) {
+      throw new Error(result.message || 'Could not delete the question set.');
+    }
+
+    const detailsId = setCard.getAttribute('aria-controls');
+    const details = detailsId ? document.getElementById(detailsId) : null;
+    if (details) details.remove();
+    setCard.closest('.question-set-wrapper')?.remove();
+
+    const setGrid = document.getElementById('submittedQuestionSets');
+    if (setGrid.querySelectorAll('.question-set-card').length === 0) {
+      const emptyMessage = document.createElement('p');
+      emptyMessage.className = 'question-review-empty';
+      emptyMessage.textContent = 'You have not submitted any questions yet.';
+      setGrid.appendChild(emptyMessage);
+    }
+    filterSubmittedQuestions();
+  } catch (error) {
+    await showAppDialog(error.message || 'Could not delete the question set. Please try again.', { title: 'QUESTION SET DELETE FAILED' });
+    console.error('deleteSubmittedQuestionSet error:', error);
+    button.disabled = false;
   }
 }
 
@@ -1753,16 +2173,35 @@ async function loadNoteStudents() {
     const res = await fetch('/backend/get_students.php');
     const data = await res.json();
     if (data.success) {
-      select.innerHTML = '<option value="">-- Select Student --</option>';
-      data.students.forEach(s => {
-        select.innerHTML += `<option value="${s.id}">${s.name}</option>`;
-      });
+      allNoteStudents = data.students;
+      const sections = [...new Set(allNoteStudents.map(student => student.section).filter(Boolean))]
+        .sort((a, b) => a.localeCompare(b));
+      const sectionSelect = document.getElementById('noteSection');
+      sectionSelect.replaceChildren(new Option('All sections', ''));
+      sections.forEach(section => sectionSelect.add(new Option(section, section)));
+      filterNoteStudents();
     } else {
       select.innerHTML = `<option value="">Error: ${data.message}</option>`;
     }
   } catch(err) {
     select.innerHTML = '<option value="">Network error.</option>';
   }
+}
+
+function filterNoteStudents() {
+  const section = document.getElementById('noteSection').value;
+  const search = document.getElementById('noteStudentSearch').value.trim().toLowerCase();
+  const select = document.getElementById('noteStudent');
+  const students = allNoteStudents.filter(student => {
+    const matchesSection = !section || student.section === section;
+    const matchesSearch = !search || student.name.toLowerCase().includes(search);
+    return matchesSection && matchesSearch;
+  });
+  select.replaceChildren(new Option(
+    students.length ? '-- Select Student --' : '-- No matching students --',
+    ''
+  ));
+  students.forEach(student => select.add(new Option(student.name, student.id)));
 }
 
 async function submitStudentNote() {
@@ -1845,6 +2284,7 @@ async function issueQuizBeeCode() {
 
 async function showClassStudents(classId, className, section) {
   currentClassId = classId;
+  document.getElementById('classStudentSearch').value = '';
   const sectionLabel = section ? ` · ${section.toUpperCase()}` : '';
   document.getElementById('studentListTitle').textContent = `👥 ${className.toUpperCase()}${sectionLabel} – STUDENTS`;
   document.getElementById('studentListPanel').style.display = 'block';
@@ -1885,16 +2325,18 @@ async function fetchAndRenderStudents(classId, subject, type = 'all', quarter = 
 function renderTeacherStudentPage() {
   const tbody = document.getElementById('studentTableBody');
   const pagination = document.getElementById('teacherStudentPagination');
-  if (teacherStudents.length === 0) {
+  const search = document.getElementById('classStudentSearch').value.trim().toLowerCase();
+  const filteredStudents = teacherStudents.filter(student => student.name.toLowerCase().includes(search));
+  if (filteredStudents.length === 0) {
     pagination.hidden = true;
-    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text-muted);font-size:14px;">NO STUDENTS IN THIS SECTION YET</td></tr>';
-      return;
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--text-muted);font-size:14px;">${teacherStudents.length ? 'NO STUDENTS MATCH YOUR SEARCH' : 'NO STUDENTS IN THIS SECTION YET'}</td></tr>`;
+    return;
   }
 
-  const pageCount = Math.ceil(teacherStudents.length / teacherStudentPageSize);
+  const pageCount = Math.ceil(filteredStudents.length / teacherStudentPageSize);
   teacherStudentPage = Math.min(teacherStudentPage, pageCount);
   const pageStart = (teacherStudentPage - 1) * teacherStudentPageSize;
-  const pageStudents = teacherStudents.slice(pageStart, pageStart + teacherStudentPageSize);
+  const pageStudents = filteredStudents.slice(pageStart, pageStart + teacherStudentPageSize);
   tbody.innerHTML = pageStudents.map((s, i) => {
       const pct       = s.score;
       const badgeCls  = pct >= 86 ? 'badge-green' : pct >= 75 ? 'badge-yellow' : 'badge-red';
@@ -1903,7 +2345,8 @@ function renderTeacherStudentPage() {
       const typeDisp  = s.type    && s.type    !== '—' ? s.type.charAt(0).toUpperCase()    + s.type.slice(1)    : '—';
       const typeColor  = s.type === 'quiz' ? 'badge-blue' : s.type === 'exam' || s.type === 'grade' ? 'badge-gold' : '';
     const safeName = escapeAttribute(s.name);
-      const bestSubjects = ['english', 'math', 'science'].map(subject => {
+      const assignedSubject = document.getElementById('section-submissions').dataset.teacherSubject.trim().toLowerCase();
+      const bestSubjects = (assignedSubject ? [assignedSubject] : []).map(subject => {
         const best = s.best_subjects?.[subject];
         const label = subject === 'english' ? 'ENG' : subject === 'science' ? 'SCI' : 'MATH';
         return `<span class="subject-best-chip ${best !== null && best !== undefined ? 'is-earned' : ''}">${label} ${best !== null && best !== undefined ? `${best}%` : '—'}</span>`;
@@ -1931,7 +2374,7 @@ function renderTeacherStudentPage() {
 
   pagination.hidden = pageCount <= 1;
   document.getElementById('teacherStudentPageInfo').textContent =
-    `Showing ${pageStart + 1}–${pageStart + pageStudents.length} of ${teacherStudents.length} students`;
+    `Showing ${pageStart + 1}–${pageStart + pageStudents.length} of ${filteredStudents.length} students`;
   document.getElementById('teacherStudentPageNumber').textContent = `Page ${teacherStudentPage} of ${pageCount}`;
   document.getElementById('teacherStudentPrev').disabled = teacherStudentPage === 1;
   document.getElementById('teacherStudentNext').disabled = teacherStudentPage === pageCount;
@@ -1970,6 +2413,11 @@ function changeTeacherStudentPage(direction) {
   teacherStudentPage += direction;
   renderTeacherStudentPage();
 }
+
+document.getElementById('classStudentSearch').addEventListener('input', () => {
+  teacherStudentPage = 1;
+  renderTeacherStudentPage();
+});
 
 document.getElementById('filterSubject').addEventListener('change', function() {
   if (currentClassId) fetchAndRenderStudents(currentClassId, this.value || 'all', document.getElementById('filterType').value || 'all', document.getElementById('filterQuarter').value || 'all');
@@ -2102,44 +2550,14 @@ async function viewStudentScore(studentId, studentName) {
   }
 }
 
-// ADD CLASS
-async function confirmAddClass() {
-  const sectionEl = document.getElementById('newClassSection');
-  const sectionId = sectionEl.value;
-  sectionEl.style.borderColor = sectionId === '' ? 'var(--red)' : 'var(--blue-mid)';
-  if (sectionId === '') { sectionEl.focus(); return; }
-  const confirmBtn = document.querySelector('#modalAddClass .pixel-btn:not(.pixel-btn-red)');
-  const origText   = confirmBtn.textContent;
-  confirmBtn.disabled    = true;
-  confirmBtn.textContent = '⏳ SAVING...';
-  try {
-    const res  = await fetch('/backend/save_class.php', {
-      method:  'POST',
-      headers: fetchConfig.headers,
-      body:    JSON.stringify({ section_id: sectionId }),
-    });
-    const data = await res.json();
-    if (res.ok && data.success) {
-      sectionEl.value = '';
-      sectionEl.style.borderColor = 'var(--blue-mid)';
-      closeModal('modalAddClass');
-      location.reload();
-    } else {
-      sectionEl.style.borderColor = 'var(--red)';
-      alert('Error: ' + data.message);
-    }
-  } catch (err) {
-    alert('Network error. Check console.');
-    console.error('confirmAddClass error:', err);
-  } finally {
-    confirmBtn.disabled    = false;
-    confirmBtn.textContent = origText;
-  }
-}
-
 // DELETE CLASS
 async function deleteClass(classId, className) {
-  if (!confirm(`Are you sure you want to drop the class "${className}"? This will also remove all questions and scores associated with it.`)) {
+  if (!await showAppDialog(`Are you sure you want to drop the class "${className}"? This will also remove all questions and scores associated with it.`, {
+    title: 'DELETE CLASS',
+    confirm: true,
+    confirmLabel: 'DELETE',
+    danger: true
+  })) {
     return;
   }
   
@@ -2153,18 +2571,76 @@ async function deleteClass(classId, className) {
     if (data.success) {
       location.reload();
     } else {
-      alert('Error deleting class: ' + data.message);
+      await showAppDialog('Error deleting class: ' + data.message, { title: 'CLASS DELETE FAILED' });
     }
   } catch (err) {
-    alert('Network error. Check console.');
+    await showAppDialog('Network error. Check console.', { title: 'NETWORK ERROR' });
     console.error('deleteClass error:', err);
   }
 }
 
 // QUESTION BUILDER
-let assessmentCount = 1;
-let examCount = 1;
-let quizCount = 1;
+const questionDrafts = {
+  assessment: [],
+  exam: [],
+  quiz: []
+};
+const hasImportedCsv = {
+  assessment: false,
+  exam: false,
+  quiz: false
+};
+const editingQuestionIndex = {
+  assessment: null,
+  exam: null,
+  quiz: null
+};
+
+function getSelectedQuestionClasses(type) {
+  const picker = document.getElementById(type + 'ClassPicker');
+  if (!picker) return [];
+  return [...picker.querySelectorAll('.question-class-checkbox:checked')].map(input => ({
+    id: Number(input.value),
+    name: input.closest('.question-class-option').querySelector('span').textContent.trim()
+  }));
+}
+
+function updateQuestionClassSelection(type) {
+  const selectedClasses = getSelectedQuestionClasses(type);
+  const selectionLabel = document.getElementById(type + 'ClassSelection');
+  if (selectionLabel) {
+    selectionLabel.textContent = `${selectedClasses.length} selected`;
+  }
+  updateQuestionPreview(type);
+}
+
+function selectAllQuestionClasses(type) {
+  const picker = document.getElementById(type + 'ClassPicker');
+  if (!picker) return;
+  picker.querySelectorAll('.question-class-checkbox').forEach(input => {
+    input.checked = true;
+  });
+  updateQuestionClassSelection(type);
+}
+
+function clearQuestionClasses(type) {
+  const picker = document.getElementById(type + 'ClassPicker');
+  if (!picker) return;
+  picker.querySelectorAll('.question-class-checkbox').forEach(input => {
+    input.checked = false;
+  });
+  updateQuestionClassSelection(type);
+}
+
+function getQuestionSetMetadata(type) {
+  if (type !== 'exam' && type !== 'quiz') {
+    return { quarter: 1, sequence_number: 1 };
+  }
+
+  const quarter = Number(document.getElementById(type + 'Quarter').value);
+  const sequenceNumber = Number(document.getElementById(type + 'Number').value);
+  return { quarter, sequence_number: sequenceNumber };
+}
 
 function updateQuestionPreview(type) {
   const section = document.getElementById('section-' + type);
@@ -2173,33 +2649,22 @@ function updateQuestionPreview(type) {
   const previewCount = document.getElementById(type + 'PreviewCount');
   if (!section || !previewList || !previewMeta || !previewCount) return;
 
-  const blocks = [...document.querySelectorAll('#' + type + 'Questions .question-block')];
-  const questions = blocks.map(block => {
-    const inputs = block.querySelectorAll('input.pixel-input');
-    const textarea = block.querySelector('textarea.pixel-textarea');
-    const answer = block.querySelector('select.pixel-select');
-    return {
-      question: textarea ? textarea.value.trim() : '',
-      choices: [...inputs].map(input => input.value.trim()),
-      answer: answer ? answer.value : 'A'
-    };
-  }).filter(item => item.question || item.choices.some(Boolean));
+  const questions = questionDrafts[type] || [];
 
-  const classSelect = document.getElementById(type + 'Class');
   const subjectSelect = document.getElementById(type + 'Subject');
-  const quarterSelect = document.getElementById(type + 'Quarter');
-  const numberInput = document.getElementById(type + 'Number');
-  const selectedClass = classSelect && classSelect.selectedIndex >= 0
-    ? classSelect.options[classSelect.selectedIndex].text.trim()
-    : 'No class selected';
+  const selectedClasses = getSelectedQuestionClasses(type);
   const selectedSubject = subjectSelect && subjectSelect.selectedIndex >= 0
     ? subjectSelect.options[subjectSelect.selectedIndex].text.trim()
     : 'No subject selected';
+  const { quarter, sequence_number: sequenceNumber } = getQuestionSetMetadata(type);
   const metadata = [
-    selectedClass && classSelect.value ? 'CLASS: ' + selectedClass : 'CLASS: No class selected',
+    selectedClasses.length
+      ? 'CLASSES: ' + selectedClasses.map(selectedClass => selectedClass.name).join(', ')
+      : 'CLASSES: No class selected',
     'SUBJECT: ' + selectedSubject,
-    'QUARTER: ' + (quarterSelect ? quarterSelect.value : '—'),
-    'SET NO.: ' + (numberInput && numberInput.value ? numberInput.value : '—')
+    ...(type === 'exam' || type === 'quiz'
+      ? [`QUARTER: ${quarter}`, `${type === 'exam' ? 'EXAM' : 'QUIZ'} NUMBER: ${sequenceNumber}`]
+      : [])
   ];
 
   previewMeta.textContent = '';
@@ -2210,18 +2675,30 @@ function updateQuestionPreview(type) {
   });
 
   previewCount.textContent = questions.length + (questions.length === 1 ? ' QUESTION' : ' QUESTIONS');
+  document.getElementById(type + 'Count').textContent = questions.length;
   previewList.textContent = '';
   if (questions.length === 0) {
     const emptyMessage = document.createElement('p');
     emptyMessage.className = 'question-preview-empty';
-    emptyMessage.textContent = 'Start entering a question to preview it here.';
+    emptyMessage.textContent = 'Questions you add will appear here.';
     previewList.appendChild(emptyMessage);
     return;
   }
 
   questions.forEach((question, index) => {
     const card = document.createElement('article');
-    card.className = 'question-preview-item';
+    const isEditing = editingQuestionIndex[type] === index;
+    card.className = 'question-preview-item' + (isEditing ? ' is-editing' : '');
+    card.setAttribute('role', 'button');
+    card.setAttribute('tabindex', '0');
+    card.setAttribute('aria-label', `Edit question ${index + 1}`);
+    card.addEventListener('click', () => editQuestion(type, index));
+    card.addEventListener('keydown', event => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        editQuestion(type, index);
+      }
+    });
 
     const title = document.createElement('div');
     title.className = 'question-preview-item-title';
@@ -2270,47 +2747,102 @@ function updateQuestionPreview(type) {
 
 function addQuestion(type) {
   const container = document.getElementById(type + 'Questions');
-  let count;
-  if(type === 'assessment') count = ++assessmentCount;
-  else if(type === 'exam') count = ++examCount;
-  else count = ++quizCount;
-  document.getElementById(type + 'Count').textContent = count;
-  const block = document.createElement('div');
-  block.className = 'question-block';
-  block.id = type + 'Q' + count;
-  block.innerHTML = `
-    <div class="q-number">QUESTION ${count}</div>
-    <textarea class="pixel-textarea" placeholder="Enter question here..."></textarea>
-    <div class="choices-grid">
-      <div class="choice-row"><span class="choice-label">A:</span><input class="pixel-input" style="margin:0;" placeholder="Choice A"></div>
-      <div class="choice-row"><span class="choice-label">B:</span><input class="pixel-input" style="margin:0;" placeholder="Choice B"></div>
-      <div class="choice-row"><span class="choice-label">C:</span><input class="pixel-input" style="margin:0;" placeholder="Choice C"></div>
-      <div class="choice-row"><span class="choice-label">D:</span><input class="pixel-input" style="margin:0;" placeholder="Choice D"></div>
-    </div>
-    <div class="filter-row" style="gap:8px;">
-      <span class="filter-label">ANSWER:</span>
-      <select class="pixel-select" style="width:auto;margin:0;">
-        <option>A</option><option>B</option><option>C</option><option>D</option>
-      </select>
-    </div>
-    <div style="margin-top:10px;">
-      <button class="pixel-btn pixel-btn-red" style="padding:7px 12px;font-size:7px;" onclick="removeQuestion(this, '${type}')">✕ REMOVE</button>
-    </div>`;
-  container.appendChild(block);
+  const block = container && container.querySelector('.question-block');
+  const statusEl = document.getElementById(type + 'Items');
+  if (!block || !questionDrafts[type]) return;
+  if (!document.getElementById(type + 'Subject').value) {
+    statusEl.textContent = '⚠ No subject is assigned to this teacher account.';
+    statusEl.style.color = 'var(--red)';
+    return;
+  }
+
+  const textarea = block.querySelector('textarea.pixel-textarea');
+  const inputs = [...block.querySelectorAll('input.pixel-input')];
+  const answer = block.querySelector('select.pixel-select');
+  const question = textarea ? textarea.value.trim() : '';
+  const choices = inputs.map(input => input.value.trim());
+  const fields = [textarea, ...inputs];
+  let hasError = false;
+  fields.forEach(field => {
+    if (!field) return;
+    const isEmpty = field.value.trim() === '';
+    field.style.borderColor = isEmpty ? 'var(--red)' : 'var(--blue-mid)';
+    hasError = hasError || isEmpty;
+  });
+  if (hasError) {
+    statusEl.textContent = '⚠ Fill in the question and all four choices before adding it.';
+    statusEl.style.color = 'var(--red)';
+    return;
+  }
+
+  const updatedQuestion = { question, choices, answer: answer ? answer.value : 'A' };
+  if (editingQuestionIndex[type] === null) {
+    questionDrafts[type].push(updatedQuestion);
+  } else {
+    questionDrafts[type][editingQuestionIndex[type]] = updatedQuestion;
+  }
+  editingQuestionIndex[type] = null;
+  updateQuestionAction(type);
+  fields.forEach(field => {
+    if (!field) return;
+    field.value = '';
+    field.style.borderColor = 'var(--blue-mid)';
+  });
+  if (answer) answer.value = 'A';
+  statusEl.textContent = `✔ ${questionDrafts[type].length} question(s) ready to submit.`;
+  statusEl.style.color = 'var(--green)';
   updateQuestionPreview(type);
-  block.scrollIntoView({ behavior:'smooth' });
 }
 
-function removeQuestion(btn, type) {
-  btn.closest('.question-block').remove();
-  let count;
-  if(type === 'assessment') count = --assessmentCount;
-  else if(type === 'exam') count = --examCount;
-  else count = --quizCount;
-  document.getElementById(type + 'Count').textContent = count;
-  document.querySelectorAll('#' + type + 'Questions .q-number').forEach((el, i) => {
-    el.textContent = 'QUESTION ' + (i + 1);
+function updateQuestionAction(type) {
+  const actionButton = document.getElementById(type + 'QuestionAction');
+  const cancelButton = document.getElementById(type + 'CancelEdit');
+  const isEditing = editingQuestionIndex[type] !== null;
+  actionButton.textContent = isEditing ? '✓ UPDATE QUESTION' : '+ ADD QUESTION';
+  cancelButton.hidden = !isEditing;
+}
+
+function editQuestion(type, index) {
+  const question = questionDrafts[type] && questionDrafts[type][index];
+  const container = document.getElementById(type + 'Questions');
+  const block = container && container.querySelector('.question-block');
+  if (!question || !block) return;
+
+  const textarea = block.querySelector('textarea.pixel-textarea');
+  const inputs = [...block.querySelectorAll('input.pixel-input')];
+  const answer = block.querySelector('select.pixel-select');
+  textarea.value = question.question;
+  inputs.forEach((input, choiceIndex) => {
+    input.value = question.choices[choiceIndex] || '';
+    input.style.borderColor = 'var(--blue-mid)';
   });
+  if (answer) answer.value = question.answer;
+  editingQuestionIndex[type] = index;
+  updateQuestionAction(type);
+  const statusEl = document.getElementById(type + 'Items');
+  statusEl.textContent = `Editing question ${index + 1}. Update it to save your changes.`;
+  statusEl.style.color = 'var(--gold)';
+  updateQuestionPreview(type);
+  block.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function cancelQuestionEdit(type) {
+  if (editingQuestionIndex[type] === null) return;
+  const container = document.getElementById(type + 'Questions');
+  const block = container && container.querySelector('.question-block');
+  if (block) {
+    block.querySelector('textarea.pixel-textarea').value = '';
+    block.querySelectorAll('input.pixel-input').forEach(input => {
+      input.value = '';
+      input.style.borderColor = 'var(--blue-mid)';
+    });
+    block.querySelector('select.pixel-select').value = 'A';
+  }
+  editingQuestionIndex[type] = null;
+  updateQuestionAction(type);
+  const statusEl = document.getElementById(type + 'Items');
+  statusEl.textContent = 'Items: add questions to the live preview';
+  statusEl.style.color = 'var(--text-muted)';
   updateQuestionPreview(type);
 }
 
@@ -2327,94 +2859,213 @@ function downloadQuestionCsvTemplate() {
   URL.revokeObjectURL(url);
 }
 
-async function uploadQuestionCsv(type, fileInput) {
+function parseQuestionCsv(csvText) {
+  const rows = [];
+  let row = [];
+  let field = '';
+  let inQuotes = false;
+  let afterQuote = false;
+
+  for (let index = 0; index < csvText.length; index++) {
+    const character = csvText[index];
+    if (inQuotes) {
+      if (character === '"') {
+        if (csvText[index + 1] === '"') {
+          field += '"';
+          index++;
+        } else {
+          inQuotes = false;
+          afterQuote = true;
+        }
+      } else {
+        field += character;
+      }
+      continue;
+    }
+
+    if (afterQuote && character !== ',' && character !== '\r' && character !== '\n' && character !== ' ' && character !== '\t') {
+      throw new Error('CSV contains unexpected characters after a quoted value.');
+    }
+    if (afterQuote && (character === ' ' || character === '\t')) continue;
+    if (character === '"') {
+      if (field !== '') throw new Error('CSV contains an unexpected quote in an unquoted value.');
+      inQuotes = true;
+    } else if (character === ',') {
+      row.push(field);
+      field = '';
+      afterQuote = false;
+    } else if (character === '\n' || character === '\r') {
+      if (character === '\r' && csvText[index + 1] === '\n') index++;
+      row.push(field);
+      rows.push(row);
+      row = [];
+      field = '';
+      afterQuote = false;
+    } else {
+      field += character;
+    }
+  }
+
+  if (inQuotes) throw new Error('CSV contains an unclosed quoted value.');
+  if (field !== '' || row.length > 0 || afterQuote) {
+    row.push(field);
+    rows.push(row);
+  }
+  return rows;
+}
+
+function uploadQuestionCsv(type, fileInput) {
   const file = fileInput.files[0];
   if (!file) return;
 
   const statusEl = document.getElementById(type + 'Items');
-  const uploadButton = fileInput.nextElementSibling;
-  const classId = document.getElementById(type + 'Class').value;
-  if (!classId) {
-    statusEl.textContent = '⚠ Please select a class before uploading.';
+  const classIds = getSelectedQuestionClasses(type).map(selectedClass => selectedClass.id);
+  const subject = document.getElementById(type + 'Subject').value;
+  if (classIds.length === 0) {
+    statusEl.textContent = '⚠ Select one or more classes before uploading.';
+    statusEl.style.color = 'var(--red)';
+    fileInput.value = '';
+    return;
+  }
+  if (!subject) {
+    statusEl.textContent = '⚠ No subject is assigned to this teacher account.';
+    statusEl.style.color = 'var(--red)';
+    fileInput.value = '';
+    return;
+  }
+  if (editingQuestionIndex[type] !== null) {
+    statusEl.textContent = '⚠ Update or cancel the current question edit before importing a CSV.';
+    statusEl.style.color = 'var(--red)';
+    fileInput.value = '';
+    return;
+  }
+  const container = document.getElementById(type + 'Questions');
+  const block = container && container.querySelector('.question-block');
+  const editorHasContent = block && [
+    block.querySelector('textarea.pixel-textarea'),
+    ...block.querySelectorAll('input.pixel-input')
+  ].some(field => field && field.value.trim() !== '');
+  if (editorHasContent) {
+    statusEl.textContent = '⚠ Add or clear the current question before importing a CSV.';
     statusEl.style.color = 'var(--red)';
     fileInput.value = '';
     return;
   }
 
-  const formData = new FormData();
-  formData.append('class_id', classId);
-  formData.append('subject', document.getElementById(type + 'Subject').value);
-  formData.append('type', type === 'assessment' ? 'quizbee' : type);
-  formData.append('quarter', document.getElementById(type + 'Quarter').value);
-  formData.append('sequence_number', document.getElementById(type + 'Number').value);
-  formData.append('questions_file', file);
-
-  uploadButton.disabled = true;
-  statusEl.textContent = '⏳ Validating and uploading CSV...';
+  statusEl.textContent = '⏳ Validating CSV for live preview...';
   statusEl.style.color = 'var(--gold)';
-  try {
-    const response = await fetch('/backend/bulk_upload_questions.php', {
-      method: 'POST',
-      headers: {
-        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-        'Accept': 'application/json',
-      },
-      body: formData,
-    });
-    const result = await response.json();
-    if (!response.ok || !result.success) {
-      const validationMessage = result.errors
-        ? Object.values(result.errors).flat()[0]
-        : null;
-      throw new Error(validationMessage || result.message || 'CSV upload failed.');
-    }
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const rows = parseQuestionCsv(String(reader.result || '').replace(/^\uFEFF/, ''));
+      if (rows.length === 0) throw new Error('The CSV file is empty.');
 
-    statusEl.textContent = `✔ ${result.inserted} question(s) added to the selected set.`;
-    statusEl.style.color = 'var(--green)';
-  } catch (error) {
-    statusEl.textContent = `✕ ${error.message || 'Network error while uploading CSV.'}`;
-    statusEl.style.color = 'var(--red)';
-    console.error('Bulk question upload failed:', error);
-  } finally {
-    uploadButton.disabled = false;
+      const headers = rows[0].map(header => header.trim().toLowerCase());
+      if (new Set(headers).size !== headers.length) throw new Error('CSV header contains duplicate column names.');
+      const requiredHeaders = ['question', 'choice_a', 'choice_b', 'choice_c', 'choice_d', 'answer'];
+      const indexes = {};
+      requiredHeaders.forEach(header => {
+        const index = headers.indexOf(header);
+        if (index === -1) throw new Error(`CSV is missing the required column: ${header}.`);
+        indexes[header] = index;
+      });
+
+      const importedQuestions = [];
+      for (let rowIndex = 1; rowIndex < rows.length; rowIndex++) {
+        const record = rows[rowIndex];
+        if (record.every(value => value.trim() === '')) continue;
+        const displayRow = rowIndex + 1;
+        if (record.length !== headers.length) {
+          throw new Error(`CSV row ${displayRow} has a different number of columns than the header.`);
+        }
+        const values = {};
+        requiredHeaders.forEach(header => {
+          values[header] = record[indexes[header]].trim();
+        });
+        for (const header of ['question', 'choice_a', 'choice_b', 'choice_c', 'choice_d']) {
+          if (!values[header]) throw new Error(`CSV row ${displayRow} is missing ${header}.`);
+        }
+        if (values.question.length > 10000) throw new Error(`CSV row ${displayRow} question exceeds 10,000 characters.`);
+        for (const header of ['choice_a', 'choice_b', 'choice_c', 'choice_d']) {
+          if (values[header].length > 255) throw new Error(`CSV row ${displayRow} ${header} exceeds 255 characters.`);
+        }
+        values.answer = values.answer.toUpperCase();
+        if (!['A', 'B', 'C', 'D'].includes(values.answer)) {
+          throw new Error(`CSV row ${displayRow} answer must be A, B, C, or D.`);
+        }
+        importedQuestions.push({
+          question: values.question,
+          choices: [values.choice_a, values.choice_b, values.choice_c, values.choice_d],
+          answer: values.answer
+        });
+        if (importedQuestions.length > 500) throw new Error('A CSV may contain no more than 500 questions.');
+      }
+      if (importedQuestions.length === 0) throw new Error('The CSV contains no question rows.');
+
+      questionDrafts[type].push(...importedQuestions);
+      hasImportedCsv[type] = true;
+      updateQuestionPreview(type);
+      statusEl.textContent = `✔ ${importedQuestions.length} CSV question(s) added to preview. Click SUBMIT to append all ${questionDrafts[type].length} question(s).`;
+      statusEl.style.color = 'var(--green)';
+    } catch (error) {
+      statusEl.textContent = `✕ ${error.message || 'Could not read the CSV file.'}`;
+      statusEl.style.color = 'var(--red)';
+    }
     fileInput.value = '';
-  }
+  };
+  reader.onerror = () => {
+    statusEl.textContent = '✕ Could not read the selected CSV file.';
+    statusEl.style.color = 'var(--red)';
+    fileInput.value = '';
+  };
+  reader.readAsText(file);
 }
 
 async function submitQuestions(type) {
   const subject = document.getElementById(type + 'Subject').value;
-  const quarter = parseInt(document.getElementById(type + 'Quarter').value);
-  const sequence_number = parseInt(document.getElementById(type + 'Number').value);
-  const class_id = parseInt(document.getElementById(type + 'Class').value);
+  const class_ids = getSelectedQuestionClasses(type).map(selectedClass => selectedClass.id);
+  const { quarter, sequence_number } = getQuestionSetMetadata(type);
 
   const container = document.getElementById(type + 'Questions');
-  const blocks    = container.querySelectorAll('.question-block');
+  const block     = container.querySelector('.question-block');
   const statusEl  = document.getElementById(type + 'Items');
-  const questions = [];
-  let hasError = false;
-  blocks.forEach((block) => {
-    const inputs    = block.querySelectorAll('input.pixel-input');
-    const textarea  = block.querySelector('textarea.pixel-textarea');
-    const answerSel = block.querySelector('select.pixel-select');
-    const questionText = textarea ? textarea.value.trim() : '';
-    const choiceA = inputs[0] ? inputs[0].value.trim() : '';
-    const choiceB = inputs[1] ? inputs[1].value.trim() : '';
-    const choiceC = inputs[2] ? inputs[2].value.trim() : '';
-    const choiceD = inputs[3] ? inputs[3].value.trim() : '';
-    const answer  = answerSel ? answerSel.value.trim() : '';
-    [textarea, inputs[0], inputs[1], inputs[2], inputs[3]].forEach(el => {
-      if (el) el.style.borderColor = el.value.trim() === '' ? 'var(--red)' : 'var(--blue-mid)';
-    });
-    if (!questionText || !choiceA || !choiceB || !choiceC || !choiceD) { hasError = true; return; }
-    questions.push({ question: questionText, choice_a: choiceA, choice_b: choiceB, choice_c: choiceC, choice_d: choiceD, answer });
-  });
-  if (hasError) {
-    statusEl.textContent = '⚠ Fill in all fields before submitting.';
+  if (!subject) {
+    statusEl.textContent = '⚠ No subject is assigned to this teacher account.';
     statusEl.style.color = 'var(--red)';
     return;
   }
+  if (editingQuestionIndex[type] !== null) {
+    statusEl.textContent = '⚠ Update or cancel the current question edit before submitting.';
+    statusEl.style.color = 'var(--red)';
+    return;
+  }
+  const editorHasContent = block && [
+    block.querySelector('textarea.pixel-textarea'),
+    ...block.querySelectorAll('input.pixel-input')
+  ].some(field => field && field.value.trim() !== '');
+  if (editorHasContent) {
+    statusEl.textContent = '⚠ Add the current question to the live preview before submitting.';
+    statusEl.style.color = 'var(--red)';
+    return;
+  }
+  const questions = (questionDrafts[type] || []).map(question => ({
+    question: question.question,
+    choice_a: question.choices[0],
+    choice_b: question.choices[1],
+    choice_c: question.choices[2],
+    choice_d: question.choices[3],
+    answer: question.answer
+  }));
   if (questions.length === 0) {
-    statusEl.textContent = '⚠ No questions to submit.';
+    statusEl.textContent = '⚠ Add a question to the live preview before submitting.';
+    statusEl.style.color = 'var(--red)';
+    return;
+  }
+  if (
+    !Number.isInteger(quarter) || quarter < 1 || quarter > 4 ||
+    !Number.isInteger(sequence_number) || sequence_number < 1
+  ) {
+    statusEl.textContent = '⚠ Select a valid quarter and enter a positive whole number.';
     statusEl.style.color = 'var(--red)';
     return;
   }
@@ -2423,13 +3074,21 @@ async function submitQuestions(type) {
   statusEl.textContent = '⏳ Saving...';
   statusEl.style.color = 'var(--gold)';
   try {
-    if (!class_id || isNaN(class_id)) {
-      statusEl.textContent = '⚠ Please select a class.';
+    if (class_ids.length === 0) {
+      statusEl.textContent = '⚠ Select one or more classes.';
       statusEl.style.color = 'var(--red)';
       if (submitBtn) submitBtn.disabled = false;
       return;
     }
-    const payload = { type: type === 'assessment' ? 'quizbee' : type, subject, quarter, sequence_number, class_id, questions };
+    const payload = {
+      type: type === 'assessment' ? 'quizbee' : type,
+      subject,
+      quarter,
+      sequence_number,
+      class_ids,
+      append: hasImportedCsv[type],
+      questions
+    };
     const res  = await fetch('/backend/save_questions.php', {
       method:  'POST',
       headers: fetchConfig.headers,
@@ -2437,16 +3096,23 @@ async function submitQuestions(type) {
     });
     const data = await res.json();
     if (data.success) {
-      statusEl.textContent = `✔ ${data.inserted} question(s) saved!` + (data.skipped > 0 ? ` (${data.skipped} skipped)` : '');
+      statusEl.textContent = `✔ ${data.message || `${data.inserted} question(s) saved!`}` + (data.skipped > 0 ? ` (${data.skipped} skipped)` : '');
       statusEl.style.color = 'var(--green)';
+      questionDrafts[type].length = 0;
+      hasImportedCsv[type] = false;
+      editingQuestionIndex[type] = null;
+      updateQuestionAction(type);
+      if (block) {
+        block.querySelector('textarea.pixel-textarea').value = '';
+        block.querySelectorAll('input.pixel-input').forEach(input => {
+          input.value = '';
+          input.style.borderColor = 'var(--blue-mid)';
+        });
+        block.querySelector('select.pixel-select').value = 'A';
+      }
+      updateQuestionPreview(type);
       setTimeout(() => {
-        container.innerHTML = '';
-        if (type === 'assessment') { assessmentCount = 0; }
-        else if (type === 'exam') { examCount = 0; }
-        else { quizCount = 0; }
-        addQuestion(type);
-        document.getElementById(type + 'Count').textContent = 1;
-        statusEl.textContent = 'Items: ready for new questions';
+        statusEl.textContent = 'Items: add questions to the live preview';
         statusEl.style.color = 'var(--text-muted)';
       }, 2000);
     } else {
@@ -2465,10 +3131,26 @@ async function submitQuestions(type) {
 
 <script>
 let myChart = null;
+let allNoteStudents = [];
+let currentSubmissions = [];
+let loadedAnalyticsData = null;
+let submissionsPage = 1;
+const submissionsPageSize = 10;
+const teacherSubject = document.getElementById('section-submissions').dataset.teacherSubject.trim().toLowerCase();
 
 async function loadAnalytics() {
+  if (!teacherSubject) {
+    document.getElementById('analyticsLoading').textContent = 'No subject is assigned to this teacher account.';
+    document.getElementById('submissionsLoading').textContent = 'No subject is assigned to this teacher account.';
+    document.getElementById('submissionsSubjectFilter').textContent = '';
+    return;
+  }
   const classId = document.getElementById('analyticsClass').value;
   if (!classId) return;
+  submissionsPage = 1;
+  currentSubmissions = [];
+  loadedAnalyticsData = null;
+  document.getElementById('submissionsPagination').hidden = true;
   document.getElementById('analyticsLoading').style.display = 'block';
   document.getElementById('submissionsLoading').style.display = 'block';
   document.getElementById('analyticsLoading').textContent = '⏳ Fetching data...';
@@ -2484,8 +3166,9 @@ async function loadAnalytics() {
       return;
     }
 
+    loadedAnalyticsData = data.analytics;
     renderChart(data.analytics);
-    renderSubmissionsTable(data.analytics);
+    renderSubmissionsTable(loadedAnalyticsData);
   } catch(err) {
     console.error(err);
     document.getElementById('analyticsLoading').textContent = 'Error loading data.';
@@ -2495,12 +3178,18 @@ async function loadAnalytics() {
 
 async function loadLeaderboard() {
   const classId = document.getElementById('analyticsClass').value;
-  const subject = document.getElementById('leaderboardSubject').value;
+  const subject = teacherSubject;
   const status = document.getElementById('leaderboardStatus');
   const table = document.getElementById('leaderboardTable');
   const tbody = document.getElementById('leaderboardTableBody');
   const button = document.getElementById('loadLeaderboardButton');
 
+  if (!subject) {
+    status.textContent = 'No subject is assigned to this teacher account.';
+    status.style.display = 'block';
+    table.style.display = 'none';
+    return;
+  }
   if (!classId) {
     status.textContent = 'Select a class before loading the leaderboard.';
     status.style.display = 'block';
@@ -2554,13 +3243,37 @@ function renderSubmissionsTable(analyticsData) {
   const table = document.getElementById('submissionsTable');
   const tbody = document.getElementById('submissionsTableBody');
   table.style.display = 'table';
-  
-  if (analyticsData.length === 0) {
+
+  const selectedType = document.getElementById('submissionsTypeFilter').value;
+  currentSubmissions = analyticsData.filter(score =>
+    String(score.subject || '').trim().toLowerCase() === teacherSubject &&
+    (selectedType === 'all' || String(score.type || '').trim().toLowerCase() === selectedType)
+  );
+  const subjectFilter = document.getElementById('submissionsSubjectFilter');
+  const typeLabel = selectedType === 'all' ? 'all types' : selectedType.toUpperCase() + ' only';
+  subjectFilter.textContent = teacherSubject
+    ? `Showing ${typeLabel} for your assigned subject: ${teacherSubject.toUpperCase()}`
+    : 'No subject is assigned to your account.';
+
+  if (currentSubmissions.length === 0) {
     tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);font-size:14px;">NO SUBMISSIONS FOUND</td></tr>';
+    document.getElementById('submissionsPagination').hidden = true;
+    document.getElementById('submissionsPageSummary').textContent = '';
+    document.getElementById('submissionsPageStatus').textContent = '';
     return;
   }
-  
-  tbody.innerHTML = analyticsData.map(s => {
+
+  renderSubmissionsPage();
+}
+
+function renderSubmissionsPage() {
+  const tbody = document.getElementById('submissionsTableBody');
+  const pageCount = Math.ceil(currentSubmissions.length / submissionsPageSize);
+  submissionsPage = Math.min(Math.max(1, submissionsPage), pageCount);
+  const start = (submissionsPage - 1) * submissionsPageSize;
+  const pageRows = currentSubmissions.slice(start, start + submissionsPageSize);
+
+  tbody.innerHTML = pageRows.map(s => {
     const pct = s.total > 0 ? Math.round((s.correct / s.total) * 100) : 0;
     const badgeCls = pct >= 86 ? 'badge-green' : pct >= 75 ? 'badge-yellow' : 'badge-red';
     const scoreDisp = s.total > 0 ? `${s.correct}/${s.total} (${pct}%)` : 'No data';
@@ -2580,7 +3293,27 @@ function renderSubmissionsTable(analyticsData) {
       </tr>
     `;
   }).join('');
+
+  const pagination = document.getElementById('submissionsPagination');
+  pagination.hidden = pageCount <= 1;
+  document.getElementById('submissionsPageSummary').textContent =
+    `Showing ${start + 1}–${Math.min(start + pageRows.length, currentSubmissions.length)} of ${currentSubmissions.length} submissions`;
+  document.getElementById('submissionsPageStatus').textContent = `Page ${submissionsPage} of ${pageCount}`;
+  document.getElementById('submissionsPrevious').disabled = submissionsPage === 1;
+  document.getElementById('submissionsNext').disabled = submissionsPage === pageCount;
 }
+
+function changeSubmissionsPage(direction) {
+  submissionsPage += direction;
+  renderSubmissionsPage();
+}
+
+document.getElementById('submissionsTypeFilter').addEventListener('change', () => {
+  if (loadedAnalyticsData !== null) {
+    submissionsPage = 1;
+    renderSubmissionsTable(loadedAnalyticsData);
+  }
+});
 
 function renderChart(analyticsData) {
   document.getElementById('analyticsLoading').style.display = 'none';

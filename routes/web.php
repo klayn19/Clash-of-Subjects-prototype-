@@ -63,6 +63,7 @@ Route::post('/backend/admin/update_student',         [AdminController::class, 'u
 Route::post('/backend/admin/delete_student',         [AdminController::class, 'deleteStudent'])->name('admin.delete_student');
 Route::post('/backend/admin/delete_teacher',         [AdminTeacherController::class, 'delete'])->name('admin.delete_teacher');
 Route::post('/backend/admin/register_teacher',       [AdminController::class, 'registerTeacher'])->name('admin.register_teacher');
+Route::post('/backend/admin/assign_teacher_section', [AdminController::class, 'assignSectionToTeacher'])->name('admin.assign_teacher_section');
 Route::post('/backend/admin/add_section',            [AdminController::class, 'addSection'])->name('admin.add_section');
 Route::post('/backend/admin/update_section',         [AdminController::class, 'updateSection'])->name('admin.update_section');
 Route::post('/backend/admin/delete_section',         [AdminController::class, 'deleteSection'])->name('admin.delete_section');
@@ -72,8 +73,9 @@ Route::get('/teacher/dashboard', [TeacherController::class, 'index'])->name('tea
 Route::get('/leaderboard', [LeaderboardController::class, 'index'])->name('leaderboard.index');
 
 // ─── TEACHER AJAX ENDPOINTS ────────────────────────────────────────
-Route::post('/backend/save_class.php',         [TeacherController::class, 'saveClass']);
 Route::post('/backend/delete_class.php',       [TeacherController::class, 'deleteClass']);
+Route::post('/backend/delete_question.php',    [TeacherController::class, 'deleteSubmittedQuestion']);
+Route::post('/backend/delete_question_set.php', [TeacherController::class, 'deleteSubmittedQuestionSet']);
 Route::post('/backend/save_questions.php',     [TeacherController::class, 'saveQuestions']);
 Route::post('/backend/bulk_upload_questions.php', [TeacherController::class, 'bulkUploadQuestions'])
     ->middleware('throttle:10,1')
@@ -99,7 +101,7 @@ Route::post('/api/quizbee/record-answer', [StudentController::class, 'recordQuiz
 Route::get('/backend/get_quiz_numbers.php', [TeacherController::class, 'getQuizNumbers'])
     ->name('api.getQuizNumbers');
 
-// Called by Unity's GK Arena (AI Mode) to fetch one AI-style question.
-// GET /backend/generate_ai_question.php?subject=math&grade_level=Grade+8&difficulty=5&answered=1,2,3
+// Unity mixed-game question pool: random Quiz/Exam questions across the student's subjects.
+// The answered parameter contains question IDs already used in the current game.
 Route::any('/backend/generate_ai_question.php', [\App\Http\Controllers\GeneralKnowledgeController::class, 'generateAiQuestion']);
 Route::any('/api/generate_ai_question',         [\App\Http\Controllers\GeneralKnowledgeController::class, 'generateAiQuestion']);

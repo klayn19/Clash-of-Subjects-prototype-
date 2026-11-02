@@ -77,68 +77,81 @@ class GeneralKnowledgeController extends Controller
     }
 
     /**
-     * Unity GK Arena AI endpoint — called by the GK Arena scene in Unity.
-     * GET /backend/generate_ai_question.php?grade_level=Grade+8&difficulty=5&subject=math&quarter=2&answered=1,2,3
-     *
-     * Returns ONE random question from the questions table that the student
-     * has not yet answered in this session.
+     * Unity game question endpoint.
+     * Returns one random Quiz or Exam question across the three subjects,
+     * excluding question IDs already answered in the current game.
      */
     public function generateAiQuestion(Request $request)
     {
-        // Accept optional filters; all are optional so Unity can call freely.
-        $subject    = strtolower(trim($request->input('subject', '')));
-        $grade      = $request->input('grade_level', '');   // e.g. "Grade 8"
-        $answered   = $request->input('answered', '');      // comma-separated IDs already answered
-        $difficulty = $request->input('difficulty', '');    // numeric 1-5 or Easy/Average/Difficult
-        $request->validate([
-            'quarter' => 'sometimes|nullable|integer|between:1,4',
-        ]);
-        $quarter = $request->filled('quarter') ? (int) $request->input('quarter') : null;
+        $answered = $request->input('answered', '');
+        $difficulty = $request->input('difficulty', '');
 
-        // Parse already-answered IDs so we don't repeat them.
-        $answeredIds = array_filter(array_map('intval', explode(',', $answered)));
+        $answeredIds = array_values(array_filter(
+            array_map('intval', explode(',', (string) $answered)),
+            static fn (int $id): bool => $id > 0
+        ));
 
-        $baseQuery = DB::table('questions')->whereNull('class_id');
+        $baseQuery = DB::table('questions')
+            ->whereIn(DB::raw('LOWER(subject)'), ['english', 'math', 'science'])
+            ->whereIn('type', ['quiz', 'exam']);
 
-        // Filter by subject when provided and valid.
-        if (in_array($subject, ['math', 'science', 'english'])) {
-            $baseQuery->where('subject', $subject);
+        if (session('user_role') === 'student' && session('user_id')) {
+            $studentId = (int) session('user_id');
+            $studentSection = DB::table('users')
+                ->where('id', $studentId)
+                ->where('role', 'student')
+                ->value('section');
+
+            $classIds = $studentSection
+                ? DB::table('classes')->where('section', $studentSection)->pluck('id')
+                : DB::table('class_students')->where('student_id', $studentId)->pluck('class_id');
+
+            $baseQuery->where(function ($query) use ($classIds) {
+                $query->whereNull('class_id');
+                if ($classIds->isNotEmpty()) {
+                    $query->orWhereIn('class_id', $classIds);
+                }
+            });
+        } else {
+            $baseQuery->whereNull('class_id');
         }
 
-        if ($quarter !== null) {
-            $baseQuery->where('quarter', $quarter);
-        }
-
-        // Exclude already-answered questions.
         if (!empty($answeredIds)) {
             $baseQuery->whereNotIn('id', $answeredIds);
         }
 
-        $query = clone $baseQuery;
+        $diffMap = ['1' => 'easy', '2' => 'easy', '3' => 'average', '4' => 'difficult', '5' => 'difficult'];
+        $diffLabel = $diffMap[$difficulty] ?? strtolower($difficulty);
+        $validDifficulty = in_array($diffLabel, ['easy', 'average', 'difficult'], true)
+            ? $diffLabel
+            : null;
+        $subjects = (clone $baseQuery)
+            ->selectRaw('LOWER(subject) as subject')
+            ->distinct()
+            ->pluck('subject')
+            ->all();
+        shuffle($subjects);
 
-        // Map numeric difficulty (1-5) to label if needed.
-        if ($difficulty !== '') {
-            $diffMap = ['1' => 'easy', '2' => 'easy', '3' => 'average', '4' => 'difficult', '5' => 'difficult'];
-            $diffLabel = $diffMap[$difficulty] ?? strtolower($difficulty);
-            if (in_array($diffLabel, ['easy', 'average', 'difficult'])) {
-                $query->where('difficulty', $diffLabel);
+        $question = null;
+        foreach ($subjects as $subject) {
+            $subjectQuery = (clone $baseQuery)->whereRaw('LOWER(subject) = ?', [$subject]);
+            $difficultyQuery = clone $subjectQuery;
+            if ($validDifficulty !== null) {
+                $difficultyQuery->where('difficulty', $validDifficulty);
+            }
+
+            $question = $difficultyQuery->inRandomOrder()->first()
+                ?? $subjectQuery->inRandomOrder()->first();
+            if ($question) {
+                break;
             }
         }
 
-        $question = $query->inRandomOrder()->first();
-
         if (!$question) {
-            // Retry without difficulty, but keep the subject and quarter filters.
-            $fallback = $baseQuery->inRandomOrder()->first();
-
-            if (!$fallback) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'No questions available.',
-                ], 404);
-            }
-
-            $question = $fallback;
+            return response()->json([
+                'success' => false,
+                'message' => 'No questions available.',
+            ], 404);
         }
 
         return response()->json([

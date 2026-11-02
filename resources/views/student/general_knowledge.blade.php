@@ -730,6 +730,8 @@
     </div>
   </div>
 
+  @include('components.app-dialog')
+
   <!-- BG CANVAS & GAME LOGIC SCRIPTS -->
   <script>
     /* ============================================================
@@ -842,7 +844,7 @@
           if (!response.ok) throw new Error(data.message || 'Could not retrieve questions.');
           return data;
         })
-        .then(data => {
+        .then(async data => {
           if (data.success && data.questions && data.questions.length > 0) {
             questionsList = data.questions;
             currentIndex = 0;
@@ -855,13 +857,17 @@
             loadQuestion();
             showStage('gameplay');
           } else {
-            alert(data.message || 'Could not retrieve questions for this quarter. Ask your teacher to verify the database.');
+            await showAppDialog(data.message || 'Could not retrieve questions for this quarter. Ask your teacher to verify the database.', {
+              title: 'QUESTIONS UNAVAILABLE'
+            });
             showStage('quarters');
           }
         })
-        .catch(err => {
+        .catch(async err => {
           console.error(err);
-          alert(err.message || 'Failed to summon subjects arena. Please refresh and try again.');
+          await showAppDialog(err.message || 'Failed to summon subjects arena. Please refresh and try again.', {
+            title: 'ARENA UNAVAILABLE'
+          });
           showStage('quarters');
         });
     }
@@ -1015,14 +1021,16 @@
 
         showStage('results');
       })
-      .catch(err => {
+      .catch(async err => {
         console.error(err);
         // Fallback display if API fails
         document.getElementById('results-subject-title').innerText = `${currentSubject.toUpperCase()} · QUARTER ${currentQuarter} ARENA CONCLUDED`;
         document.getElementById('results-score-display').innerText = `${correctAnswersCount} / ${questionsList.length} (${percent}%)`;
         document.getElementById('congrats-banner').style.display = 'none';
         
-        alert('Arena concluded. Your score was calculated but we could not verify communication with the High Council server. (Score was not saved)');
+        await showAppDialog('Arena concluded. Your score was calculated but we could not verify communication with the High Council server. (Score was not saved)', {
+          title: 'SCORE NOT SAVED'
+        });
         showStage('results');
       });
     }

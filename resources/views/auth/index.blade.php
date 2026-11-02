@@ -197,7 +197,6 @@ body[data-active-form="resetForm"] .card-wrap {
 .strength-row { display: flex; gap: 3px; margin-top: 7px; }
 .s-seg { flex: 1; height: 5px; background: rgba(30,42,80,0.8); transition: background 0.1s steps(1); }
 .s-seg.s1 { background: #c01020; }
-.s-seg.s2 { background: #d04000; }
 .s-seg.s3 { background: #a08000; }
 .s-seg.s4 { background: #20a030; }
 .s-label { font-size: 14px; color: rgba(180,200,255,0.4); text-align: right; margin-top: 3px; }
@@ -230,21 +229,6 @@ body[data-active-form="resetForm"] .card-wrap {
 }
 .card-footer a { color: var(--gold); cursor: pointer; text-decoration: none; font-weight: bold; }
 .card-footer a:hover { text-decoration: underline; }
-
-/* ── TOAST / ALERT ── */
-.toast {
-  position: fixed; bottom: 24px; left: 50%;
-  transform: translateX(-50%) translateY(80px);
-  background: var(--blue-deep); border: 2px solid var(--gold);
-  box-shadow: 4px 4px 0 var(--gold-dim);
-  color: var(--gold); padding: 14px 26px;
-  font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 600;
-  letter-spacing: 0.08em; z-index: 999;
-  transition: transform 0.3s steps(4), opacity 0.3s steps(4);
-  opacity: 0; white-space: nowrap; line-height: 2;
-}
-.toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
-.toast.error { border-color: #c01020; color: #c01020; box-shadow: 4px 4px 0 #600010; }
 
 * {
   cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16'%3E%3Crect x='0' y='0' width='4' height='4' fill='%23f0a000'/%3E%3Crect x='0' y='4' width='4' height='4' fill='%23f0a000'/%3E%3Crect x='0' y='8' width='4' height='4' fill='%23f0a000'/%3E%3Crect x='4' y='4' width='4' height='4' fill='%23f0a000'/%3E%3Crect x='8' y='8' width='4' height='4' fill='%23f0a000'/%3E%3C/svg%3E") 0 0, default;
@@ -422,7 +406,7 @@ body[data-active-form="resetForm"] .card-wrap {
             <label>New Password</label>
             <div class="input-wrap pw-wrap">
               <span class="input-icon">🛡️</span>
-              <input type="password" name="new_password" id="r-npw" placeholder="New password" required oninput="checkStrength(this)">
+              <input type="password" name="new_password" id="r-npw" placeholder="New password" minlength="6" pattern="(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9]).{6,}" title="Use at least 6 characters, including a number, an uppercase letter, and a special character." required oninput="checkStrength(this)">
               <button type="button" class="pw-toggle" onclick="togglePw('r-npw',this)">
                 <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
               </button>
@@ -461,14 +445,14 @@ body[data-active-form="resetForm"] .card-wrap {
             <label>First Name</label>
             <div class="input-wrap">
               <span class="input-icon">👤</span>
-              <input type="text" name="first_name" placeholder="First Name" value="{{ old('first_name') }}" required>
+              <input type="text" name="first_name" placeholder="First Name" value="{{ old('first_name') }}" pattern="[^0-9]+" title="Names cannot contain numbers." required>
             </div>
           </div>
           <div class="field">
             <label>Last Name</label>
             <div class="input-wrap">
               <span class="input-icon">👤</span>
-              <input type="text" name="last_name" placeholder="Last Name" value="{{ old('last_name') }}" required>
+              <input type="text" name="last_name" placeholder="Last Name" value="{{ old('last_name') }}" pattern="[^0-9]+" title="Names cannot contain numbers." required>
             </div>
           </div>
         </div>
@@ -527,7 +511,7 @@ body[data-active-form="resetForm"] .card-wrap {
               <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
             </button>
           </div>
-          <div class="password-hint">At least 6 characters, with a number, uppercase letter, and special character.</div>
+          <div class="password-hint">At least 6 characters, with a number, an uppercase letter, and one special character.</div>
           <div class="strength-row">
             <div class="s-seg"></div><div class="s-seg"></div>
             <div class="s-seg"></div><div class="s-seg"></div>
@@ -554,7 +538,7 @@ body[data-active-form="resetForm"] .card-wrap {
   </div><!-- end .card -->
 </div><!-- end .card-wrap -->
 
-<div class="toast" id="toast"></div>
+@include('components.app-dialog')
 
 @if(session()->has('success') || session()->has('error') || $errors->any())
 @php
@@ -719,20 +703,16 @@ function checkStrength(input) {
   if (/[A-Z]/.test(val)) score++;
   if (/[0-9]/.test(val)) score++;
   if (/[^A-Za-z0-9]/.test(val)) score++;
-  const lbls = ['Weak Password', 'Weak Password', 'Weak Password', 'Moderate Password', 'Secure Password'];
-  const cls  = ['','s1','s2','s3','s4'];
-  const colors = ['#c01020','#c01020','#d04000','#a08000','#20a030'];
+  const lbls = ['Weak Password', 'Weak Password', 'Weak Password', 'Moderate Password', 'Strong Password'];
+  const cls  = ['s1','s1','s1','s3','s4'];
+  const colors = ['#c01020','#c01020','#c01020','#a08000','#20a030'];
   for (let i = 0; i < score; i++) segs[i].classList.add(cls[score]);
   lbl.textContent = lbls[score];
   lbl.style.color = colors[score];
 }
 
 function showToast(msg, isError = false) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'toast' + (isError ? ' error' : '');
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 3500);
+  showAppDialog(msg, { title: isError ? 'NOTICE' : 'SUCCESS' });
 }
 
 window.addEventListener('DOMContentLoaded', () => {
