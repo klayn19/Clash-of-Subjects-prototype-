@@ -59,8 +59,8 @@ class LeaderboardTest extends TestCase
             'section' => 'Grade 8 - A',
             'teacher_id' => $teacherId,
         ]);
-        $scoreTieId = $this->addUser('Alex', 'Able', 'student', 1);
-        $tieWinnerId = $this->addUser('Blake', 'Baker', 'student', 6);
+        $scoreTieId = $this->addUser('Alex', 'Able', 'student', 10);
+        $tieWinnerId = $this->addUser('Blake', 'Baker', 'student', 15);
         $noScoreId = $this->addUser('Casey', 'Clark', 'student', 20);
 
         foreach ([$scoreTieId, $tieWinnerId, $noScoreId] as $studentId) {
@@ -79,11 +79,14 @@ class LeaderboardTest extends TestCase
             ->assertJsonPath('success', true)
             ->assertJsonPath('students.0.student_id', $tieWinnerId)
             ->assertJsonPath('students.0.average_percent', 90)
-            ->assertJsonPath('students.0.multiplayer_wins', 6)
+            ->assertJsonPath('students.0.multiplayer_wins', 15)
+            ->assertJsonPath('students.0.multiplayer_tier', 'silver')
             ->assertJsonPath('students.1.student_id', $scoreTieId)
             ->assertJsonPath('students.1.average_percent', 90)
+            ->assertJsonPath('students.1.multiplayer_tier', 'bronze')
             ->assertJsonPath('students.2.student_id', $noScoreId)
-            ->assertJsonPath('students.2.average_percent', null);
+            ->assertJsonPath('students.2.average_percent', null)
+            ->assertJsonPath('students.2.multiplayer_tier', 'gold');
     }
 
     public function test_student_cannot_view_a_class_they_do_not_belong_to(): void

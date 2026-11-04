@@ -21,41 +21,33 @@ class GeneralKnowledgeController extends Controller
     }
 
     /**
-     * Fetch 15 random general knowledge questions for the chosen subject and quarter.
+     * Fetch up to 20 quiz and exam questions for the chosen subject.
      */
     public function getQuestions(Request $request)
     {
         $request->validate([
             'subject' => 'required|string|in:math,science,english',
-            'quarter' => 'required|integer|between:1,4',
         ]);
 
         $subject = strtolower(trim($request->subject));
-        $quarter = (int) $request->quarter;
 
-        // Retrieve 15 random general knowledge questions for the selected subject and quarter.
         $questions = DB::table('questions')
-            ->whereNull('class_id')
-            ->where('subject', $subject)
-            ->where('type', 'quiz')
-            ->where('quarter', $quarter)
+            ->whereRaw('LOWER(subject) = ?', [$subject])
+            ->whereRaw('LOWER(type) IN (?, ?)', ['quiz', 'exam'])
             ->inRandomOrder()
-            ->limit(15)
+            ->limit(20)
             ->get();
 
-        // If not enough questions exist in the database, return error
         if ($questions->isEmpty()) {
             return response()->json([
                 'success' => false,
-                'message' => 'No questions found for this subject and quarter.',
+                'message' => 'No quiz or exam questions found for this subject.',
             ], 404);
         }
 
-        // Return questions format
         return response()->json([
             'success' => true,
             'subject' => $subject,
-            'quarter' => $quarter,
             'questions' => $questions->map(function ($q) {
                 return [
                     'id' => $q->id,

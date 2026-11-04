@@ -74,6 +74,8 @@ class LeaderboardController extends Controller
             ->get()
             ->values()
             ->map(function ($student, $index) {
+                $wins = (int) ($student->multiplayer_wins ?? 0);
+
                 return [
                     'rank' => $index + 1,
                     'student_id' => (int) $student->id,
@@ -81,7 +83,8 @@ class LeaderboardController extends Controller
                     'average_percent' => $student->average_percent === null
                         ? null
                         : round((float) $student->average_percent, 2),
-                    'multiplayer_wins' => (int) ($student->multiplayer_wins ?? 0),
+                    'multiplayer_wins' => $wins,
+                    'multiplayer_tier' => $wins >= 20 ? 'gold' : ($wins >= 15 ? 'silver' : ($wins >= 10 ? 'bronze' : null)),
                 ];
             });
 

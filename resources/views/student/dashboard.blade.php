@@ -607,6 +607,19 @@
     .leaderboard-rank-bronze td { border-top: 2px solid #cd7f32; border-bottom: 2px solid #cd7f32; }
     .leaderboard-rank-bronze td:first-child { border-left: 2px solid #cd7f32; }
     .leaderboard-rank-bronze td:last-child { border-right: 2px solid #cd7f32; }
+    .leaderboard-trophy {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      margin-right: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .leaderboard-trophy.tier-bronze { color: #cd7f32; }
+    .leaderboard-trophy.tier-silver { color: #c0c7d1; }
+    .leaderboard-trophy.tier-gold { color: #f0c030; }
     .leaderboard-filter-row {
       display: flex;
       align-items: center;
@@ -1677,13 +1690,25 @@ async function loadStudentLeaderboard() {
       [
         student.rank,
         student.name,
-        student.average_percent === null ? 'No score' : `${Number(student.average_percent).toFixed(2)}%`,
-        student.multiplayer_wins
+        student.average_percent === null ? 'No score' : `${Number(student.average_percent).toFixed(2)}%`
       ].forEach(value => {
         const cell = document.createElement('td');
         cell.textContent = value;
         row.appendChild(cell);
       });
+      const winsCell = document.createElement('td');
+      if (student.multiplayer_tier) {
+        const trophy = document.createElement('span');
+        trophy.className = `leaderboard-trophy tier-${student.multiplayer_tier}`;
+        trophy.setAttribute('aria-label', `${student.multiplayer_tier} multiplayer trophy`);
+        const icon = document.createElement('i');
+        icon.className = 'fas fa-trophy';
+        icon.setAttribute('aria-hidden', 'true');
+        trophy.append(icon, document.createTextNode(student.multiplayer_tier));
+        winsCell.appendChild(trophy);
+      }
+      winsCell.appendChild(document.createTextNode(String(student.multiplayer_wins)));
+      row.appendChild(winsCell);
       tbody.appendChild(row);
     });
     table.style.display = 'table';

@@ -1296,6 +1296,10 @@
             <option value="3">Quarter 3</option>
             <option value="4">Quarter 4</option>
           </select>
+          <label class="filter-label" for="reviewQuestionNumber">QUIZ/EXAM NUMBER:</label>
+          <select class="pixel-select" style="width:auto;margin:0;" id="reviewQuestionNumber" onchange="filterSubmittedQuestions()">
+            <option value="all">All Numbers</option>
+          </select>
         </div>
         <div class="class-grid" id="submittedQuestionSets">
           @forelse($submittedQuestionSets as $setIndex => $reviewSet)
@@ -1392,7 +1396,7 @@
               @forelse($classes as $c)
                 <label class="question-class-option">
                   <input type="checkbox" class="question-class-checkbox" value="{{ $c->id }}" onchange="updateQuestionClassSelection('assessment')">
-                  <span>{{ $c->name }}{{ $c->section ? ' - '.$c->section : '' }}</span>
+                  <span>{{ $c->name }}{{ $c->section && $c->section !== $c->name ? ' - '.$c->section : '' }}</span>
                 </label>
               @empty
                 <span class="question-class-selection">No classes assigned.</span>
@@ -1477,7 +1481,7 @@
               @forelse($classes as $c)
                 <label class="question-class-option">
                   <input type="checkbox" class="question-class-checkbox" value="{{ $c->id }}" onchange="updateQuestionClassSelection('exam')">
-                  <span>{{ $c->name }}{{ $c->section ? ' - '.$c->section : '' }}</span>
+                  <span>{{ $c->name }}{{ $c->section && $c->section !== $c->name ? ' - '.$c->section : '' }}</span>
                 </label>
               @empty
                 <span class="question-class-selection">No classes assigned.</span>
@@ -1575,7 +1579,7 @@
               @forelse($classes as $c)
                 <label class="question-class-option">
                   <input type="checkbox" class="question-class-checkbox" value="{{ $c->id }}" onchange="updateQuestionClassSelection('quiz')">
-                  <span>{{ $c->name }}{{ $c->section ? ' - '.$c->section : '' }}</span>
+                  <span>{{ $c->name }}{{ $c->section && $c->section !== $c->name ? ' - '.$c->section : '' }}</span>
                 </label>
               @empty
                 <span class="question-class-selection">No classes assigned.</span>
@@ -1901,14 +1905,31 @@ function filterSubmittedQuestions() {
   const typeFilter = document.getElementById('reviewQuestionType').value;
   const sectionFilter = document.getElementById('reviewQuestionSection').value;
   const quarterFilter = document.getElementById('reviewQuestionQuarter').value;
+  const numberFilter = document.getElementById('reviewQuestionNumber');
   const cards = [...document.querySelectorAll('.question-set-card')];
+  const numberOptions = [...new Set(cards
+    .filter(card => ['quiz', 'exam'].includes(card.dataset.questionType)
+      && (typeFilter === 'all' || card.dataset.questionType === typeFilter))
+    .map(card => card.dataset.sequenceNumber))]
+    .sort((a, b) => Number(a) - Number(b));
+  const selectedNumber = numberFilter.value;
+  numberFilter.replaceChildren(new Option('All Numbers', 'all'));
+  numberOptions.forEach(number => numberFilter.add(new Option(number, number)));
+  numberFilter.disabled = typeFilter === 'quizbee' || numberOptions.length === 0;
+  if (numberOptions.includes(selectedNumber)) {
+    numberFilter.value = selectedNumber;
+  }
+  const activeNumberFilter = numberFilter.value;
   let visibleCount = 0;
 
   cards.forEach(card => {
     const matchesType = typeFilter === 'all' || card.dataset.questionType === typeFilter;
     const matchesSection = sectionFilter === 'all' || card.dataset.section === sectionFilter;
     const matchesQuarter = quarterFilter === 'all' || card.dataset.quarter === quarterFilter;
-    const matches = matchesType && matchesSection && matchesQuarter;
+    const matchesNumber = activeNumberFilter === 'all'
+      || (typeFilter === 'quizbee' && card.dataset.questionType === 'quizbee')
+      || (card.dataset.questionType !== 'quizbee' && card.dataset.sequenceNumber === activeNumberFilter);
+    const matches = matchesType && matchesSection && matchesQuarter && matchesNumber;
     const wrapper = card.closest('.question-set-wrapper');
     if (wrapper) wrapper.hidden = !matches;
     if (matches) visibleCount++;
@@ -1918,6 +1939,8 @@ function filterSubmittedQuestions() {
   const noMatchMessage = document.getElementById('submittedQuestionsNoMatch');
   if (noMatchMessage) noMatchMessage.hidden = visibleCount > 0 || cards.length === 0;
 }
+
+filterSubmittedQuestions();
 
 function openSubmittedQuestionSet(setIndex, card) {
   closeSubmittedQuestionSet();

@@ -578,7 +578,7 @@
         <div class="corner-bl"></div><div class="corner-br"></div>
         <div class="panel-title">CHOOSE YOUR SUBJECT ARENA</div>
         <p style="text-align:center; color: var(--text-dim); margin-bottom: 20px;">
-          Prepare your mind, scholar! Select a subject, then choose a quarter. You will face 15 challenging general knowledge questions. Your final scores will be reported to the High Council.
+          Practice up to 20 quiz and exam questions for your selected subject, randomly chosen across all sections and quarters. Your score is shown for this session only and is not saved to My Grades.
         </p>
 
         <div class="subject-grid">
@@ -605,57 +605,25 @@
         </div>
       </div>
 
-      <!-- STAGE 2: QUARTER SELECTION -->
-      <div id="stage-quarters" class="panel" style="display: none;">
-        <div class="corner-tl"></div><div class="corner-tr"></div>
-        <div class="corner-bl"></div><div class="corner-br"></div>
-        <div class="panel-title" id="quarter-selection-title">CHOOSE A QUARTER</div>
-        <p style="text-align:center; color: var(--text-dim); margin-bottom: 20px;">
-          Choose which quarter you want to study.
-        </p>
-
-        <div class="subject-grid">
-          <div class="subject-card" onclick="startArena(1)">
-            <div class="icon"><i class="fas fa-book"></i></div>
-            <h3>QUARTER 1</h3>
-          </div>
-          <div class="subject-card" onclick="startArena(2)">
-            <div class="icon"><i class="fas fa-book"></i></div>
-            <h3>QUARTER 2</h3>
-          </div>
-          <div class="subject-card" onclick="startArena(3)">
-            <div class="icon"><i class="fas fa-book"></i></div>
-            <h3>QUARTER 3</h3>
-          </div>
-          <div class="subject-card" onclick="startArena(4)">
-            <div class="icon"><i class="fas fa-book"></i></div>
-            <h3>QUARTER 4</h3>
-          </div>
-        </div>
-        <div class="action-footer" style="margin-top: 24px;">
-          <button class="back-btn" type="button" onclick="showStage('selection')"><i class="fas fa-arrow-left"></i> CHANGE SUBJECT</button>
-        </div>
-      </div>
-
-      <!-- STAGE 3: LOADING -->
+      <!-- STAGE 2: LOADING -->
       <div id="stage-loading" class="panel" style="display: none;">
         <div class="corner-tl"></div><div class="corner-tr"></div>
         <div class="corner-bl"></div><div class="corner-br"></div>
         <div class="loader-box">
           <div class="loader-spinner"><i class="fas fa-circle-notch"></i></div>
-          <p>SUMMONING GENERAL KNOWLEDGE QUESTIONS...</p>
+          <p>SUMMONING QUIZ AND EXAM QUESTIONS...</p>
         </div>
       </div>
 
-      <!-- STAGE 4: GAMEPLAY -->
+      <!-- STAGE 3: GAMEPLAY -->
       <div id="stage-gameplay" class="panel" style="display: none;">
         <div class="corner-tl"></div><div class="corner-tr"></div>
         <div class="corner-bl"></div><div class="corner-br"></div>
         
         <!-- Live HUD -->
         <div class="hud-bar">
-          <span id="hud-subject">ARENA: <strong>MATHEMATICS</strong> · <strong>QUARTER 1</strong></span>
-          <span id="hud-progress">QUESTION: <strong id="hud-q-index">1</strong> / <strong>15</strong></span>
+          <span id="hud-subject">ARENA: <strong>MATHEMATICS</strong></span>
+          <span id="hud-progress">QUESTION: <strong id="hud-q-index">1</strong> / <strong id="hud-total">0</strong></span>
           <span id="hud-score">CORRECT: <strong id="hud-correct-count" style="color:var(--green-light);">0</strong> | MISTAKES: <strong id="hud-mistake-count" style="color:var(--red-light);">0</strong></span>
         </div>
 
@@ -702,7 +670,7 @@
         </div>
       </div>
 
-      <!-- STAGE 5: RESULTS SUMMARY -->
+      <!-- STAGE 4: RESULTS SUMMARY -->
       <div id="stage-results" class="panel" style="display: none;">
         <div class="corner-tl"></div><div class="corner-tr"></div>
         <div class="corner-bl"></div><div class="corner-br"></div>
@@ -712,7 +680,7 @@
           <div class="panel-title" id="results-subject-title">MATHEMATICS ARENA CONCLUDED</div>
           
           <div class="results-score-label">FINAL SCORE ACHIEVED</div>
-          <div class="results-score-val" id="results-score-display">12 / 15 (80%)</div>
+          <div class="results-score-val" id="results-score-display">0 / 0 (0%)</div>
 
           <!-- High Score Record Announcement -->
           <div class="congrats-banner" id="congrats-banner" style="display: none;">
@@ -814,7 +782,6 @@
        GAMEPLAY LOGIC CONTROLLER
        ============================================================ */
     let currentSubject = '';
-    let currentQuarter = 1;
     let questionsList = [];
     let currentIndex = 0;
     let correctAnswersCount = 0;
@@ -824,20 +791,16 @@
     // Start a quiz arena session
     function selectSubject(subject) {
       currentSubject = subject;
-      document.getElementById('quarter-selection-title').innerText = `CHOOSE A QUARTER FOR ${subject.toUpperCase()}`;
-      showStage('quarters');
+      startArena();
     }
 
-    function startArena(quarter) {
-      currentQuarter = quarter;
+    function startArena() {
       showStage('loading');
 
       const params = new URLSearchParams({
         subject: currentSubject,
-        quarter: currentQuarter,
       });
 
-      // Fetch 15 general knowledge questions for the selected subject and quarter.
       fetch(`/api/general-knowledge/questions?${params}`)
         .then(async response => {
           const data = await response.json();
@@ -852,15 +815,16 @@
             mistakesAnswersCount = 0;
             
             // Render HUD subject name
-            document.getElementById('hud-subject').innerHTML = `ARENA: <strong>${currentSubject.toUpperCase()}</strong> · <strong>QUARTER ${currentQuarter}</strong>`;
+            document.getElementById('hud-subject').innerHTML = `ARENA: <strong>${currentSubject.toUpperCase()}</strong>`;
+            document.getElementById('hud-total').innerText = questionsList.length;
             
             loadQuestion();
             showStage('gameplay');
           } else {
-            await showAppDialog(data.message || 'Could not retrieve questions for this quarter. Ask your teacher to verify the database.', {
+            await showAppDialog(data.message || 'Could not retrieve questions for this subject. Ask your teacher to verify the database.', {
               title: 'QUESTIONS UNAVAILABLE'
             });
-            showStage('quarters');
+            showStage('selection');
           }
         })
         .catch(async err => {
@@ -868,7 +832,7 @@
           await showAppDialog(err.message || 'Failed to summon subjects arena. Please refresh and try again.', {
             title: 'ARENA UNAVAILABLE'
           });
-          showStage('quarters');
+          showStage('selection');
         });
     }
 
@@ -971,78 +935,26 @@
       }
     }
 
-    // Conclude session, save score to DB, and render summary
+    // Conclude the practice session and show its score without saving it.
     function concludeArena() {
       showStage('loading');
       
       const percent = Math.round((correctAnswersCount / questionsList.length) * 100);
 
-      // Prepare payload to save score using existing /api/save_score
-      const payload = {
-        student_id: "{{ session('user_id') }}",
-        class_id: null,
-        subject: currentSubject,
-        type: 'quiz',
-        quarter: currentQuarter,
-        sequence_number: 1,
-        correct: correctAnswersCount,
-        total: questionsList.length
-      };
-
-      fetch('/api/save_score', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-        },
-        body: JSON.stringify(payload)
-      })
-      .then(response => {
-        if (!response.ok) throw new Error('Failed to record score');
-        return response.json();
-      })
-      .then(data => {
-        // Render concluded layout
-        document.getElementById('results-subject-title').innerText = `${currentSubject.toUpperCase()} · QUARTER ${currentQuarter} ARENA CONCLUDED`;
-        document.getElementById('results-score-display').innerText = `${correctAnswersCount} / ${questionsList.length} (${percent}%)`;
-
-        const congratsBanner = document.getElementById('congrats-banner');
-        if (data.is_new_high_score) {
-          document.getElementById('congrats-title').innerText = '🎉 NEW PERSONAL RECORD! 🎉';
-          document.getElementById('congrats-text').innerText = `Sensational achievement! You reached your highest point record of ${percent}% in the ${currentSubject} arena!`;
-          congratsBanner.style.display = 'block';
-        } else if (percent >= 70) {
-          document.getElementById('congrats-title').innerText = '⚔️ GREAT JOB, WARRIOR! ⚔️';
-          document.getElementById('congrats-text').innerText = `You scored ${percent}%! Keep training to surpass your peak record of ${data.highest_percent}%!`;
-          congratsBanner.style.display = 'block';
-        } else {
-          congratsBanner.style.display = 'none';
-        }
-
-        showStage('results');
-      })
-      .catch(async err => {
-        console.error(err);
-        // Fallback display if API fails
-        document.getElementById('results-subject-title').innerText = `${currentSubject.toUpperCase()} · QUARTER ${currentQuarter} ARENA CONCLUDED`;
-        document.getElementById('results-score-display').innerText = `${correctAnswersCount} / ${questionsList.length} (${percent}%)`;
-        document.getElementById('congrats-banner').style.display = 'none';
-        
-        await showAppDialog('Arena concluded. Your score was calculated but we could not verify communication with the High Council server. (Score was not saved)', {
-          title: 'SCORE NOT SAVED'
-        });
-        showStage('results');
-      });
+      document.getElementById('results-subject-title').innerText = `${currentSubject.toUpperCase()} ARENA CONCLUDED`;
+      document.getElementById('results-score-display').innerText = `${correctAnswersCount} / ${questionsList.length} (${percent}%)`;
+      document.getElementById('congrats-banner').style.display = 'none';
+      showStage('results');
     }
 
     // Restart arena session
     function replayArena() {
-      showStage('quarters');
+      startArena();
     }
 
     // Toggle viewport visibility between panels
     function showStage(stageName) {
-      const stages = ['selection', 'quarters', 'loading', 'gameplay', 'results'];
+      const stages = ['selection', 'loading', 'gameplay', 'results'];
       stages.forEach(st => {
         const el = document.getElementById(`stage-${st}`);
         if (st === stageName) {

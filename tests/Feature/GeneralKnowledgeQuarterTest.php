@@ -55,31 +55,108 @@ class GeneralKnowledgeQuarterTest extends TestCase
         parent::tearDown();
     }
 
-    public function test_questions_are_filtered_by_subject_and_quarter(): void
+    public function test_gk_arena_returns_up_to_20_quiz_and_exam_questions_for_the_subject(): void
     {
-        $quarterOneId = $this->createQuestion('math', 1);
-        $quarterTwoId = $this->createQuestion('math', 2);
+        $firstQuestionId = $this->createQuestion('math', 1);
+        $otherSectionId = $this->createQuestion('math', 2, null, 'exam', 42);
+        $thirdQuarterId = $this->createQuestion('math', 3);
         $otherSubjectId = $this->createQuestion('science', 2);
+        $this->createQuestion('math', 2, null, 'quizbee');
+        $moreQuestionIds = [];
+        for ($i = 0; $i < 23; $i++) {
+            $moreQuestionIds[] = $this->createQuestion('math', ($i % 4) + 1, null, $i % 2 ? 'quiz' : 'exam');
+        }
+
+        $response = $this->getJson('/api/general-knowledge/questions?subject=math&quarter=2')
+            ->assertOk()
+            ->assertJsonPath('subject', 'math')
+            ->assertJsonCount(20, 'questions')
+            ->assertJsonMissing(['id' => $otherSubjectId]);
+
+        $returnedIds = collect($response->json('questions'))->pluck('id')->all();
+        $allowedIds = array_merge([$firstQuestionId, $otherSectionId, $thirdQuarterId], $moreQuestionIds);
+        $this->assertCount(20, $returnedIds);
+        $this->assertEmpty(array_diff($returnedIds, $allowedIds));
+    }
+
+    public function test_student_gets_quiz_and_exam_questions_from_all_sections_and_quarters(): void
+    {
+        $studentId = DB::table('users')->insertGetId([
+            'role' => 'student',
+            'section' => 'Grade 7',
+        ]);
+        $studentClassId = DB::table('classes')->insertGetId(['section' => 'Grade 7']);
+        $otherClassId = DB::table('classes')->insertGetId(['section' => 'Grade 8']);
+        $membershipClassId = DB::table('classes')->insertGetId(['section' => 'Grade 7 - Math']);
+        $sharedQuizId = $this->createQuestion('math', 3);
+        $sectionQuizId = $this->createQuestion('math', 3, null, 'quiz', $studentClassId);
+        $sectionExamId = $this->createQuestion('math', 3, null, 'exam', $studentClassId);
+        $membershipExamId = $this->createQuestion('math', 3, null, 'exam', $membershipClassId);
+        $otherSectionId = $this->createQuestion('math', 4, null, 'exam', $otherClassId);
+        $this->createQuestion('science', 3, null, 'exam', $studentClassId);
+        $otherQuarterId = $this->createQuestion('math', 4, null, 'exam', $studentClassId);
+        DB::table('class_students')->insert([
+            'class_id' => $membershipClassId,
+            'student_id' => $studentId,
+        ]);
+
+        $response = $this->withSession(['user_id' => $studentId, 'user_role' => 'student'])
+            ->getJson('/api/general-knowledge/questions?subject=math&quarter=3')
+            ->assertOk()
+            ->assertJsonCount(6, 'questions');
+
+        $returnedIds = collect($response->json('questions'))->pluck('id')->all();
+        $this->assertContains($sharedQuizId, $returnedIds);
+        $this->assertContains($sectionQuizId, $returnedIds);
+        $this->assertContains($sectionExamId, $returnedIds);
+        $this->assertContains($membershipExamId, $returnedIds);
+        $this->assertContains($otherSectionId, $returnedIds);
+        $this->assertContains($otherQuarterId, $returnedIds);
+    }
+
+    public function test_gk_arena_question_lookup_accepts_capitalized_quiz_and_exam_types(): void
+    {
+        $quizId = $this->createQuestion('math', 2);
+        $examId = $this->createQuestion('math', 2, null, 'exam');
+        DB::table('questions')->where('id', $quizId)->update(['type' => 'Quiz']);
+        DB::table('questions')->where('id', $examId)->update(['type' => 'Exam']);
 
         $this->getJson('/api/general-knowledge/questions?subject=math&quarter=2')
             ->assertOk()
-            ->assertJsonPath('subject', 'math')
-            ->assertJsonPath('quarter', 2)
-            ->assertJsonCount(1, 'questions')
-            ->assertJsonPath('questions.0.id', $quarterTwoId)
-            ->assertJsonMissing(['id' => $quarterOneId])
-            ->assertJsonMissing(['id' => $otherSubjectId]);
+            ->assertJsonCount(2, 'questions')
+            ->assertJsonFragment(['id' => $quizId])
+            ->assertJsonFragment(['id' => $examId]);
     }
 
-    public function test_quarter_is_required_and_must_be_between_one_and_four(): void
+    public function test_student_without_section_can_get_questions_from_other_sections(): void
     {
-        $this->getJson('/api/general-knowledge/questions?subject=math')
-            ->assertUnprocessable()
-            ->assertJsonValidationErrors('quarter');
+        $studentId = DB::table('users')->insertGetId([
+            'role' => 'student',
+            'section' => null,
+        ]);
+        $otherSectionId = $this->createQuestion(
+            'math',
+            1,
+            null,
+            'quiz',
+            DB::table('classes')->insertGetId(['section' => 'Grade 8'])
+        );
 
-        $this->getJson('/api/general-knowledge/questions?subject=math&quarter=5')
-            ->assertUnprocessable()
-            ->assertJsonValidationErrors('quarter');
+        $this->withSession(['user_id' => $studentId, 'user_role' => 'student'])
+            ->getJson('/api/general-knowledge/questions?subject=math&quarter=1')
+            ->assertOk()
+            ->assertJsonFragment(['id' => $otherSectionId]);
+    }
+
+    public function test_quarter_is_ignored_when_loading_gk_arena_questions(): void
+    {
+        $this->createQuestion('math', 2);
+
+        $this->getJson('/api/general-knowledge/questions?subject=math')
+            ->assertOk();
+
+        $this->getJson('/api/general-knowledge/questions?subject=math&quarter=not-a-quarter')
+            ->assertOk();
     }
 
     public function test_question_answers_are_returned_as_uppercase_letters(): void
@@ -113,17 +190,20 @@ class GeneralKnowledgeQuarterTest extends TestCase
             ->assertJsonPath('answer', 'A');
     }
 
-    public function test_student_can_see_quarter_selection_after_subject_selection(): void
+    public function test_student_can_select_subjects_without_quarter_selection(): void
     {
         $this->withSession(['user_role' => 'student'])
             ->get('/student/general-knowledge')
             ->assertOk()
             ->assertSee('id="appDialogOverlay"', false)
             ->assertDontSee('alert(', false)
-            ->assertSee('stage-quarters')
-            ->assertSee('CHOOSE A QUARTER')
+            ->assertDontSee("fetch('/api/save_score'", false)
+            ->assertSee('not saved to My Grades')
+            ->assertDontSee('stage-quarters')
+            ->assertDontSee('CHOOSE A QUARTER')
             ->assertSee('selectSubject')
-            ->assertSee('startArena(4)');
+            ->assertSee('startArena()')
+            ->assertSee('across all sections and quarters');
     }
 
     public function test_multiplayer_questions_ignore_subject_quarter_type_and_set_number_filters(): void

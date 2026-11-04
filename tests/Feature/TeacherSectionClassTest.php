@@ -384,6 +384,8 @@ class TeacherSectionClassTest extends TestCase
             ->assertSee('QUESTION TYPE')
             ->assertSee('id="reviewQuestionSection"', false)
             ->assertSee('id="reviewQuestionQuarter"', false)
+            ->assertSee('id="reviewQuestionNumber"', false)
+            ->assertSee('QUIZ/EXAM NUMBER')
             ->assertSee('<option value="Grade 7 - Rizal">Grade 7 - Rizal</option>', false)
             ->assertSee('<option value="1">Quarter 1</option>', false)
             ->assertSee('id="submittedQuestionSets"', false)
